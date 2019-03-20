@@ -27,7 +27,7 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
     {
         if( _verbose )
         {
-            cout << "Disks have different number of sides. " << info1.sidesNum << " vs ";
+            cout << "Disks have different number of sides. " << (int)info1.sidesNum << " vs ";
             cout << info2.sidesNum << "." << endl;
         }
         return false;
@@ -59,7 +59,7 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                 if( _verbose )
                 {
                     cout << "Disks side " << side << ", track " << track << " have different number of sectors. ";
-                    cout << disk1Side[track].sectorsNum << " vs " << disk2Side[track].sectorsNum << "." << endl;
+                    cout << (int)disk1Side[track].sectorsNum << " vs " << (int)disk2Side[track].sectorsNum << "." << endl;
                 }
                 return false;
             }
@@ -88,13 +88,13 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                     {
                         cout << "Disks side " << side << ", track " << track << ", sector " << sector;
                         cout << " have different sector info. " << endl;
-                        cout << "track      " << disk1Side[track].sectorInfoList[sector].track      << " vs " << disk2Side[track].sectorInfoList[sector].track      << endl;
-                        cout << "side       " << disk1Side[track].sectorInfoList[sector].side       << " vs " << disk2Side[track].sectorInfoList[sector].side       << endl;
-                        cout << "sectorID   " << disk1Side[track].sectorInfoList[sector].sectorID   << " vs " << disk2Side[track].sectorInfoList[sector].sectorID   << endl;
-                        cout << "sectorSize " << disk1Side[track].sectorInfoList[sector].sectorSize << " vs " << disk2Side[track].sectorInfoList[sector].sectorSize << endl;
-                        cout << "FDCStatus1 " << disk1Side[track].sectorInfoList[sector].FDCStatus1 << " vs " << disk2Side[track].sectorInfoList[sector].FDCStatus1 << endl;
-                        cout << "FDCStatus2 " << disk1Side[track].sectorInfoList[sector].FDCStatus2 << " vs " << disk2Side[track].sectorInfoList[sector].FDCStatus2 << endl;
-                        cout << "dataLength " << disk1Side[track].sectorInfoList[sector].dataLength << " vs " << disk2Side[track].sectorInfoList[sector].dataLength << endl;
+                        cout << "track      " << (int)disk1Side[track].sectorInfoList[sector].track      << " vs " << (int)disk2Side[track].sectorInfoList[sector].track      << endl;
+                        cout << "side       " << (int)disk1Side[track].sectorInfoList[sector].side       << " vs " << (int)disk2Side[track].sectorInfoList[sector].side       << endl;
+                        cout << "sectorID   " << (int)disk1Side[track].sectorInfoList[sector].sectorID   << " vs " << (int)disk2Side[track].sectorInfoList[sector].sectorID   << endl;
+                        cout << "sectorSize " << (int)disk1Side[track].sectorInfoList[sector].sectorSize << " vs " << (int)disk2Side[track].sectorInfoList[sector].sectorSize << endl;
+                        cout << "FDCStatus1 " << (int)disk1Side[track].sectorInfoList[sector].FDCStatus1 << " vs " << (int)disk2Side[track].sectorInfoList[sector].FDCStatus1 << endl;
+                        cout << "FDCStatus2 " << (int)disk1Side[track].sectorInfoList[sector].FDCStatus2 << " vs " << (int)disk2Side[track].sectorInfoList[sector].FDCStatus2 << endl;
+                        cout << "dataLength " << (int)disk1Side[track].sectorInfoList[sector].dataLength << " vs " << (int)disk2Side[track].sectorInfoList[sector].dataLength << endl;
                     }
                     return false;
                 }
