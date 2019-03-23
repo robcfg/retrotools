@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <algorithm>
 #include "dskfile.h"
 
 using namespace std;
@@ -38,7 +39,7 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
         const vector<CDSKFile_TrackInfoBlock>& disk1Side = disk1.GetSide(side != 0);
         const vector<CDSKFile_TrackInfoBlock>& disk2Side = disk2.GetSide(side != 0);
 
-        // 2 - Number of tracks
+        // 2 - Number of tracks. Different number of tracks will show warning, but continue checking.
         if( disk1Side.size() != disk2Side.size() )
         {
             if( _verbose )
@@ -46,10 +47,9 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                 cout << "Disks side " << side << " have different number of tracks. ";
                 cout << disk1Side.size() << " vs " << disk2Side.size() << "." << endl;
             }
-            return false;
         }
 
-        size_t numTracks = disk1Side.size();
+        size_t numTracks = min(disk1Side.size(),disk2Side.size());
 
         for( size_t track = 0; track < numTracks; ++track )
         {
