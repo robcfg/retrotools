@@ -6,7 +6,7 @@
         {
             "label": "Build DskComp",
             "type": "shell",
-            "command": "g++ -g -o dskcomp dskfile.cpp dskcomp.cpp",
+            "command": "g++ -g -o dskcomp dskfile.cpp dskcomp.cpp ../common/crc.cpp",
             "group": {
                 "kind": "build",
                 "isDefault": true

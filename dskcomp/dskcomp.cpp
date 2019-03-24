@@ -102,7 +102,21 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                 }
 
                 // Sector data
-                size_t dataLength = disk1Side[track].sectorInfoList[sector].dataLength;
+                size_t sector1len = disk1Side[track].sectorData[sector].size();
+                size_t sector2len = disk2Side[track].sectorData[sector].size();
+                if( sector1len != sector2len )
+                {
+                    if( _verbose )
+                    {
+                        cout << "Disks side " << side << ", track " << track << ", sector " << sector;
+                        cout << " have different sector size. " << endl;
+                        cout << "> Sector size " << sector1len << " vs " << sector2len << endl;
+                    }
+                    retVal = false;
+                    continue;
+                }
+
+                size_t dataLength = min(sector1len,sector2len);
                 unsigned short int crc1 = crc::CRC16_MSB( disk1Side[track].sectorData[sector].data(), disk1Side[track].sectorData[sector].size(), crc::CRC16_CCITT_POLY, 0xFFFF );
                 unsigned short int crc2 = crc::CRC16_MSB( disk2Side[track].sectorData[sector].data(), disk2Side[track].sectorData[sector].size(), crc::CRC16_CCITT_POLY, 0xFFFF );
 
