@@ -19,6 +19,7 @@ using namespace std;
 // Compare disk images and show output to the console
 bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
 {
+    bool retVal = true;
     const CDSKFile_DiskInfoBlock& info1 = disk1.GetDiskInfoBlock();
     const CDSKFile_DiskInfoBlock& info2 = disk2.GetDiskInfoBlock();
 
@@ -61,7 +62,7 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                     cout << "Disks side " << side << ", track " << track << " have different number of sectors. ";
                     cout << (int)disk1Side[track].sectorsNum << " vs " << (int)disk2Side[track].sectorsNum << "." << endl;
                 }
-                return false;
+                retVal = false;
             }
 
             // 4 - Sector info and data
@@ -88,15 +89,15 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                     {
                         cout << "Disks side " << side << ", track " << track << ", sector " << sector;
                         cout << " have different sector info. " << endl;
-                        cout << "track      " << (int)disk1Side[track].sectorInfoList[sector].track      << " vs " << (int)disk2Side[track].sectorInfoList[sector].track      << endl;
-                        cout << "side       " << (int)disk1Side[track].sectorInfoList[sector].side       << " vs " << (int)disk2Side[track].sectorInfoList[sector].side       << endl;
-                        cout << "sectorID   " << (int)disk1Side[track].sectorInfoList[sector].sectorID   << " vs " << (int)disk2Side[track].sectorInfoList[sector].sectorID   << endl;
-                        cout << "sectorSize " << (int)disk1Side[track].sectorInfoList[sector].sectorSize << " vs " << (int)disk2Side[track].sectorInfoList[sector].sectorSize << endl;
-                        cout << "FDCStatus1 " << (int)disk1Side[track].sectorInfoList[sector].FDCStatus1 << " vs " << (int)disk2Side[track].sectorInfoList[sector].FDCStatus1 << endl;
-                        cout << "FDCStatus2 " << (int)disk1Side[track].sectorInfoList[sector].FDCStatus2 << " vs " << (int)disk2Side[track].sectorInfoList[sector].FDCStatus2 << endl;
-                        cout << "dataLength " << (int)disk1Side[track].sectorInfoList[sector].dataLength << " vs " << (int)disk2Side[track].sectorInfoList[sector].dataLength << endl;
+                        cout << "> track      " << (int)disk1Side[track].sectorInfoList[sector].track      << " vs " << (int)disk2Side[track].sectorInfoList[sector].track      << endl;
+                        cout << "  side       " << (int)disk1Side[track].sectorInfoList[sector].side       << " vs " << (int)disk2Side[track].sectorInfoList[sector].side       << endl;
+                        cout << "  sectorID   " << (int)disk1Side[track].sectorInfoList[sector].sectorID   << " vs " << (int)disk2Side[track].sectorInfoList[sector].sectorID   << endl;
+                        cout << "  sectorSize " << (int)disk1Side[track].sectorInfoList[sector].sectorSize << " vs " << (int)disk2Side[track].sectorInfoList[sector].sectorSize << endl;
+                        cout << "  FDCStatus1 " << (int)disk1Side[track].sectorInfoList[sector].FDCStatus1 << " vs " << (int)disk2Side[track].sectorInfoList[sector].FDCStatus1 << endl;
+                        cout << "  FDCStatus2 " << (int)disk1Side[track].sectorInfoList[sector].FDCStatus2 << " vs " << (int)disk2Side[track].sectorInfoList[sector].FDCStatus2 << endl;
+                        cout << "  dataLength " << (int)disk1Side[track].sectorInfoList[sector].dataLength << " vs " << (int)disk2Side[track].sectorInfoList[sector].dataLength << endl;
                     }
-                    return false;
+                    retVal = false;
                 }
 
                 // Sector data
@@ -108,13 +109,13 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
                         cout << "Disks side " << side << ", track " << track << ", sector " << sector;
                         cout << " have different sector data. " << endl;
                     }
-                    return false;
+                    retVal = false;
                 }
             }
         }
     }
 
-    return true;
+    return retVal;
 }
 
 void ShowUsage()
