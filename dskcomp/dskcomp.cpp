@@ -13,6 +13,7 @@
 #include <cstring>
 #include <algorithm>
 #include "dskfile.h"
+#include "../common/crc.h"
 
 using namespace std;
 
@@ -102,12 +103,16 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
 
                 // Sector data
                 size_t dataLength = disk1Side[track].sectorInfoList[sector].dataLength;
+                unsigned short int crc1 = crc::CRC16_MSB( disk1Side[track].sectorData[sector].data(), disk1Side[track].sectorData[sector].size(), crc::CRC16_CCITT_POLY, 0xFFFF );
+                unsigned short int crc2 = crc::CRC16_MSB( disk2Side[track].sectorData[sector].data(), disk2Side[track].sectorData[sector].size(), crc::CRC16_CCITT_POLY, 0xFFFF );
+
                 if( 0 != memcmp( disk1Side[track].sectorData[sector].data(), disk2Side[track].sectorData[sector].data(), dataLength) )
                 {
                     if( _verbose )
                     {
                         cout << "Disks side " << side << ", track " << track << ", sector " << sector;
                         cout << " have different sector data. " << endl;
+                        cout << "> CRC " << hex << crc1 << " vs " << crc2 << dec << endl;
                     }
                     retVal = false;
                 }
