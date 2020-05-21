@@ -31,12 +31,13 @@ bool Compare( CDSKFile& disk1, CDSKFile& disk2, bool _verbose )
         if( _verbose )
         {
             cout << "Disks have different number of sides. " << (int)info1.sidesNum << " vs ";
-            cout << info2.sidesNum << "." << endl;
+            cout << (int)info2.sidesNum << "." << endl;
         }
-        return false;
+        retVal = false; // Disks are different, but let's compare some data.
     }
+    int sidesNum = min( info1.sidesNum, info2.sidesNum );
 
-    for( int side = 0; side < info1.sidesNum; ++side )
+    for( int side = 0; side < sidesNum; ++side )
     {
         const vector<CDSKFile_TrackInfoBlock>& disk1Side = disk1.GetSide(side != 0);
         const vector<CDSKFile_TrackInfoBlock>& disk2Side = disk2.GetSide(side != 0);
