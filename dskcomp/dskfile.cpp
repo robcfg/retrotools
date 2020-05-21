@@ -87,7 +87,7 @@ bool CDSKFile::Load(const string& _filename)
 	{
 		for( unsigned char side = 0; side < diskInfoBlock.sidesNum; ++side )
 		{
-			if(diskInfoBlock.trackSizeTable[ (track * diskInfoBlock.sidesNum) + side] )
+			if(diskInfoBlock.trackSize || diskInfoBlock.trackSizeTable[ (track * diskInfoBlock.sidesNum) + side] )
 			{
 				ReadTrackInformationBlock(pIn);
 			}
@@ -259,6 +259,19 @@ void CDSKFile::ReadTrackInformationBlock(FILE* _pIn)
 	for( unsigned char sector = 0; sector < tib.sectorsNum; ++sector )
 	{
 		unsigned short int dataSize = tib.sectorInfoList[sector].dataLength;
+		if( 0 == dataSize )
+		{
+			if( 0 != tib.sectorSize )
+			{
+				dataSize = (256 << (tib.sectorSize - 1));
+			}
+			else
+			{
+				return;
+			}
+			
+		}
+
 		uint8vector tmpVec;
 
 		for( unsigned short int dataByte = 0; dataByte < dataSize; ++dataByte )
