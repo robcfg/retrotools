@@ -1,0 +1,8 @@
+{
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "__locale": "cpp",
+        "cctype": "cpp",
+        "locale": "cpp"
+    }
+}

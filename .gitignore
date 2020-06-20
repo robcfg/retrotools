@@ -1,0 +1,4 @@
+**/scmversion.h
+build/
+**/.DS_Store
+**/*.dSYM

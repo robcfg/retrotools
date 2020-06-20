@@ -1,0 +1,42 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake build MMBExplorer (Debug)",
+            "type": "shell",
+            "command": "make",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": { "cwd": "${workspaceFolder}/build" },
+            "dependsOn": "Run CMake (Debug)"
+        },
+        {
+            "label": "Run CMake (Debug)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [ "-DCMAKE_BUILD_TYPE=Debug", "-Wno-dev", ".." ],
+            "options": { "cwd": "${workspaceFolder}/build" }
+        },
+        {
+            "label": "CMake build MMBExplorer (Release)",
+            "type": "shell",
+            "command": "make",
+            "problemMatcher": [],
+            "group": "build",
+            "options": { "cwd": "${workspaceFolder}/build" },
+            "dependsOn": "Run CMake (Release)"
+        },
+        {
+            "label": "Run CMake (Release)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [ "-DCMAKE_BUILD_TYPE=Release", "-Wno-dev", ".." ],
+            "options": { "cwd": "${workspaceFolder}/build" }
+        }
+    ]
+}
