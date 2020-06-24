@@ -321,3 +321,8 @@ bool ProcessArguments( int argc, char** argv, string& _errorString )
 
     return false;
 }
+
+const char* GetSCMVersion()
+{
+    return scmVersion;
+}

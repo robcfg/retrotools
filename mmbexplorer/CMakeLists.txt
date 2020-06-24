@@ -21,6 +21,8 @@ add_executable(
 	MMBExplorer ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBExplorer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBFile.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Commands.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Gui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
 	)
 
 # Generate source control version file

@@ -1,7 +1,8 @@
-#include <FL/Fl.H>
 #include <iostream>
+#include <string>
 #include "MMBFile.h"
 #include "MMBE_Commands.h"
+#include "MMBE_Gui.h"
 
 using namespace std;
 
@@ -19,7 +20,11 @@ int main( int argc, char** argv )
     }
     else
     {
-        cout << "Launching GUI :P" << endl;
+        string windowTitle = "MMBExplorer by Robcfg (";
+        windowTitle += GetSCMVersion();
+        windowTitle += ")";
+        CMMBEGui gui( 640, 480, windowTitle.c_str() );
+        return gui.Run();    
     }
 
     return 0;

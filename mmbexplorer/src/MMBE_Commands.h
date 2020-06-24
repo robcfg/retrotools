@@ -14,3 +14,6 @@ void ExtractImage( const std::string& _filename, const std::string& _imageName, 
 
 // Execute specified command. Returns true if processed or false for launching gui.
 bool ProcessArguments( int argc, char** argv, std::string& _errorString );
+
+// Auxiliary functions
+const char* GetSCMVersion();

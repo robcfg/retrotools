@@ -15,10 +15,10 @@ CMMBFile::CMMBFile()
 CMMBFile::~CMMBFile()
 {
     // Make sure we close the file properly.
-    if( nullptr != mFile )
-    {
-        fclose( mFile );
-    }    
+    //if( nullptr != mFile )
+    //{
+    //    fclose( mFile );
+    //}    
 }
 
 bool CMMBFile::Open( const std::string& _filename, std::string& _errorString )
@@ -125,11 +125,23 @@ void CMMBFile::Close()
 
     mFileSize = 0;
     mNumberOfDisks = 0;
+
+    ClearDirectory();
 }
 
 const SMMBDirectoryEntry* CMMBFile::GetDirectory()
 {
     return mDirectory;
+}
+
+const char* CMMBFile::GetEntryName( size_t _entry )
+{ 
+    return mDirectory[_entry].name.c_str(); 
+}
+
+unsigned char CMMBFile::GetEntryAttribute( size_t _entry )
+{ 
+    return mDirectory[_entry].diskAttributes; 
 }
 
 void CMMBFile::ReadDirectory()
@@ -251,6 +263,8 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
 
     // Cleanup
     delete[] pImage;
+
+    ReadDirectory();
 
     return true;
 }
@@ -391,4 +405,9 @@ bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
     delete[] pImage;
 
     return true;
+}
+
+const std::string& CMMBFile::GetFilename()
+{
+    return mFilename;
 }

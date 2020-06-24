@@ -3,6 +3,7 @@
     "files.associations": {
         "__locale": "cpp",
         "cctype": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "*.xpm": "cpp"
     }
 }

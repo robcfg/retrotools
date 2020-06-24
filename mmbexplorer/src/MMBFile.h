@@ -21,7 +21,7 @@ class CMMBFile
 {
 public:
     CMMBFile();
-    ~CMMBFile();
+    virtual ~CMMBFile();
 
     bool Open  ( const std::string& _filename, std::string& _errorString );
     bool Create( const std::string& _filename, size_t _numberOfDisks, std::string& _errorString ) const;
@@ -36,10 +36,15 @@ public:
     bool UnlockImageInSlot  ( size_t _slot, std::string& _errorString );
     bool RemoveImageFromSlot( size_t _slot, std::string& _errorString );
 
+    const std::string& GetFilename();
+    
+    const char*   GetEntryName     ( size_t _entry );
+    unsigned char GetEntryAttribute( size_t _entry );
+
 private:
     void ReadDirectory();
     void ClearDirectory();
-    
+
     std::string mFilename;
     FILE* mFile = nullptr;
     size_t mFileSize = 0;
