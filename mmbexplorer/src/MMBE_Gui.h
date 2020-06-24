@@ -12,7 +12,7 @@
 #endif
 class Fl_Table;
 class Fl_Pixmap;
-class RateTable;
+class Fl_Select_Browser;
 
 //******************************************
 //* CAppWindow class
@@ -26,9 +26,11 @@ public:
 
 	virtual int handle(int _event);
 
+    void SetDiscContentWidget( Fl_Select_Browser* _diskContent );
+    void RefreshDiscContent( unsigned char* _data, size_t _dataSize );
+    
 private:
-    unsigned char* mTestData = nullptr;
-    size_t mTestDataSize = 0;
+    Fl_Select_Browser* mDiskContent = nullptr;
 };
 
 //******************************************
@@ -83,7 +85,6 @@ private:
     CAppWindow* mMainWindow = nullptr;
     CMMBETable* mTable = nullptr;
     Fl_Box* mFilenameBox = nullptr;
-    RateTable* pTable = nullptr;
     char mBuffer[32] = { 0 };
 
 #ifdef __APPLE__

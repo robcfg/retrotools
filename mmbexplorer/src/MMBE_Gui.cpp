@@ -3,15 +3,12 @@
 #include <string>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
+#include <FL/Fl_Select_Browser.H>
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
 #include "MMBE_Gui.h"
 #include "MMBE_Callbacks.h"
-
-#include <FL/Fl_Tile.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Float_Input.H>
+#include "AcornDFS.h"
 
 // Icons
 #include "../icons/empty.xpm"
@@ -37,7 +34,45 @@ CAppWindow::~CAppWindow()
 
 int CAppWindow::handle( int _event )
 {
-    return Fl_Window::handle( _event );
+    int ret = Fl_Window::handle( _event );
+    /*switch ( _event ) 
+    {
+        case FL_PUSH:               // do 'copy/dnd' when someone clicks on box
+            Fl::copy(blabla.c_str(),(int)blabla.length(),0);//Fl::clipboard_image);
+            Fl::dnd();
+            ret = 1;
+            break;
+    }*/
+    return(ret);
+}
+
+void CAppWindow::SetDiscContentWidget( Fl_Select_Browser* _diskContent )
+{
+    mDiskContent = _diskContent;
+}
+
+void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
+{
+    if( nullptr == mDiskContent )
+    {
+        return;
+    }
+
+    mDiskContent->clear();    
+
+    if( nullptr != _data )
+    {
+        DFSDisk disc;
+
+        DFSRead( _data, _dataSize, disc );
+
+        for( auto dfsFile : disc.files )
+        {
+            string fileStr = "@f";
+            fileStr += dfsFile.name;
+            mDiskContent->add( fileStr.c_str() );
+        }
+    }
 }
 
 CMMBETable::CMMBETable( CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label ) : Fl_Table( _x, _y, _w, _h, _label )
@@ -232,10 +267,23 @@ void CMMBETable::SelectSlot( size_t _slot )
     if( nullptr == mMMB || _slot >= mMMB->GetNumberOfDisks() )
     {
         mSelectedSlot = (size_t)-1;
+        ((CAppWindow*)this->window())->RefreshDiscContent( nullptr, 0 );
     }
     else
     {
         mSelectedSlot = (mSelectedSlot == _slot) ? (size_t)-1 : _slot;
+        if( mSelectedSlot < mMMB->GetNumberOfDisks() )
+        {
+            string errorString;
+            unsigned char* data = new unsigned char[MMB_DISKSIZE];
+            mMMB->ExtractImageInSlot( data, mSelectedSlot, errorString );
+            ((CAppWindow*)this->window())->RefreshDiscContent( data, MMB_DISKSIZE );
+            delete[] data;
+        }
+        else
+        {
+            ((CAppWindow*)this->window())->RefreshDiscContent( nullptr, 0 );
+        }
     }
 
     redraw();
@@ -298,6 +346,7 @@ void CMMBEGui::OpenMMB( const std::string& _filename )
     mFilenameBox->copy_label( filenameStr.c_str() );
 
     // Refresh contents
+    mMainWindow->RefreshDiscContent(nullptr,0);
     mTable->redraw();
 }
 
@@ -371,6 +420,7 @@ void CMMBEGui::CreateMenuBar()
 
 void CMMBEGui::CreateControls()
 {
+    int x = 10;
     int y = 10 + mMenuBarOffset;
 
     // File name
@@ -395,4 +445,10 @@ void CMMBEGui::CreateControls()
     mTable->col_width_all(206);   // default width of columns
     mTable->col_resize(0);        // enable column resizing
     mTable->end();			      // end the Fl_Table group
+
+    x += 512 + 10;
+    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 260, 384, "Disc content" );
+	diskContent->align( FL_ALIGN_TOP );
+	diskContent->type(FL_HOLD_BROWSER);
+    mMainWindow->SetDiscContentWidget( diskContent );
 }

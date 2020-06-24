@@ -315,6 +315,14 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
     return true;
 }
 
+bool CMMBFile::ExtractImageInSlot( unsigned char* _data, size_t _slot, std::string& _errorString )
+{
+    fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
+    fread( _data, 1, MMB_DISKSIZE, mFile );
+    
+    return true;
+}
+
 bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
 {
     if( nullptr == mFile )

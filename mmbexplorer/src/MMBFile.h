@@ -32,6 +32,7 @@ public:
 
     bool InsertImageInSlot  ( const std::string& _filename, size_t _slot, std::string& _errorString );
     bool ExtractImageInSlot ( const std::string& _filename, size_t _slot, std::string& _errorString );
+    bool ExtractImageInSlot ( unsigned char* _data, size_t _slot, std::string& _errorString );
     bool LockImageInSlot    ( size_t _slot, std::string& _errorString );
     bool UnlockImageInSlot  ( size_t _slot, std::string& _errorString );
     bool RemoveImageFromSlot( size_t _slot, std::string& _errorString );
