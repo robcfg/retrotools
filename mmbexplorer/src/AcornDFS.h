@@ -22,9 +22,5 @@ struct DFSDisk
     std::vector<DFSEntry> files;
 };
 
-// Boot options
-//   0: "0: *None",
-//   1: "1: *Load $.!BOOT",
-//   2: "2: *Run $.!BOOT",
-//   3: "3: *Exec $.!BOOT"
-void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk );
+void        DFSRead           ( unsigned char* _data, size_t _size, DFSDisk& _disk );
+std::string BootOptionToString( unsigned char  _bootOption );

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <sstream>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
 #include <FL/Fl_Select_Browser.H>
@@ -62,16 +63,89 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
 
     if( nullptr != _data )
     {
+        stringstream strStream;
         DFSDisk disc;
 
         DFSRead( _data, _dataSize, disc );
 
+        string discNameStr = "@fDisc name: " + disc.name;
+        mDiskContent->add( discNameStr.c_str() );
+        string bootOptionStr = "@fBoot option: ";
+        bootOptionStr += BootOptionToString( disc.bootOption );
+        mDiskContent->add( bootOptionStr.c_str() );
+        mDiskContent->add( "@f-+------------+------+-----+-----");
+        mDiskContent->add( "@fD|File name   |Size  |Load |Exec ");
+        mDiskContent->add( "@f-+------------+------+-----+-----");
+        
+        size_t sectorsUsed = 2; // Filesystem sectors
+
         for( auto dfsFile : disc.files )
         {
             string fileStr = "@f";
-            fileStr += dfsFile.name;
+            fileStr += dfsFile.directory;
+            fileStr += '.';
+
+            // Pad file name to the maximum of 12 characters
+            string paddedName = dfsFile.name;
+            while( paddedName.length() < 12 )
+            {
+                paddedName += ' ';
+            }
+
+            fileStr += paddedName;
+            fileStr += ' ';
+
+            // Convert and pad size to a maximum of 6 characters
+            string paddedSize = to_string( dfsFile.fileSize );
+            if( paddedSize.length() < 6 )
+            {
+                paddedSize.insert( paddedSize.begin(), 6 - paddedSize.length(), ' ' );
+            }
+            fileStr += paddedSize;
+            fileStr += ' ';
+            sectorsUsed += dfsFile.fileSize / 256;
+            if( 0 != dfsFile.fileSize % 256 )
+            {
+                ++sectorsUsed;
+            }
+
+            // Convert to hex and pad load address to a maximum of 4 characters
+            strStream.str("");
+            strStream << hex << dfsFile.loadAddress;
+            string paddedLoad = strStream.str();
+            if( paddedLoad.length() < 5 )
+            {
+                paddedLoad.insert( paddedLoad.begin(), 5 - paddedLoad.length(), '0' );
+            }
+            transform( paddedLoad.begin(), paddedLoad.end(), paddedLoad.begin(), ::toupper );
+            fileStr += paddedLoad;
+            fileStr += ' ';
+
+            // Convert to hex and pad load address to a maximum of 4 characters
+            strStream.str("");
+            strStream << hex << dfsFile.execAddress;
+            std::string paddedExec = strStream.str();
+            if( paddedExec.length() < 5 )
+            {
+                paddedExec.insert( paddedExec.begin(), 5 - paddedExec.length(), '0' );
+            }
+            transform( paddedExec.begin(), paddedExec.end(), paddedExec.begin(), ::toupper );
+            fileStr += paddedExec;
+            fileStr += ' ';
+
+            // Add line to widget
             mDiskContent->add( fileStr.c_str() );
         }
+
+        mDiskContent->add( "@f-+------------+------+-----+-----");
+        string freeSpaceStr = "@f  Free Space   ";
+        string paddedFreeSpace = to_string( (disc.sectorsNum - sectorsUsed) * 256 );
+        if( paddedFreeSpace.length() < 6 )
+        {
+            paddedFreeSpace.insert( paddedFreeSpace.begin(), 6 - paddedFreeSpace.length(), ' ' );
+        }
+        freeSpaceStr += paddedFreeSpace;
+        mDiskContent->add( freeSpaceStr.c_str() );
     }
 }
 
@@ -429,7 +503,7 @@ void CMMBEGui::CreateControls()
     y += 26;
 
     //pTable = new RateTable( 10, 10 + mMenuBarOffset, 512, 384, 0 );
-    mTable = new CMMBETable( &mMMB, 10, y, 512, 384, 0 );
+    mTable = new CMMBETable( &mMMB, 10, y, 472, 384, 0 );
     // TODO: Add http://seriss.com/people/erco/fltk/#ContextMenu
     mTable->begin();
 
@@ -446,8 +520,8 @@ void CMMBEGui::CreateControls()
     mTable->col_resize(0);        // enable column resizing
     mTable->end();			      // end the Fl_Table group
 
-    x += 512 + 10;
-    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 260, 384, "Disc content" );
+    x += 472 + 10;
+    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 300, 384, "Disc content" );
 	diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_HOLD_BROWSER);
     mMainWindow->SetDiscContentWidget( diskContent );

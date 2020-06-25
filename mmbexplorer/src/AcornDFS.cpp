@@ -40,11 +40,23 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
         tmpEntry.fileSize    =   _data[sector_1_offset++];
         tmpEntry.fileSize    |= (_data[sector_1_offset++] << 8);
         tmpEntry.startSector = ((_data[sector_1_offset] & 3)  << 8 );
-        tmpEntry.loadAddress |=((_data[sector_1_offset] & 12 )<< 16);
-        tmpEntry.fileSize    |=((_data[sector_1_offset] & 48 )<< 16);
-        tmpEntry.execAddress |=((_data[sector_1_offset++] & 192)<< 16);
+        tmpEntry.loadAddress |=((_data[sector_1_offset] & 12 )<< 14);
+        tmpEntry.fileSize    |=((_data[sector_1_offset] & 48 )<< 12);
+        tmpEntry.execAddress |=((_data[sector_1_offset++] & 192)<< 10);
         tmpEntry.startSector |=  _data[sector_1_offset++];
 
         _disk.files.push_back( tmpEntry );
     }
+}
+
+std::string BootOptionToString( unsigned char _bootOption )
+{
+    switch( _bootOption )
+    {
+    case 1: return "*Load $.!BOOT";
+    case 2: return "*Run $.!BOOT";
+    case 3: return "*Exec $.!BOOT";
+    }
+
+    return "*None";
 }
