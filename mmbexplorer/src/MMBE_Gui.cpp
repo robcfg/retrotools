@@ -73,9 +73,9 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
         string bootOptionStr = "@fBoot option: ";
         bootOptionStr += BootOptionToString( disc.bootOption );
         mDiskContent->add( bootOptionStr.c_str() );
-        mDiskContent->add( "@f-+------------+------+-----+-----");
-        mDiskContent->add( "@fD|File name   |Size  |Load |Exec ");
-        mDiskContent->add( "@f-+------------+------+-----+-----");
+        mDiskContent->add( "@f-+----------+------+-----+-----");
+        mDiskContent->add( "@fD|File name |Size  |Load |Exec ");
+        mDiskContent->add( "@f-+----------+------+-----+-----");
         
         size_t sectorsUsed = 2; // Filesystem sectors
 
@@ -87,13 +87,12 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
 
             // Pad file name to the maximum of 12 characters
             string paddedName = dfsFile.name;
-            while( paddedName.length() < 12 )
+            if( paddedName.length() < 10 )
             {
-                paddedName += ' ';
+                paddedName.insert( paddedName.end(), 10 - paddedName.length(), ' ');
             }
 
             fileStr += paddedName;
-            fileStr += ' ';
 
             // Convert and pad size to a maximum of 6 characters
             string paddedSize = to_string( dfsFile.fileSize );
@@ -137,9 +136,9 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
             mDiskContent->add( fileStr.c_str() );
         }
 
-        mDiskContent->add( "@f-+------------+------+-----+-----");
+        mDiskContent->add( "@f-+----------+------+-----+-----");
         string freeSpaceStr = "@f  Free Space   ";
-        string paddedFreeSpace = to_string( (disc.sectorsNum - sectorsUsed) * 256 );
+        string paddedFreeSpace = to_string( (disc.sectorsNum - min(sectorsUsed, (size_t)disc.sectorsNum)) * 256 );
         if( paddedFreeSpace.length() < 6 )
         {
             paddedFreeSpace.insert( paddedFreeSpace.begin(), 6 - paddedFreeSpace.length(), ' ' );
@@ -363,6 +362,10 @@ void CMMBETable::SelectSlot( size_t _slot )
     redraw();
 }
 
+size_t CMMBETable::GetSelectedSlot()
+{
+    return mSelectedSlot;
+}
 
 CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 {
@@ -396,14 +399,6 @@ int CMMBEGui::Run()
     }
 
     return -1;
-}
-
-void CMMBEGui::Stop()
-{
-    if( nullptr != mMainWindow )
-    {
-        //mMainWindow->hide();
-    }
 }
 
 void CMMBEGui::OpenMMB( const std::string& _filename )
@@ -478,7 +473,7 @@ void CMMBEGui::CreateMenuBar()
 	#ifdef __APPLE__
 	mMenuBar = new Fl_Sys_Menu_Bar(0,0,mMainWindow->w(),30);
 	#else
-	mMenuBar = new Fl_Menu_Bar(0,0,mMainWindow->(),30);
+	mMenuBar = new Fl_Menu_Bar(0,0,mMainWindow->w(),30);
 	#endif
 
 	// File menu
@@ -487,9 +482,7 @@ void CMMBEGui::CreateMenuBar()
 	mMenuBar->add( "&File/Create &new MMB", mModifierKey+'n', createFile_cb, (void*)this, 0 );
     // TODO:Add disk table/rebuild table option
 
-	#ifndef __APPLE__
 	mMenuBar->add( "&File/&Quit", mModifierKey+'q', menuQuit_cb, (void*)mMainWindow, 0 );
-    #endif
 }
 
 void CMMBEGui::CreateControls()
@@ -500,11 +493,9 @@ void CMMBEGui::CreateControls()
     // File name
     mFilenameBox = new Fl_Box( 10, y, 620, 26, "File: " );
     mFilenameBox->align( FL_ALIGN_INSIDE | FL_ALIGN_LEFT );
-    y += 26;
+    y += 21;
 
-    //pTable = new RateTable( 10, 10 + mMenuBarOffset, 512, 384, 0 );
-    mTable = new CMMBETable( &mMMB, 10, y, 472, 384, 0 );
-    // TODO: Add http://seriss.com/people/erco/fltk/#ContextMenu
+    mTable = new CMMBETable( &mMMB, 10, y, 492, 384, 0 );
     mTable->begin();
 
     // Rows
@@ -520,8 +511,8 @@ void CMMBEGui::CreateControls()
     mTable->col_resize(0);        // enable column resizing
     mTable->end();			      // end the Fl_Table group
 
-    x += 472 + 10;
-    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 300, 384, "Disc content" );
+    x += 492 + 10;
+    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 280, 384, "Disc content" );
 	diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_HOLD_BROWSER);
     mMainWindow->SetDiscContentWidget( diskContent );

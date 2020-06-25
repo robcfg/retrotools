@@ -4,9 +4,9 @@
 #include <FL/Fl.H>
 
 // Callbacks
+void menuQuit_cb  ( Fl_Widget* pWidget, void* );
 void openFile_cb  ( Fl_Widget* pWidget, void* _gui );
 void closeFile_cb ( Fl_Widget* pWidget, void* _gui );
-void menuQuit_cb  ( Fl_Widget* pWidget, void* _gui );
 void createFile_cb( Fl_Widget* pWidget, void* _gui );
 
 // Auxiliary functions

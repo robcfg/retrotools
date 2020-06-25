@@ -68,7 +68,7 @@ void createFile_cb( Fl_Widget* pWidget, void* _gui )
     ((CMMBEGui*)_gui)->CreateMMB( filename );
 }
 
-void menuQuit_cb( Fl_Widget* pWidget, void* _gui )
+void menuQuit_cb( Fl_Widget* pWidget, void* )
 {
-    ((CMMBEGui*)_gui)->Stop();
+    pWidget->window()->hide();
 }

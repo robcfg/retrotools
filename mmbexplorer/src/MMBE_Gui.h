@@ -44,7 +44,8 @@ public:
 
     void draw_cell( TableContext context, int _row = 0, int _col = 0, int _x = 0, int _y = 0, int _w = 0, int _h = 0 );
 
-    void SelectSlot( size_t _slot );
+    void   SelectSlot     ( size_t _slot );
+    size_t GetSelectedSlot();
 
 private:
     void DrawHeader( const char* _string, int _x, int _y, int _w, int _h );
@@ -71,7 +72,6 @@ public:
     virtual ~CMMBEGui();
 
     int Run();
-    void Stop();
 
     void OpenMMB  ( const std::string& _filename ); 
     void CreateMMB( const std::string& _filename );

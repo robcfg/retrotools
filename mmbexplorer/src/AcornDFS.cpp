@@ -1,4 +1,5 @@
 #include "AcornDFS.h"
+#include <string.h>
 
 const size_t DFS_SECTOR0_OFFSET = 0;
 const size_t DFS_SECTOR1_OFFSET = 256;
@@ -19,6 +20,7 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
 
     // Read files' info
     char fileName[8];
+    fileName[7] = 0;
     size_t sector_0_offset = 8 + DFS_SECTOR0_OFFSET;
     size_t sector_1_offset = 8 + DFS_SECTOR1_OFFSET;
     for( size_t fileNum = 0; fileNum < entriesNum; ++fileNum )
