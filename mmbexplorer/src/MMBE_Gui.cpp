@@ -87,9 +87,9 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
 
             // Pad file name to the maximum of 12 characters
             string paddedName = dfsFile.name;
-            if( paddedName.length() < 10 )
+            if( paddedName.length() < 11 )
             {
-                paddedName.insert( paddedName.end(), 10 - paddedName.length(), ' ');
+                paddedName.insert( paddedName.end(), 11 - paddedName.length(), ' ');
             }
 
             fileStr += paddedName;
@@ -228,14 +228,8 @@ int CMMBETable::handle( int _event )
             {
                 case FL_LEFT_MOUSE:
                     SelectSlot( slot );
-                    cout << "FL_RELEASE Left Mouse Button (Table) at " << callback_col() << ", " << callback_row() << endl;
-                    break;
-                case FL_RIGHT_MOUSE:
-                    SelectSlot( slot );
-                    cout << "FL_RELEASE Right Mouse Button (Table) at " << callback_col() << ", " << callback_row() << endl;
                     break;
                 default:
-                    cout << "FL_RELEASE (Table) at " << callback_col() << ", " << callback_row() << endl;
                     break;
             }
             return 1;
@@ -255,8 +249,12 @@ int CMMBETable::handle( int _event )
                 return 1;
             }
 
+            std::string pastedText = Fl::event_text();
+
+            // On Linux, remove the leading file:// protocol
+
             std::string errorString;
-            if( !mMMB->InsertImageInSlot( Fl::event_text(), slot, errorString ) )
+            if( !mMMB->InsertImageInSlot( pastedText, slot, errorString ) )
             {
                 fl_alert("[ERROR] %s",errorString.c_str());
             }
@@ -513,7 +511,8 @@ void CMMBEGui::CreateControls()
 
     x += 492 + 10;
     Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 280, 384, "Disc content" );
-	diskContent->align( FL_ALIGN_TOP );
+	diskContent->color( FL_WHITE );
+    diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_HOLD_BROWSER);
     mMainWindow->SetDiscContentWidget( diskContent );
 }

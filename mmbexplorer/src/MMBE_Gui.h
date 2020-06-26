@@ -94,6 +94,6 @@ private:
 #else
     Fl_Menu_Bar* mMenuBar = nullptr;
     int mMenuBarOffset = 30;
-    int mModifierKey = FL_ALT;
+    int mModifierKey = FL_CTRL;
 #endif
 };
