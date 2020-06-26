@@ -251,7 +251,12 @@ int CMMBETable::handle( int _event )
 
             std::string pastedText = Fl::event_text();
 
-            // On Linux, remove the leading file:// protocol
+            // Check for file:// protocol
+            std::string fileProtocol = "file://";
+            if( 0 == pastedText.compare(0, fileProtocol.length(), fileProtocol) )
+            {
+                pastedText = pastedText.substr( fileProtocol.length(), std::string::npos );
+            }
 
             std::string errorString;
             if( !mMMB->InsertImageInSlot( pastedText, slot, errorString ) )
