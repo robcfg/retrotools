@@ -258,6 +258,10 @@ int CMMBETable::handle( int _event )
                 pastedText = pastedText.substr( fileProtocol.length(), std::string::npos );
             }
 
+            // Remove unwanted characters...
+            pastedText.erase(std::remove(pastedText.begin(), pastedText.end(), 0xD), pastedText.end());
+            pastedText.erase(std::remove(pastedText.begin(), pastedText.end(), 0xA), pastedText.end());
+
             std::string errorString;
             if( !mMMB->InsertImageInSlot( pastedText, slot, errorString ) )
             {
