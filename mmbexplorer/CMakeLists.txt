@@ -26,6 +26,19 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
 	)
 
+if( WIN32 )
+# Generate source control version file
+add_custom_target(
+	getscmversion 
+	ALL
+	COMMAND if exist scmversion.h del scmversion.h
+	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/src/getscmversion.bat
+	VERBATIM
+	BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/scmversion.h
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+	)
+add_dependencies(MMBExplorer getscmversion)
+else()
 # Generate source control version file
 add_custom_target(
 	getscmversion 
@@ -38,6 +51,7 @@ add_custom_target(
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
 	)
 add_dependencies(MMBExplorer getscmversion)
+endif()
 
 # Set debug postfix
 set(CMAKE_DEBUG_POSTFIX _d)
