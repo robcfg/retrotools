@@ -137,7 +137,7 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
         }
 
         mDiskContent->add( "@f-+----------+------+-----+-----");
-        string freeSpaceStr = "@f  Free Space   ";
+        string freeSpaceStr = "@f  Free Space ";
         string paddedFreeSpace = to_string( (disc.sectorsNum - min(sectorsUsed, (size_t)disc.sectorsNum)) * 256 );
         if( paddedFreeSpace.length() < 6 )
         {
@@ -217,7 +217,6 @@ int CMMBETable::handle( int _event )
     {
         case FL_RELEASE:
         {
-            cout << "x=" << Fl::event_x() << " y=" << Fl::event_y() << " tix=" << tix << " tiy=" << tiy << " tiw=" << tiw << " tih=" << tih << endl ;
             if( Fl::event_x() < tix || Fl::event_x() >= tix + tiw ||
                 Fl::event_y() < tiy || Fl::event_y() >= tiy + tih )
             {
