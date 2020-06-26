@@ -1,5 +1,6 @@
 #include <string>
 #include <FL/Fl_Native_File_Chooser.H>
+#include <FL/fl_ask.H>
 #include "MMBE_Callbacks.h"
 #include "MMBE_Gui.h"
 
@@ -41,6 +42,17 @@ bool ChooseFilename( std::string& fileName, const std::string& filter, const std
 	return true;
 }
 
+size_t ChooseSlot()
+{
+	const char* result = fl_input( "Enter slot number (1 - 511)", nullptr );
+	if( nullptr == result )
+	{
+		return (size_t)-1;
+	}
+
+	return (size_t)strtoul( result, nullptr, 0);
+}
+
 void openFile_cb( Fl_Widget* pWidget, void* _gui )
 {
 	string filename;
@@ -71,4 +83,97 @@ void createFile_cb( Fl_Widget* pWidget, void* _gui )
 void menuQuit_cb( Fl_Widget* pWidget, void* )
 {
     pWidget->window()->hide();
+}
+
+void insertDisk_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	if( 0 == pGui->GetNumberOfSlots() )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
+	if( slot == (size_t)-1 )
+	{
+		return;
+	}
+
+	std::string filename;
+	if( !ChooseFilename( filename, "SSD files\t*.ssd\n", ".", false) )
+		return;
+
+	pGui->InsertDisk( filename, slot );
+}
+
+void extractDisk_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	if( 0 == pGui->GetNumberOfSlots() )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
+	if( slot == (size_t)-1 )
+	{
+		return;
+	}
+
+	std::string filename;
+	if( !ChooseFilename( filename, "SSD files\t*.ssd\n", ".", true) )
+		return;
+
+	pGui->ExtractDisk( filename, slot );
+}
+
+void removeDisk_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	if( 0 == pGui->GetNumberOfSlots() )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
+	if( slot == (size_t)-1 )
+	{
+		return;
+	}
+
+	pGui->RemoveDisk( slot );
+}
+
+void lockDisk_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	if( 0 == pGui->GetNumberOfSlots() )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
+	if( slot == (size_t)-1 )
+	{
+		return;
+	}
+
+	pGui->LockDisk( slot );
+}
+
+void unlock_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	if( 0 == pGui->GetNumberOfSlots() )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
+	if( slot == (size_t)-1 )
+	{
+		return;
+	}
+
+	pGui->UnlockDisk( slot );
 }

@@ -47,6 +47,8 @@ public:
     void   SelectSlot     ( size_t _slot );
     size_t GetSelectedSlot();
 
+    void DoRedraw();
+
 private:
     void DrawHeader( const char* _string, int _x, int _y, int _w, int _h );
     void DrawData( const char* _string, Fl_Pixmap* _icon, int _x, int _y, int _w, int _h, bool _selected );
@@ -76,6 +78,15 @@ public:
     void OpenMMB  ( const std::string& _filename ); 
     void CreateMMB( const std::string& _filename );
     void CloseMMB ();
+
+    void InsertDisk ( const std::string& _filename, size_t _slot );
+    void ExtractDisk( const std::string& _filename, size_t _slot );
+    void RemoveDisk ( size_t _slot );
+    void LockDisk   ( size_t _slot );
+    void UnlockDisk ( size_t _slot );
+
+    size_t GetSelectedSlot ();
+    size_t GetNumberOfSlots() const;
 
 private:
     void CreateMenuBar();

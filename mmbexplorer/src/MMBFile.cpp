@@ -335,7 +335,7 @@ bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
     if( _slot >= GetNumberOfDisks() )
     {
         _errorString = "Slot number out of range or invalid: ";
-        _errorString += _slot;
+        _errorString += std::to_string( _slot );
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
@@ -344,6 +344,8 @@ bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
 
     fseek( mFile, ((_slot + 2) * MMB_DIRECTORYENTRYSIZE) - 1, SEEK_SET );
     fwrite( &MMB_DISKATTRIBUTE_LOCKED, 1, 1, mFile );
+
+    ReadDirectory();
 
     return true;
 }
@@ -360,7 +362,7 @@ bool CMMBFile::UnlockImageInSlot( size_t _slot, std::string& _errorString )
     if( _slot >= GetNumberOfDisks() )
     {
         _errorString = "Slot number out of range or invalid: ";
-        _errorString += _slot;
+        _errorString += std::to_string( _slot );
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
@@ -369,6 +371,8 @@ bool CMMBFile::UnlockImageInSlot( size_t _slot, std::string& _errorString )
 
     fseek( mFile, ((_slot + 2) * MMB_DIRECTORYENTRYSIZE) - 1, SEEK_SET );
     fwrite( &MMB_DISKATTRIBUTE_UNLOCKED, 1, 1, mFile );
+
+    ReadDirectory();
 
     return true;
 }
@@ -385,7 +389,7 @@ bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
     if( _slot >= GetNumberOfDisks() )
     {
         _errorString = "Slot number out of range or invalid: ";
-        _errorString += _slot;
+        _errorString += std::to_string( _slot );
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
@@ -411,6 +415,8 @@ bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
     fwrite( pImage, 1, MMB_DISKSIZE, mFile );
 
     delete[] pImage;
+
+    ReadDirectory();
 
     return true;
 }

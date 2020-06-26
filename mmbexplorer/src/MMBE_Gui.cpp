@@ -360,10 +360,16 @@ void CMMBETable::SelectSlot( size_t _slot )
     redraw();
 }
 
+void CMMBETable::DoRedraw()
+{
+    redraw();
+}
+
 size_t CMMBETable::GetSelectedSlot()
 {
     return mSelectedSlot;
 }
+
 
 CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 {
@@ -478,9 +484,23 @@ void CMMBEGui::CreateMenuBar()
 	mMenuBar->add( "&File/&Open MMB"      , mModifierKey+'o', openFile_cb  , (void*)this, 0 );
 	mMenuBar->add( "&File/&Close MMB"     , mModifierKey+'c', closeFile_cb , (void*)this, 0 );
 	mMenuBar->add( "&File/Create &new MMB", mModifierKey+'n', createFile_cb, (void*)this, 0 );
+	#ifndef __APPLE__
+    mMenuBar->add( "&File/&Quit"          , mModifierKey+'q', menuQuit_cb  , (void*)mMainWindow, 0 );
+    #endif
+
+    // Slot menu
+	mMenuBar->add( "&Slot/&Insert disk"   , mModifierKey+'i', insertDisk_cb  , (void*)this, 0 ); // If no slot selected, ask for slot
+	mMenuBar->add( "&Slot/&Extract disk"  , mModifierKey+'e', extractDisk_cb , (void*)this, 0 );
+	mMenuBar->add( "&Slot/&Remove disk"   , mModifierKey+'r', removeDisk_cb  , (void*)this, 0 );
+	mMenuBar->add( "&Slot/&Lock disk"     , mModifierKey+'l', lockDisk_cb    , (void*)this, 0 );
+	mMenuBar->add( "&Slot/&Unlock disk"   , mModifierKey+'u', unlock_cb      , (void*)this, 0 );
+
     // TODO:Add disk table/rebuild table option
 
-	mMenuBar->add( "&File/&Quit", mModifierKey+'q', menuQuit_cb, (void*)mMainWindow, 0 );
+    // Help menu
+	#ifndef __APPLE__
+    mMenuBar->add( "&Help/&About"         , mModifierKey+'a', menuQuit_cb  , (void*)mMainWindow, 0 );
+    #endif
 }
 
 void CMMBEGui::CreateControls()
@@ -515,4 +535,108 @@ void CMMBEGui::CreateControls()
     diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_HOLD_BROWSER);
     mMainWindow->SetDiscContentWidget( diskContent );
+}
+
+size_t CMMBEGui::GetSelectedSlot()
+{
+    if( nullptr == mTable )
+    {
+        return (size_t)-1;
+    }
+    
+    return mTable->GetSelectedSlot();
+}
+
+size_t CMMBEGui::GetNumberOfSlots() const
+{
+    return mMMB.GetNumberOfDisks();    
+}
+
+void CMMBEGui::InsertDisk ( const std::string& _filename, size_t _slot )
+{
+    std::string errorString;
+
+    if( !mMMB.InsertImageInSlot( _filename, _slot, errorString ) )
+    {
+        fl_alert( "[ERROR] %s",errorString.c_str() );
+    }
+    else
+    {
+        unsigned char* pData = new unsigned char[MMB_DISKSIZE];
+        if( nullptr == pData )
+        {
+            fl_alert( "[ERROR] Could't allocate %zu bytes for temporal storage.",MMB_DISKSIZE );
+            return;
+        }
+
+        if( !mMMB.ExtractImageInSlot( pData, _slot, errorString ) )
+        {
+            delete[] pData;
+            fl_alert( "[ERROR] %s", errorString.c_str() );
+        }
+
+        mMainWindow->RefreshDiscContent( pData, MMB_DISKSIZE);
+
+        delete[] pData;
+    }
+    
+
+    // Refresh contents
+    mTable->redraw();
+}
+
+void CMMBEGui::ExtractDisk( const std::string& _filename, size_t _slot )
+{
+    std::string errorString;
+
+    if( !mMMB.ExtractImageInSlot( _filename, _slot, errorString ) )
+    {
+        fl_alert("[ERROR] %s",errorString.c_str());        
+    }
+
+    // Refresh contents
+    mTable->redraw();
+}
+
+void CMMBEGui::RemoveDisk ( size_t _slot )
+{
+    std::string errorString;
+
+    if( !mMMB.RemoveImageFromSlot( _slot, errorString ) )
+    {
+        fl_alert("[ERROR] %s",errorString.c_str());        
+    }
+    else
+    {
+        mMainWindow->RefreshDiscContent( nullptr, 0 );
+    }
+
+    // Refresh contents
+    mTable->redraw();
+}
+
+void CMMBEGui::LockDisk   ( size_t _slot )
+{
+    std::string errorString;
+
+    if( !mMMB.LockImageInSlot( _slot, errorString ) )
+    {
+        fl_alert("[ERROR] %s",errorString.c_str());        
+    }
+
+    // Refresh contents
+    mTable->redraw();
+}
+
+void CMMBEGui::UnlockDisk ( size_t _slot )
+{
+    std::string errorString;
+
+    if( !mMMB.UnlockImageInSlot( _slot, errorString ) )
+    {
+        fl_alert("[ERROR] %s",errorString.c_str());        
+    }
+
+    // Refresh contents
+    mTable->redraw();
 }
