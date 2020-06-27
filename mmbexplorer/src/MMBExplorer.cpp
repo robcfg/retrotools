@@ -23,7 +23,7 @@ int main( int argc, char** argv )
         string windowTitle = "MMBExplorer by Robcfg (";
         windowTitle += GetSCMVersion();
         windowTitle += ")";
-        CMMBEGui gui( 800, 480, windowTitle.c_str() );
+        CMMBEGui gui( 800, 425, windowTitle.c_str() );
         return gui.Run();    
     }
 
