@@ -386,7 +386,7 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 {
     Fl::visual(FL_RGB);
 
-    mMainWindow = new CAppWindow( _w, _h, _label );
+    mMainWindow = new CAppWindow( _w, _h + mMenuBarOffset, _label );
 
     mMainWindow->begin();
 
