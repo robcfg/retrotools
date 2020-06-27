@@ -88,6 +88,8 @@ public:
     size_t GetSelectedSlot ();
     size_t GetNumberOfSlots() const;
 
+    void ShowAboutDialog();
+
 private:
     void CreateMenuBar();
     void CreateControls();

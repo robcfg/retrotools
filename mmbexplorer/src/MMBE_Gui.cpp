@@ -11,6 +11,7 @@
 #include <FL/fl_draw.H>
 #include <FL/x.H>
 #include "MMBE_Gui.h"
+#include "MMBE_Commands.h"
 #include "MMBE_Callbacks.h"
 #include "AcornDFS.h"
 
@@ -18,6 +19,7 @@
 #include "../icons/empty.xpm"
 #include "../icons/locked.xpm"
 #include "../icons/unlocked.xpm"
+#include "../logo/mmbexplorer_64x64.xpm"
 
 using namespace std;
 
@@ -395,7 +397,7 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
     CreateControls();
 
     mMainWindow->end();
-	
+
 #ifdef WIN32
 	mMainWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
 #endif
@@ -510,11 +512,9 @@ void CMMBEGui::CreateMenuBar()
 	mMenuBar->add( "&Slot/&Lock disk"     , mModifierKey+'l', lockDisk_cb    , (void*)this, 0 );
 	mMenuBar->add( "&Slot/&Unlock disk"   , mModifierKey+'u', unlock_cb      , (void*)this, 0 );
 
-    // TODO:Add disk table/rebuild table option
-
     // Help menu
 	#ifndef __APPLE__
-    mMenuBar->add( "&Help/&About"         , mModifierKey+'a', menuQuit_cb  , (void*)mMainWindow, 0 );
+    mMenuBar->add( "&Help/&About"         , mModifierKey+'a', menuAbout_cb  , (void*)mMainWindow, 0 );
     #endif
 }
 
@@ -654,4 +654,75 @@ void CMMBEGui::UnlockDisk ( size_t _slot )
 
     // Refresh contents
     mTable->redraw();
+}
+
+void CMMBEGui::ShowAboutDialog()
+{
+    if( nullptr != Fl::modal() )
+    {
+        return;
+    }
+
+    int aboutDialogWidth  = 284;
+    int aboutDialogHeight = 195;
+
+    Fl_Window* aboutDialog = new Fl_Window( aboutDialogWidth, aboutDialogHeight, nullptr );
+    if( nullptr == aboutDialog )
+    {
+        return;
+    }
+
+    aboutDialog->box(FL_FLAT_BOX);
+    aboutDialog->color( FL_DARK2 );
+    aboutDialog->set_modal();
+    aboutDialog->begin();
+
+    int ySeparation = 8;
+    int y = ySeparation;
+
+    Fl_Pixmap* aboutIcon = new Fl_Pixmap( mmbexplorer_64x64 );
+    Fl_Box* aboutIconBox = new Fl_Box( (aboutDialogWidth - aboutIcon->w()) / 2, y, aboutIcon->w(), aboutIcon->h() );
+    aboutIconBox->image(aboutIcon);
+    y += aboutIcon->h() + ySeparation;
+
+    int textWidth  = 104;
+    int textHeight = 15;
+
+    Fl_Box* aboutText1 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, "MMBExplorer" );
+    aboutText1->align( FL_ALIGN_CENTER );
+    aboutText1->labelcolor( FL_BLACK );
+    aboutText1->labelsize( 14 );
+    aboutText1->labelfont( FL_HELVETICA_BOLD );
+    y += textHeight + ySeparation;
+
+    std::string versionStr = "Version 1.0 (";
+    versionStr += GetSCMVersion();
+    versionStr += ")";
+    Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
+    aboutText2->align( FL_ALIGN_CENTER );
+    aboutText2->labelcolor( FL_BLACK );
+    aboutText2->labelsize( 12 );
+    aboutText2->labelfont( FL_HELVETICA );
+    aboutText2->copy_label( versionStr.c_str() );
+    y += textHeight + ySeparation;
+
+    std::string fltkVersionStr = "GUI with FLTK ";
+    fltkVersionStr += std::to_string( FL_MAJOR_VERSION );
+    fltkVersionStr += ".";
+    fltkVersionStr += std::to_string( FL_MINOR_VERSION );
+    Fl_Box* aboutText3 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, "GUI with FLTK 1.3" );
+    aboutText3->align( FL_ALIGN_CENTER );
+    aboutText3->labelcolor( FL_BLACK );
+    aboutText3->labelsize( 12 );
+    aboutText3->labelfont( FL_HELVETICA_BOLD );
+    y += textHeight + ySeparation;
+
+    Fl_Box* aboutText4 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight * 2, "Copyright 2020 by Roberto Carlos\nFernández Gerhardt" );
+    aboutText4->align( FL_ALIGN_CENTER );
+    aboutText4->labelcolor( FL_BLACK );
+    aboutText4->labelsize( 12 );
+    aboutText4->labelfont( FL_HELVETICA );
+
+    aboutDialog->end();
+    aboutDialog->show();
 }

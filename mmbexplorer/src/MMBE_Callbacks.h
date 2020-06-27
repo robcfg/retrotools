@@ -5,6 +5,7 @@
 
 // File menu callbacks
 void menuQuit_cb  ( Fl_Widget* pWidget, void* );
+void menuAbout_cb ( Fl_Widget* pWidget, void* _gui );
 void openFile_cb  ( Fl_Widget* pWidget, void* _gui );
 void closeFile_cb ( Fl_Widget* pWidget, void* _gui );
 void createFile_cb( Fl_Widget* pWidget, void* _gui );

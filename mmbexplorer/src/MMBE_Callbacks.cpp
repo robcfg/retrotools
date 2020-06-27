@@ -177,3 +177,10 @@ void unlock_cb( Fl_Widget* pWidget, void* _gui )
 
 	pGui->UnlockDisk( slot );
 }
+
+void menuAbout_cb ( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->ShowAboutDialog();	
+}
+
