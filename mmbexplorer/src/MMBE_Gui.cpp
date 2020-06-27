@@ -402,7 +402,9 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 #ifdef WIN32
 	mMainWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
 #else
-    mMainWindow->icon(mmbexplorer_64x64);
+    Fl_Pixmap xpmIcon( mmbexplorer_64x64 );
+    Fl_RGB_Image appIcon( &xpmIcon, Fl_Color(0) );
+    mMainWindow->icon( &appIcon );
 #endif
 #endif
 
