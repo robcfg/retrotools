@@ -203,7 +203,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     if( _slot >= GetNumberOfDisks() )
     {
         _errorString = "Slot number out of range or invalid: ";
-        _errorString += _slot;
+        _errorString += std::to_string(_slot);
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
@@ -283,7 +283,7 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
     if( _slot >= GetNumberOfDisks() )
     {
         _errorString = "Slot number out of range or invalid: ";
-        _errorString += _slot;
+        _errorString += std::to_string(_slot);
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
