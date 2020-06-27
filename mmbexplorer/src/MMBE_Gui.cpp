@@ -398,8 +398,12 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 
     mMainWindow->end();
 
+#ifndef __APPLE__
 #ifdef WIN32
 	mMainWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
+#else
+    mMainWindow->icon(mmbexplorer_64x64);
+#endif
 #endif
 
     mMainWindow->resizable( mTable );
