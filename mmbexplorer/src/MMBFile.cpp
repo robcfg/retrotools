@@ -160,12 +160,13 @@ void CMMBFile::ReadDirectory()
 
     // Read entries
     char tmpChar = 0;
+    size_t bytesRead = 0;
 
     for( size_t entry = 0; entry < MMB_MAXNUMBEROFDISKS; ++entry )
     {
         for( size_t nameChar = 0; nameChar < MMB_MAXDISKNAMELENGTH; ++nameChar )
         {
-            fread( &tmpChar, 1, 1, mFile );
+            bytesRead = fread( &tmpChar, 1, 1, mFile );
             mDirectory[entry].name += tmpChar;
         }
 
@@ -173,7 +174,7 @@ void CMMBFile::ReadDirectory()
         fseek( mFile, 3, SEEK_CUR );
 
         // Read disk atributes byte
-        fread( &mDirectory[entry].diskAttributes, 1, 1, mFile );
+        bytesRead = fread( &mDirectory[entry].diskAttributes, 1, 1, mFile );
     }
 }
 
@@ -245,7 +246,8 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     }
 
     // Read file
-    fread( pImage, 1, fileSize, pFile );
+    size_t bytesRead = 0;
+    bytesRead = fread( pImage, 1, fileSize, pFile );
     fclose( pFile );
 
     // Write directory entry
@@ -307,8 +309,9 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
         return false;
     }
 
+    size_t bytesRead = 0;
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
-    fread( pImage, 1, MMB_DISKSIZE, mFile );
+    bytesRead = fread( pImage, 1, MMB_DISKSIZE, mFile );
     fwrite( pImage, 1, MMB_DISKSIZE, pDestinationFile );
 
     fclose( pDestinationFile );
@@ -319,8 +322,9 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
 
 bool CMMBFile::ExtractImageInSlot( unsigned char* _data, size_t _slot, std::string& _errorString )
 {
+    size_t bytesRead = 0;
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
-    fread( _data, 1, MMB_DISKSIZE, mFile );
+    bytesRead = fread( _data, 1, MMB_DISKSIZE, mFile );
     
     return true;
 }
