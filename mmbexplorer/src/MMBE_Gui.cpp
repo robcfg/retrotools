@@ -7,6 +7,7 @@
 #include <FL/Fl_Select_Browser.H>
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
+#include <FL/x.H>
 #include "MMBE_Gui.h"
 #include "MMBE_Callbacks.h"
 #include "AcornDFS.h"
@@ -392,6 +393,10 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
     CreateControls();
 
     mMainWindow->end();
+	
+#ifdef WIN32
+	mMainWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
+#endif
 
     mMainWindow->resizable( mTable );
 }

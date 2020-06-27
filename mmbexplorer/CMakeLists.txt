@@ -17,6 +17,17 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add executable
+if( WIN32 )
+add_executable(
+	MMBExplorer ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBExplorer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBFile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Commands.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Gui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/resource.rc
+	)
+else()
 add_executable(
 	MMBExplorer ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBExplorer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBFile.cpp
@@ -25,6 +36,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
 	)
+endif()
 
 if( WIN32 )
 # Generate source control version file
