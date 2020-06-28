@@ -677,7 +677,9 @@ void CMMBEGui::ShowAboutDialog()
     {
         return;
     }
-
+#ifdef WIN32
+    aboutDialog->resizable( aboutDialog );
+#endif
     aboutDialog->box(FL_FLAT_BOX);
     aboutDialog->color( FL_DARK2 );
     aboutDialog->set_modal();
