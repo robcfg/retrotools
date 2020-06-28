@@ -26,8 +26,8 @@ public:
 
 	virtual int handle(int _event);
 
-    void SetDiscContentWidget( Fl_Select_Browser* _diskContent );
-    void RefreshDiscContent( unsigned char* _data, size_t _dataSize );
+    void SetDiskContentWidget( Fl_Select_Browser* _diskContent );
+    void RefreshDiskContent( unsigned char* _data, size_t _dataSize );
     
 private:
     Fl_Select_Browser* mDiskContent = nullptr;

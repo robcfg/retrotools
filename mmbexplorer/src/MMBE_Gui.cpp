@@ -52,12 +52,12 @@ int CAppWindow::handle( int _event )
     return(ret);
 }
 
-void CAppWindow::SetDiscContentWidget( Fl_Select_Browser* _diskContent )
+void CAppWindow::SetDiskContentWidget( Fl_Select_Browser* _diskContent )
 {
     mDiskContent = _diskContent;
 }
 
-void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
+void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
 {
     if( nullptr == mDiskContent )
     {
@@ -69,14 +69,14 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
     if( nullptr != _data )
     {
         stringstream strStream;
-        DFSDisk disc;
+        DFSDisk disk;
 
-        DFSRead( _data, _dataSize, disc );
+        DFSRead( _data, _dataSize, disk );
 
-        string discNameStr = "@fDisc name: " + disc.name;
-        mDiskContent->add( discNameStr.c_str() );
+        string diskNameStr = "@fDisk name: " + disk.name;
+        mDiskContent->add( diskNameStr.c_str() );
         string bootOptionStr = "@fBoot option: ";
-        bootOptionStr += BootOptionToString( disc.bootOption );
+        bootOptionStr += BootOptionToString( disk.bootOption );
         mDiskContent->add( bootOptionStr.c_str() );
         mDiskContent->add( "@f-+----------+------+-----+-----");
         mDiskContent->add( "@fD|File name |Size  |Load |Exec ");
@@ -84,7 +84,7 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
         
         size_t sectorsUsed = 2; // Filesystem sectors
 
-        for( auto dfsFile : disc.files )
+        for( auto dfsFile : disk.files )
         {
             string fileStr = "@f";
             fileStr += dfsFile.directory;
@@ -143,7 +143,7 @@ void CAppWindow::RefreshDiscContent( unsigned char* _data, size_t _dataSize )
 
         mDiskContent->add( "@f-+----------+------+-----+-----");
         string freeSpaceStr = "@f  Free Space ";
-        string paddedFreeSpace = to_string( (disc.sectorsNum - min(sectorsUsed, (size_t)disc.sectorsNum)) * 256 );
+        string paddedFreeSpace = to_string( (disk.sectorsNum - min(sectorsUsed, (size_t)disk.sectorsNum)) * 256 );
         if( paddedFreeSpace.length() < 6 )
         {
             paddedFreeSpace.insert( paddedFreeSpace.begin(), 6 - paddedFreeSpace.length(), ' ' );
@@ -351,7 +351,7 @@ void CMMBETable::SelectSlot( size_t _slot )
     if( nullptr == mMMB || _slot >= mMMB->GetNumberOfDisks() )
     {
         mSelectedSlot = (size_t)-1;
-        ((CAppWindow*)this->window())->RefreshDiscContent( nullptr, 0 );
+        ((CAppWindow*)this->window())->RefreshDiskContent( nullptr, 0 );
     }
     else
     {
@@ -361,12 +361,12 @@ void CMMBETable::SelectSlot( size_t _slot )
             string errorString;
             unsigned char* data = new unsigned char[MMB_DISKSIZE];
             mMMB->ExtractImageInSlot( data, mSelectedSlot, errorString );
-            ((CAppWindow*)this->window())->RefreshDiscContent( data, MMB_DISKSIZE );
+            ((CAppWindow*)this->window())->RefreshDiskContent( data, MMB_DISKSIZE );
             delete[] data;
         }
         else
         {
-            ((CAppWindow*)this->window())->RefreshDiscContent( nullptr, 0 );
+            ((CAppWindow*)this->window())->RefreshDiskContent( nullptr, 0 );
         }
     }
 
@@ -442,7 +442,7 @@ void CMMBEGui::OpenMMB( const std::string& _filename )
     mFilenameBox->copy_label( filenameStr.c_str() );
 
     // Refresh contents
-    mMainWindow->RefreshDiscContent(nullptr,0);
+    mMainWindow->RefreshDiskContent(nullptr,0);
     mTable->redraw();
 }
 
@@ -551,11 +551,11 @@ void CMMBEGui::CreateControls()
     mTable->end();			      // end the Fl_Table group
 
     x += 492 + 10;
-    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 280, 384, "Disc content" );
+    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 280, 384, "Disk content" );
 	diskContent->color( FL_WHITE );
     diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_HOLD_BROWSER);
-    mMainWindow->SetDiscContentWidget( diskContent );
+    mMainWindow->SetDiskContentWidget( diskContent );
 }
 
 size_t CMMBEGui::GetSelectedSlot()
@@ -596,7 +596,7 @@ void CMMBEGui::InsertDisk ( const std::string& _filename, size_t _slot )
             fl_alert( "[ERROR] %s", errorString.c_str() );
         }
 
-        mMainWindow->RefreshDiscContent( pData, MMB_DISKSIZE);
+        mMainWindow->RefreshDiskContent( pData, MMB_DISKSIZE);
 
         delete[] pData;
     }
@@ -629,7 +629,7 @@ void CMMBEGui::RemoveDisk ( size_t _slot )
     }
     else
     {
-        mMainWindow->RefreshDiscContent( nullptr, 0 );
+        mMainWindow->RefreshDiskContent( nullptr, 0 );
     }
 
     // Refresh contents
