@@ -8,7 +8,7 @@ A manager of MMB disk collections for Acorn Computers 8-bit systems.
 
 I created this program to manage MMB files ( which are collections of disk images for systems like the Acorn BBC Micro and the Acorn Electron ) for use with my recently acquired ElkSD-Plus1 cartridge.
 
-Software on disks for these machines are stored as files called disk images. For use on the aforementioned cartidge, these disk images need to be packed into a MMB file, which contains an index and the disk images.
+Software on disks for these machines are stored as files called disk images. For use on the aforementioned cartridge, these disk images need to be packed into a MMB file, which contains an index and the disk images.
 
 MMBExplorer lets you create and edit MMB files, insert, remove and extract disk images, change attributes and peek the content of the disk.
 
