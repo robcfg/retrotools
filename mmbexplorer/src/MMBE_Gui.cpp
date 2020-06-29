@@ -78,15 +78,16 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
         string bootOptionStr = "@fBoot option: ";
         bootOptionStr += BootOptionToString( disk.bootOption );
         mDiskContent->add( bootOptionStr.c_str() );
-        mDiskContent->add( "@f-+----------+------+-----+-----");
-        mDiskContent->add( "@fD|File name |Size  |Load |Exec ");
-        mDiskContent->add( "@f-+----------+------+-----+-----");
+        mDiskContent->add( "@f-+-+----------+------+-----+-----");
+        mDiskContent->add( "@fL|D|File name |Size  |Load |Exec ");
+        mDiskContent->add( "@f-+-+----------+------+-----+-----");
         
         size_t sectorsUsed = 2; // Filesystem sectors
 
         for( auto dfsFile : disk.files )
         {
             string fileStr = "@f";
+            fileStr += dfsFile.locked ? "L " : "  ";
             fileStr += dfsFile.directory;
             fileStr += '.';
 
@@ -141,8 +142,8 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
             mDiskContent->add( fileStr.c_str() );
         }
 
-        mDiskContent->add( "@f-+----------+------+-----+-----");
-        string freeSpaceStr = "@f  Free Space ";
+        mDiskContent->add(    "@f-+-+----------+------+-----+-----");
+        string freeSpaceStr = "@f    Free Space ";
         string paddedFreeSpace = to_string( (disk.sectorsNum - min(sectorsUsed, (size_t)disk.sectorsNum)) * 256 );
         if( paddedFreeSpace.length() < 6 )
         {
@@ -442,7 +443,7 @@ void CMMBEGui::OpenMMB( const std::string& _filename )
     mFilenameBox->copy_label( filenameStr.c_str() );
 
     // Refresh contents
-    mMainWindow->RefreshDiskContent(nullptr,0);
+    mTable->SelectSlot( 0 );
     mTable->redraw();
 }
 
@@ -534,7 +535,7 @@ void CMMBEGui::CreateControls()
     mFilenameBox->align( FL_ALIGN_INSIDE | FL_ALIGN_LEFT );
     y += 21;
 
-    mTable = new CMMBETable( &mMMB, 10, y, 492, 384, 0 );
+    mTable = new CMMBETable( &mMMB, 10, y, 472, 384, 0 );
     mTable->begin();
 
     // Rows
@@ -550,8 +551,8 @@ void CMMBEGui::CreateControls()
     mTable->col_resize(0);        // enable column resizing
     mTable->end();			      // end the Fl_Table group
 
-    x += 492 + 10;
-    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 280, 384, "Disk content" );
+    x += 472 + 10;
+    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 300, 384, "Disk content" );
 	diskContent->color( FL_WHITE );
     diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_HOLD_BROWSER);

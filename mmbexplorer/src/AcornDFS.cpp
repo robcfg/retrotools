@@ -32,7 +32,8 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
         tmpEntry.name = fileName;
         sector_0_offset += 7;
 
-        tmpEntry.directory = _data[sector_0_offset++];
+        tmpEntry.directory = _data[sector_0_offset] & 0x7F;
+        tmpEntry.locked    = (_data[sector_0_offset++] & 0x80) != 0;
 
         // Sector 1
         tmpEntry.loadAddress =   _data[sector_1_offset++];

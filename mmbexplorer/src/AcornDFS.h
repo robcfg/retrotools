@@ -11,6 +11,7 @@ struct DFSEntry
     unsigned int  execAddress;
     unsigned int  fileSize;
     unsigned int  startSector;
+    bool          locked;
 };
 
 struct DFSDisk
