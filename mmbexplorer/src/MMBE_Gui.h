@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Table.H>
 #include "MMBFile.h"
@@ -39,13 +40,27 @@ private:
 class CMMBETable : public Fl_Table
 {
 public:
+    enum EMMBETable_SelectionType
+    {
+        EMMBETable_Single,
+        EMMBETable_SingleAdd,
+        EMMBETable_Multiple
+    };
+
     CMMBETable( CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label = 0 );
     virtual ~CMMBETable();
 
     void draw_cell( TableContext context, int _row = 0, int _col = 0, int _x = 0, int _y = 0, int _w = 0, int _h = 0 );
 
-    void   SelectSlot     ( size_t _slot );
-    size_t GetSelectedSlot();
+    void   SelectSlot      ( size_t _slot, EMMBETable_SelectionType _selectionType );
+    bool   IsSlotSelected  ( size_t _slot );
+    size_t GetSelectedSlot ();
+    size_t GetSelectionSize();
+
+    const std::vector<size_t>& GetSelection();
+    
+    void LockSelectedDisks  ();
+    void UnlockSelectedDisks();
 
     void DoRedraw();
 
@@ -55,12 +70,17 @@ private:
     void DrawUnused( int _x, int _y, int _w, int _h );
     int  handle( int _event );
 
+    void AddSlotToSelection( size_t _slot );
+    void RemoveSlotFromSelection( size_t _slot );
+
     Fl_Pixmap* mIconEmpty    = nullptr;
     Fl_Pixmap* mIconUnlocked = nullptr;
     Fl_Pixmap* mIconLocked   = nullptr;
 
     CMMBFile* mMMB = nullptr;
 
+    std::vector<size_t> mSelectedSlots; 
+    size_t mLastSelectedSlot = (size_t)-1;   
     size_t mSelectedSlot = (size_t)-1;
 };
 
@@ -85,8 +105,13 @@ public:
     void LockDisk   ( size_t _slot );
     void UnlockDisk ( size_t _slot );
 
-    size_t GetSelectedSlot ();
-    size_t GetNumberOfSlots() const;
+    void RemoveSelectedDisks();
+    void LockSelectedDisks  ();
+    void UnlockSelectedDisks();
+
+    size_t GetSelectionSize ();
+    size_t GetSelectedSlot  ();
+    size_t GetNumberOfSlots () const;
 
     void ShowAboutDialog();
 

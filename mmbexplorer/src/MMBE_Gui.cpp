@@ -219,6 +219,16 @@ int CMMBETable::handle( int _event )
     cursor2rowcol ( row, col, rf );
     size_t slot = (col * rows()) + row;
 
+    EMMBETable_SelectionType selectionType = EMMBETable_Single;
+    if( Fl::event_shift() )
+    {
+        selectionType = EMMBETable_Multiple;
+    }
+    else if( Fl::event_command() | Fl::event_ctrl() )
+    {
+        selectionType = EMMBETable_SingleAdd;
+    }
+
     switch( _event )
     {
         case FL_RELEASE:
@@ -232,7 +242,7 @@ int CMMBETable::handle( int _event )
             switch( Fl::event_button() )
             {
                 case FL_LEFT_MOUSE:
-                    SelectSlot( slot );
+                    SelectSlot( slot, selectionType );
                     break;
                 default:
                     break;
@@ -273,7 +283,7 @@ int CMMBETable::handle( int _event )
                 fl_alert("[ERROR] %s",errorString.c_str());
             }
 
-            SelectSlot( slot );
+            SelectSlot( slot, EMMBETable_Single );
 
             return 1;
         }
@@ -288,7 +298,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
     string tmp;
     char cellData[32] = {0};
     size_t slot = (_col*32)+_row;
-    bool selected = slot == mSelectedSlot;
+    bool selected = IsSlotSelected( slot );
 
     switch ( context ) 
     {
@@ -347,31 +357,113 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
     }
 }
 
-void CMMBETable::SelectSlot( size_t _slot )
+void CMMBETable::SelectSlot( size_t _slot, EMMBETable_SelectionType _selectionType )
 {
     if( nullptr == mMMB || _slot >= mMMB->GetNumberOfDisks() )
     {
-        mSelectedSlot = (size_t)-1;
+        mLastSelectedSlot = (size_t)-1;
+        mSelectedSlots.clear();
         ((CAppWindow*)this->window())->RefreshDiskContent( nullptr, 0 );
     }
     else
     {
-        mSelectedSlot = (mSelectedSlot == _slot) ? (size_t)-1 : _slot;
-        if( mSelectedSlot < mMMB->GetNumberOfDisks() )
+        if( _selectionType == EMMBETable_Single )
         {
-            string errorString;
-            unsigned char* data = new unsigned char[MMB_DISKSIZE];
-            mMMB->ExtractImageInSlot( data, mSelectedSlot, errorString );
-            ((CAppWindow*)this->window())->RefreshDiskContent( data, MMB_DISKSIZE );
-            delete[] data;
+            // Single click.
+            // Deselect all other slots, select the clicked one.
+            size_t selectionSize = GetSelectionSize();
+            if( selectionSize > 1 || selectionSize == 0 )
+            {
+                mSelectedSlots.clear();
+                AddSlotToSelection( _slot );
+            }
+            else if( selectionSize == 1 )
+            {
+                if( IsSlotSelected( _slot ) )
+                {
+                    RemoveSlotFromSelection( _slot );
+                }
+                else
+                {
+                    mSelectedSlots.clear();
+                    AddSlotToSelection( _slot );
+                }
+            }
         }
-        else
+        else if( _selectionType == EMMBETable_SingleAdd )
         {
-            ((CAppWindow*)this->window())->RefreshDiskContent( nullptr, 0 );
+            // Single click with Command or Control keys pressed.
+            // Change the clicked widget state.
+            if( IsSlotSelected( _slot ) )
+            {
+                RemoveSlotFromSelection( _slot );
+            }
+            else
+            {
+                AddSlotToSelection( _slot );
+            }
+        }
+        else // EMMBETable_Multiple
+        {
+            // Selects range
+            if( mLastSelectedSlot != (size_t)-1 && mLastSelectedSlot != _slot )
+            {
+                mSelectedSlots.clear();
+
+                size_t startSlot = min( mLastSelectedSlot, _slot );
+                size_t endSlot   = max( mLastSelectedSlot, _slot );
+
+                for( ; startSlot <= endSlot; ++startSlot )
+                {
+                    if( !IsSlotSelected(startSlot) )
+                    {
+                        mSelectedSlots.push_back( startSlot );
+                    }
+                }
+            }
         }
     }
 
+    // Refresh contents
+    mLastSelectedSlot = _slot;
+
+    if( mSelectedSlots.size() == 1 )
+    {
+        string errorString;
+        unsigned char* data = new unsigned char[MMB_DISKSIZE];
+        mMMB->ExtractImageInSlot( data, mSelectedSlots[0], errorString );
+        ((CAppWindow*)this->window())->RefreshDiskContent( data, MMB_DISKSIZE );
+        delete[] data;
+    }
+    else
+    {
+        ((CAppWindow*)this->window())->RefreshDiskContent( nullptr, 0 );
+    }
+
     redraw();
+}
+
+bool CMMBETable::IsSlotSelected( size_t _slot )
+{
+    return std::find( mSelectedSlots.begin(), mSelectedSlots.end(), _slot ) != mSelectedSlots.end();
+}
+
+void CMMBETable::AddSlotToSelection( size_t _slot )
+{
+    vector<size_t>::const_iterator slotIterator = std::find( mSelectedSlots.begin(), mSelectedSlots.end(), _slot );
+    if( slotIterator == mSelectedSlots.end() )
+    {
+        mSelectedSlots.push_back( _slot );
+    }
+}
+
+void CMMBETable::RemoveSlotFromSelection( size_t _slot )
+{
+    vector<size_t>::const_iterator slotIterator = std::find( mSelectedSlots.begin(), mSelectedSlots.end(), _slot );
+    if( slotIterator != mSelectedSlots.end() )
+    {
+        mSelectedSlots.erase( slotIterator );
+    }
 }
 
 void CMMBETable::DoRedraw()
@@ -384,6 +476,15 @@ size_t CMMBETable::GetSelectedSlot()
     return mSelectedSlot;
 }
 
+size_t CMMBETable::GetSelectionSize()
+{
+    return mSelectedSlots.size();
+}
+
+const std::vector<size_t>& CMMBETable::GetSelection()
+{
+    return mSelectedSlots;
+}
 
 CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 {
@@ -443,7 +544,7 @@ void CMMBEGui::OpenMMB( const std::string& _filename )
     mFilenameBox->copy_label( filenameStr.c_str() );
 
     // Refresh contents
-    mTable->SelectSlot( 0 );
+    mTable->SelectSlot( 0, CMMBETable::EMMBETable_Single );
     mTable->redraw();
 }
 
@@ -489,7 +590,7 @@ void CMMBEGui::CloseMMB()
     string filenameStr = "File: ";
     mFilenameBox->copy_label( filenameStr.c_str() );
 
-    mTable->SelectSlot( MMB_MAXNUMBEROFDISKS );
+    mTable->SelectSlot( MMB_MAXNUMBEROFDISKS, CMMBETable::EMMBETable_Single );
 
     // Refresh contents
     mTable->redraw();
@@ -661,6 +762,35 @@ void CMMBEGui::UnlockDisk ( size_t _slot )
 
     // Refresh contents
     mTable->redraw();
+}
+
+void CMMBEGui::RemoveSelectedDisks()
+{
+    for( auto slot : mTable->GetSelection() )
+    {
+        RemoveDisk( slot );
+    }
+}
+
+void CMMBEGui::LockSelectedDisks()
+{
+    for( auto slot : mTable->GetSelection() )
+    {
+        LockDisk( slot );
+    }
+}
+
+void CMMBEGui::UnlockSelectedDisks()
+{
+    for( auto slot : mTable->GetSelection() )
+    {
+        UnlockDisk( slot );
+    }
+}
+
+size_t CMMBEGui::GetSelectionSize()
+{
+    return mTable->GetSelectionSize();
 }
 
 void CMMBEGui::ShowAboutDialog()

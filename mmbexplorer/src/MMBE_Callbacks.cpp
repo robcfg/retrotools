@@ -135,13 +135,18 @@ void removeDisk_cb( Fl_Widget* pWidget, void* _gui )
 		return;
 	}
 
-	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
-	if( slot == (size_t)-1 )
+	if( pGui->GetSelectionSize() > 0 )
 	{
-		return;
+		pGui->RemoveSelectedDisks();
 	}
-
-	pGui->RemoveDisk( slot );
+	else
+	{
+		size_t slot = ChooseSlot();
+		if( slot != (size_t)-1 )
+		{
+			pGui->RemoveDisk( slot );
+		}
+	}
 }
 
 void lockDisk_cb( Fl_Widget* pWidget, void* _gui )
@@ -152,13 +157,18 @@ void lockDisk_cb( Fl_Widget* pWidget, void* _gui )
 		return;
 	}
 
-	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
-	if( slot == (size_t)-1 )
+	if( pGui->GetSelectionSize() > 0 )
 	{
-		return;
+		pGui->LockSelectedDisks();
 	}
-
-	pGui->LockDisk( slot );
+	else
+	{
+		size_t slot = ChooseSlot();
+		if( slot != (size_t)-1 )
+		{
+			pGui->LockDisk( slot );
+		}
+	}
 }
 
 void unlock_cb( Fl_Widget* pWidget, void* _gui )
@@ -169,13 +179,18 @@ void unlock_cb( Fl_Widget* pWidget, void* _gui )
 		return;
 	}
 
-	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
-	if( slot == (size_t)-1 )
+	if( pGui->GetSelectionSize() > 0 )
 	{
-		return;
+		pGui->UnlockSelectedDisks();
 	}
-
-	pGui->UnlockDisk( slot );
+	else
+	{
+		size_t slot = ChooseSlot();
+		if( slot != (size_t)-1 )
+		{
+			pGui->UnlockDisk( slot );
+		}
+	}
 }
 
 void menuAbout_cb ( Fl_Widget* pWidget, void* _gui )
