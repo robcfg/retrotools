@@ -471,11 +471,6 @@ void CMMBETable::DoRedraw()
     redraw();
 }
 
-size_t CMMBETable::GetSelectedSlot()
-{
-    return mSelectedSlot;
-}
-
 size_t CMMBETable::GetSelectionSize()
 {
     return mSelectedSlots.size();
@@ -660,16 +655,6 @@ void CMMBEGui::CreateControls()
     mMainWindow->SetDiskContentWidget( diskContent );
 }
 
-size_t CMMBEGui::GetSelectedSlot()
-{
-    if( nullptr == mTable )
-    {
-        return (size_t)-1;
-    }
-    
-    return mTable->GetSelectedSlot();
-}
-
 size_t CMMBEGui::GetNumberOfSlots() const
 {
     return mMMB.GetNumberOfDisks();    
@@ -685,6 +670,12 @@ void CMMBEGui::InsertDisk ( const std::string& _filename, size_t _slot )
     }
     else
     {
+        if( GetSelectionSize() > 1 )
+        {
+            mTable->redraw();
+            return;
+        }
+
         unsigned char* pData = new unsigned char[MMB_DISKSIZE];
         if( nullptr == pData )
         {
@@ -698,7 +689,14 @@ void CMMBEGui::InsertDisk ( const std::string& _filename, size_t _slot )
             fl_alert( "[ERROR] %s", errorString.c_str() );
         }
 
-        mMainWindow->RefreshDiskContent( pData, MMB_DISKSIZE);
+        if( mTable->IsSlotSelected(_slot) )
+        {
+            mMainWindow->RefreshDiskContent( pData, MMB_DISKSIZE);    
+        }
+        else
+        {
+            mMainWindow->RefreshDiskContent( nullptr, 0);
+        }
 
         delete[] pData;
     }
@@ -762,6 +760,63 @@ void CMMBEGui::UnlockDisk ( size_t _slot )
 
     // Refresh contents
     mTable->redraw();
+}
+
+void CMMBEGui::ExtractSelectedDisks()
+{
+    if( GetSelectionSize() == 0 )
+    {
+        size_t slot = ChooseSlot();
+		std::string filename;
+		if( !ChooseFilename( filename, "SSD files\t*.ssd\n", ".", true) )
+			return;
+
+		ExtractDisk( filename, slot );
+    }
+    else if( GetSelectionSize() == 1 )
+    {
+   		std::string filename;
+		if( !ChooseFilename( filename, "SSD files\t*.ssd\n", ".", true) )
+			return;
+
+        ExtractDisk( filename, mTable->GetSelection()[0] );
+    }
+    else
+    {
+        // Choose export folder
+        string folderName;
+        if( !ChooseFilename( folderName, "", "", true, true ) )
+            return;
+
+    #ifdef WIN32
+        if( folderName.back() != '\\' ) folderName += '\\';
+    #else
+        if( folderName.back() != '/' ) folderName += '/';
+    #endif
+
+        for( auto slot : mTable->GetSelection() )
+        {
+            unsigned char diskAttribute = mMMB.GetEntryAttribute(slot);
+            if( MMB_DISKATTRIBUTE_INVALID == diskAttribute || MMB_DISKATTRIBUTE_UNFORMATTED == diskAttribute )
+            {
+                continue;
+            }
+
+            string filename = folderName;
+
+            string slotStr = to_string(slot);
+            if( slotStr.length() < 3 )
+            {
+                slotStr.insert( slotStr.begin(), 3 - slotStr.length(), '0');
+            }
+            filename += slotStr;
+            filename += '_';
+            filename += mMMB.GetEntryName( slot );
+            filename += ".ssd";
+
+            ExtractDisk( filename, slot );
+        }
+    }
 }
 
 void CMMBEGui::RemoveSelectedDisks()
@@ -864,4 +919,9 @@ void CMMBEGui::ShowAboutDialog()
 
     aboutDialog->end();
     aboutDialog->show();
+}
+
+const std::vector<size_t>& CMMBEGui::GetSelection()
+{
+    return mTable->GetSelection();
 }

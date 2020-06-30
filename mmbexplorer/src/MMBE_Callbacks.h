@@ -18,5 +18,5 @@ void lockDisk_cb    ( Fl_Widget* pWidget, void* _gui );
 void unlock_cb      ( Fl_Widget* pWidget, void* _gui );
 
 // Auxiliary functions
-bool ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog );
-
+bool   ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory = false );
+size_t ChooseSlot    ();

@@ -9,24 +9,33 @@
 
 using namespace std;
 
-bool ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog )
+bool ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory )
 {
 	// Create native chooser
 	Fl_Native_File_Chooser native;
-	if( bSaveAsDialog )
+	if( bDirectory )
 	{
-		native.title("Save as");
-		native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-		native.options(Fl_Native_File_Chooser::SAVEAS_CONFIRM | Fl_Native_File_Chooser::USE_FILTER_EXT);
+		native.title( bSaveAsDialog ? "Save to folder" : "Choose folder" );
+		native.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+		native.options(Fl_Native_File_Chooser::NEW_FOLDER);
 	}
 	else
 	{
-		native.title("Select file to open");
-		native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+		if( bSaveAsDialog )
+		{
+			native.title("Save as");
+			native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
+			native.options(Fl_Native_File_Chooser::SAVEAS_CONFIRM | Fl_Native_File_Chooser::USE_FILTER_EXT);
+		}
+		else
+		{
+			native.title("Select file to open");
+			native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+		}
+		native.filter( filter.c_str() );
+		native.preset_file( preset.c_str() );
 	}
-	native.filter( filter.c_str() );
-	native.preset_file( preset.c_str() );
-	
+
 	// Show native chooser
 	switch ( native.show() )
 	{
@@ -93,7 +102,7 @@ void insertDisk_cb( Fl_Widget* pWidget, void* _gui )
 		return;
 	}
 
-	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
+	size_t slot = pGui->GetSelectionSize() == 1 ? pGui->GetSelection()[0] : ChooseSlot();
 	if( slot == (size_t)-1 )
 	{
 		return;
@@ -114,17 +123,7 @@ void extractDisk_cb( Fl_Widget* pWidget, void* _gui )
 		return;
 	}
 
-	size_t slot = pGui->GetSelectedSlot() != (size_t)-1 ? pGui->GetSelectedSlot() : ChooseSlot();
-	if( slot == (size_t)-1 )
-	{
-		return;
-	}
-
-	std::string filename;
-	if( !ChooseFilename( filename, "SSD files\t*.ssd\n", ".", true) )
-		return;
-
-	pGui->ExtractDisk( filename, slot );
+	pGui->ExtractSelectedDisks();
 }
 
 void removeDisk_cb( Fl_Widget* pWidget, void* _gui )

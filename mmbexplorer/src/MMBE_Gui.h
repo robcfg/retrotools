@@ -54,7 +54,6 @@ public:
 
     void   SelectSlot      ( size_t _slot, EMMBETable_SelectionType _selectionType );
     bool   IsSlotSelected  ( size_t _slot );
-    size_t GetSelectedSlot ();
     size_t GetSelectionSize();
 
     const std::vector<size_t>& GetSelection();
@@ -81,7 +80,6 @@ private:
 
     std::vector<size_t> mSelectedSlots; 
     size_t mLastSelectedSlot = (size_t)-1;   
-    size_t mSelectedSlot = (size_t)-1;
 };
 
 //******************************************
@@ -105,13 +103,15 @@ public:
     void LockDisk   ( size_t _slot );
     void UnlockDisk ( size_t _slot );
 
-    void RemoveSelectedDisks();
-    void LockSelectedDisks  ();
-    void UnlockSelectedDisks();
+    void ExtractSelectedDisks();
+    void RemoveSelectedDisks ();
+    void LockSelectedDisks   ();
+    void UnlockSelectedDisks ();
 
     size_t GetSelectionSize ();
-    size_t GetSelectedSlot  ();
     size_t GetNumberOfSlots () const;
+
+    const std::vector<size_t>& GetSelection();
 
     void ShowAboutDialog();
 
