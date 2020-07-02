@@ -266,24 +266,59 @@ int CMMBETable::handle( int _event )
 
             std::string pastedText = Fl::event_text();
 
-            // Check for file:// protocol
+            // Split string in case we have several files to paste
+            vector<string> fileNames;
+            istringstream stringStream(pastedText);
+            string tempString;
+            bool wasInsertionOk = true;
+            string failedFiles;
+
+            while (getline(stringStream, tempString, '\n'))
+            {
+                cout << tempString << endl;
+                fileNames.push_back(tempString);
+            }
             std::string fileProtocol = "file://";
-            if( 0 == pastedText.compare(0, fileProtocol.length(), fileProtocol) )
+
+            // Clear selection
+            SelectSlot( MMB_MAXNUMBEROFDISKS, CMMBETable::EMMBETable_Single );
+            bool isFirstSlot = true;
+
+            for( auto filename : fileNames )
             {
-                pastedText = pastedText.substr( fileProtocol.length(), std::string::npos );
+                if( slot >= mMMB->GetNumberOfDisks() )
+                {
+                    break;
+                }
+
+                // Check for file:// protocol
+                if( 0 == filename.compare(0, fileProtocol.length(), fileProtocol) )
+                {
+                    filename = filename.substr( fileProtocol.length(), std::string::npos );
+                }
+
+                // Remove unwanted characters...
+                filename.erase(std::remove(filename.begin(), filename.end(), 0xD), filename.end());
+                filename.erase(std::remove(filename.begin(), filename.end(), 0xA), filename.end());
+
+                std::string errorString;
+                if( !mMMB->InsertImageInSlot( filename, slot, errorString ) )
+                {
+                    wasInsertionOk = false;
+
+                    failedFiles += filename;
+                    failedFiles += "\n";
+                }
+
+                SelectSlot( slot, isFirstSlot ? CMMBETable::EMMBETable_Single : CMMBETable::EMMBETable_SingleAdd );
+                isFirstSlot = false;
+                ++slot;
             }
 
-            // Remove unwanted characters...
-            pastedText.erase(std::remove(pastedText.begin(), pastedText.end(), 0xD), pastedText.end());
-            pastedText.erase(std::remove(pastedText.begin(), pastedText.end(), 0xA), pastedText.end());
-
-            std::string errorString;
-            if( !mMMB->InsertImageInSlot( pastedText, slot, errorString ) )
+            if( !wasInsertionOk )
             {
-                fl_alert("[ERROR] %s",errorString.c_str());
+                fl_alert("[ERROR] Could not add these files:\n%s",failedFiles.c_str());
             }
-
-            SelectSlot( slot, EMMBETable_Single );
 
             return 1;
         }
@@ -415,10 +450,7 @@ void CMMBETable::SelectSlot( size_t _slot, EMMBETable_SelectionType _selectionTy
 
                 for( ; startSlot <= endSlot; ++startSlot )
                 {
-                    if( !IsSlotSelected(startSlot) )
-                    {
-                        mSelectedSlots.push_back( startSlot );
-                    }
+                    mSelectedSlots.push_back( startSlot );
                 }
             }
         }
