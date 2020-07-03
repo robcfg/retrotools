@@ -6,7 +6,6 @@
 #include <sstream>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
-#include <FL/Fl_Select_Browser.H>
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
@@ -23,6 +22,9 @@
 
 using namespace std;
 
+//******************************************
+//* CAppWindow class
+//******************************************
 CAppWindow::CAppWindow( int _w, int _h, const char* _label ) : 
         Fl_Window( _w, _h, _label ) 
 {
@@ -154,6 +156,110 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
     }
 }
 
+//******************************************
+//* CMMBESelectBrowser class
+//******************************************
+CMMBESelectBrowser::CMMBESelectBrowser( int _x, int _y, int _w, int _h, const char* _label ) : 
+                    Fl_Select_Browser( _x, _y, _w, _h, _label )
+{
+
+}
+
+CMMBESelectBrowser::~CMMBESelectBrowser()
+{
+
+}
+
+int CMMBESelectBrowser::handle(int _event)
+{
+    int retVal = Fl_Select_Browser::handle( _event );
+
+    switch( _event )
+    {
+        // Receive a dropped item
+        case FL_DND_ENTER:
+        case FL_DND_RELEASE:
+        case FL_DND_LEAVE:
+        case FL_DND_DRAG:
+            retVal = 1;
+            break;
+
+        case FL_PASTE:
+        {
+            /*if( nullptr == mMMB || slot >= mMMB->GetNumberOfDisks() )
+            {
+                return 1;
+            }
+
+            std::string pastedText = Fl::event_text();
+
+            // Split string in case we have several files to paste
+            vector<string> fileNames;
+            istringstream stringStream(pastedText);
+            string tempString;
+            bool wasInsertionOk = true;
+            string failedFiles;
+
+            while (getline(stringStream, tempString, '\n'))
+            {
+                cout << tempString << endl;
+                fileNames.push_back(tempString);
+            }
+            std::string fileProtocol = "file://";
+
+            // Clear selection
+            SelectSlot( MMB_MAXNUMBEROFDISKS, CMMBETable::EMMBETable_Single );
+            bool isFirstSlot = true;
+
+            for( auto filename : fileNames )
+            {
+                if( slot >= mMMB->GetNumberOfDisks() )
+                {
+                    break;
+                }
+
+                // Check for file:// protocol
+                if( 0 == filename.compare(0, fileProtocol.length(), fileProtocol) )
+                {
+                    filename = filename.substr( fileProtocol.length(), std::string::npos );
+                }
+
+                // Remove unwanted characters...
+                filename.erase(std::remove(filename.begin(), filename.end(), 0xD), filename.end());
+                filename.erase(std::remove(filename.begin(), filename.end(), 0xA), filename.end());
+
+                std::string errorString;
+                if( !mMMB->InsertImageInSlot( filename, slot, errorString ) )
+                {
+                    wasInsertionOk = false;
+
+                    failedFiles += filename;
+                    failedFiles += "\n";
+                }
+
+                SelectSlot( slot, isFirstSlot ? CMMBETable::EMMBETable_Single : CMMBETable::EMMBETable_SingleAdd );
+                isFirstSlot = false;
+                ++slot;
+            }
+
+            if( !wasInsertionOk )
+            {
+                fl_alert("[ERROR] Could not add these files:\n%s",failedFiles.c_str());
+            }
+
+            return 1;*/
+            cout << "Le vien pasté " << Fl::event_text() << endl;
+            retVal = 1;
+        }
+        break;
+    }
+
+    return retVal;
+}
+
+//******************************************
+//* CMMBETable class
+//******************************************
 CMMBETable::CMMBETable( CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label ) : Fl_Table( _x, _y, _w, _h, _label )
 {
     mIconEmpty    = new Fl_Pixmap( iconEmpty );
@@ -513,6 +619,9 @@ const std::vector<size_t>& CMMBETable::GetSelection()
     return mSelectedSlots;
 }
 
+//******************************************
+//* CMMBEGui class
+//******************************************
 CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 {
     Fl::visual(FL_RGB);
@@ -645,7 +754,21 @@ void CMMBEGui::CreateMenuBar()
 	mMenuBar->add( "&Slot/&Extract disk"  , mModifierKey+'e', extractDisk_cb , (void*)this, 0 );
 	mMenuBar->add( "&Slot/&Remove disk"   , mModifierKey+'r', removeDisk_cb  , (void*)this, 0 );
 	mMenuBar->add( "&Slot/&Lock disk"     , mModifierKey+'l', lockDisk_cb    , (void*)this, 0 );
-	mMenuBar->add( "&Slot/&Unlock disk"   , mModifierKey+'u', unlock_cb      , (void*)this, 0 );
+	mMenuBar->add( "&Slot/&Unlock disk"   , mModifierKey+'u', unlockDisk_cb  , (void*)this, 0 );
+
+    // Disk menu
+    mMenuBar->add( "&Disk/&Format disk"   , FL_SHIFT+mModifierKey+'f', formatDisk_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Name disk"     , FL_SHIFT+mModifierKey+'n', nameDisk_cb    , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Insert file"   , FL_SHIFT+mModifierKey+'i', insertFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Extract file"  , FL_SHIFT+mModifierKey+'e', extractFile_cb , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Remove file"   , FL_SHIFT+mModifierKey+'r', removeFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Lock file"     , FL_SHIFT+mModifierKey+'l', lockFile_cb    , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Unlock file"   , FL_SHIFT+mModifierKey+'u', unlockFile_cb  , (void*)this, 0 );
+
+    mMenuBar->add( "&Disk/&Boot option/&None"   , FL_SHIFT+mModifierKey+'0', unlockFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&Load"   , FL_SHIFT+mModifierKey+'1', unlockFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&Run"    , FL_SHIFT+mModifierKey+'2', unlockFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&Exec"   , FL_SHIFT+mModifierKey+'3', unlockFile_cb  , (void*)this, 0 );
 
     // Help menu
 	#ifndef __APPLE__
@@ -680,10 +803,10 @@ void CMMBEGui::CreateControls()
     mTable->end();			      // end the Fl_Table group
 
     x += 472 + 10;
-    Fl_Select_Browser* diskContent = new Fl_Select_Browser( x, y, 300, 384, "Disk content" );
+    CMMBESelectBrowser* diskContent = new CMMBESelectBrowser( x, y, 300, 384, "Disk content" );
 	diskContent->color( FL_WHITE );
     diskContent->align( FL_ALIGN_TOP );
-	diskContent->type(FL_HOLD_BROWSER);
+	diskContent->type(FL_MULTI_BROWSER);
     mMainWindow->SetDiskContentWidget( diskContent );
 }
 

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Select_Browser.H>
 #include <FL/Fl_Table.H>
 #include "MMBFile.h"
 
@@ -13,7 +14,6 @@
 #endif
 class Fl_Table;
 class Fl_Pixmap;
-class Fl_Select_Browser;
 
 //******************************************
 //* CAppWindow class
@@ -32,6 +32,19 @@ public:
     
 private:
     Fl_Select_Browser* mDiskContent = nullptr;
+};
+
+//******************************************
+//* CMMBESelectBrowser class
+//******************************************
+class CMMBESelectBrowser : public Fl_Select_Browser
+{
+public:
+    CMMBESelectBrowser( int _x, int _y, int _w, int _h, const char* _label = 0 );
+    virtual ~CMMBESelectBrowser();
+
+	virtual int handle(int _event);
+
 };
 
 //******************************************

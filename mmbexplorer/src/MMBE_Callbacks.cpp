@@ -170,7 +170,7 @@ void lockDisk_cb( Fl_Widget* pWidget, void* _gui )
 	}
 }
 
-void unlock_cb( Fl_Widget* pWidget, void* _gui )
+void unlockDisk_cb( Fl_Widget* pWidget, void* _gui )
 {
 	CMMBEGui* pGui = (CMMBEGui*)_gui;
 	if( 0 == pGui->GetNumberOfSlots() )
@@ -198,3 +198,38 @@ void menuAbout_cb ( Fl_Widget* pWidget, void* _gui )
 	pGui->ShowAboutDialog();	
 }
 
+// Disk menu callbacks
+void formatDisk_cb  ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
+
+void nameDisk_cb  ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
+
+void insertFile_cb  ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
+
+void extractFile_cb ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
+
+void removeFile_cb  ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
+
+void lockFile_cb    ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
+
+void unlockFile_cb  ( Fl_Widget* pWidget, void* _gui )
+{
+
+}
