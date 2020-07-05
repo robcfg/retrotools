@@ -31,6 +31,7 @@ public:
     size_t GetNumberOfDisks() const;
 
     bool InsertImageInSlot  ( const std::string& _filename, size_t _slot, std::string& _errorString );
+    bool InsertImageInSlot  ( const unsigned char* _data, size_t _dataSize, size_t _slot, std::string& _errorString );
     bool ExtractImageInSlot ( const std::string& _filename, size_t _slot, std::string& _errorString );
     bool ExtractImageInSlot ( unsigned char* _data, size_t _slot, std::string& _errorString );
     bool LockImageInSlot    ( size_t _slot, std::string& _errorString );
@@ -41,6 +42,9 @@ public:
     
     const char*   GetEntryName     ( size_t _entry );
     unsigned char GetEntryAttribute( size_t _entry );
+
+    bool LockFile   ( size_t _slot, size_t _fileIndex, std::string& _errorString );
+    bool UnlockFile ( size_t _slot, size_t _fileIndex, std::string& _errorString );
 
 private:
     void ReadDirectory();

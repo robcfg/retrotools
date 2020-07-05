@@ -30,6 +30,8 @@ public:
     void SetDiskContentWidget( Fl_Select_Browser* _diskContent );
     void RefreshDiskContent( unsigned char* _data, size_t _dataSize );
     
+    void GetSelectedFiles( std::vector<int>& _dst );
+
 private:
     Fl_Select_Browser* mDiskContent = nullptr;
 };
@@ -68,6 +70,7 @@ public:
     void   SelectSlot      ( size_t _slot, EMMBETable_SelectionType _selectionType );
     bool   IsSlotSelected  ( size_t _slot );
     size_t GetSelectionSize();
+    void   ClearSelection();
 
     const std::vector<size_t>& GetSelection();
     
@@ -121,12 +124,24 @@ public:
     void LockSelectedDisks   ();
     void UnlockSelectedDisks ();
 
+    void FormatDisk ( size_t _slot );
+    void NameDisk   ( size_t _slot );
+    void InsertFile ( size_t _slot, const std::string& _filename );
+    void ExtractFile( size_t _slot, size_t _fileIndex, const std::string& _filename );
+    void RemoveFile ( size_t _slot, size_t _fileIndex );
+    void LockFile   ( size_t _slot, size_t _fileIndex );
+    void UnlockFile ( size_t _slot, size_t _fileIndex );
+
     size_t GetSelectionSize ();
     size_t GetNumberOfSlots () const;
 
     const std::vector<size_t>& GetSelection();
 
+    void GetSelectedFiles( std::vector<int>& _dst );
+
     void ShowAboutDialog();
+
+    void RefreshDiskContent( size_t _slot );
 
 private:
     void CreateMenuBar();

@@ -156,6 +156,19 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
     }
 }
 
+void CAppWindow::GetSelectedFiles( std::vector<int>& _dst )
+{
+    // Line numbers are 1 based. First 5 lines are the header lines,
+    // last two lines are the footer.
+    for( int line = 6; line <= mDiskContent->size() - 2; ++line )
+    {
+        if( mDiskContent->selected( line ) )
+        {
+            _dst.push_back( line - 6 );
+        }
+    }
+}
+
 //******************************************
 //* CMMBESelectBrowser class
 //******************************************
@@ -619,6 +632,11 @@ const std::vector<size_t>& CMMBETable::GetSelection()
     return mSelectedSlots;
 }
 
+void CMMBETable::ClearSelection()
+{
+    mSelectedSlots.clear();
+}
+
 //******************************************
 //* CMMBEGui class
 //******************************************
@@ -1079,4 +1097,96 @@ void CMMBEGui::ShowAboutDialog()
 const std::vector<size_t>& CMMBEGui::GetSelection()
 {
     return mTable->GetSelection();
+}
+
+void CMMBEGui::FormatDisk( size_t _slot )
+{
+    std::vector<unsigned char> data;
+    data.resize( MMB_DISKSIZE, 0 );
+
+    DFSDisk tmpDisk;
+    if( !DFSWrite( data.data(), MMB_DISKSIZE, tmpDisk ) )
+    {
+        fl_alert( "[ERROR] Number of sectors in image and image size don't match." );
+        return;
+    }
+
+    std::string errorString;
+    if( !mMMB.InsertImageInSlot( data.data(), MMB_DISKSIZE, _slot, errorString ) )
+    {
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+    }
+
+    mTable->redraw();
+
+    if( mTable->GetSelectionSize() == 1 )
+    {
+        size_t slot = mTable->GetSelection()[0];
+        mTable->ClearSelection();
+        mTable->SelectSlot( slot, CMMBETable::EMMBETable_Single );
+    }
+}
+
+void CMMBEGui::NameDisk( size_t _slot )
+{
+
+}
+
+void CMMBEGui::InsertFile( size_t _slot, const std::string& _filename )
+{
+
+}
+
+void CMMBEGui::ExtractFile( size_t _slot, size_t _fileIndex, const std::string& _filename )
+{
+
+}
+
+void CMMBEGui::RemoveFile( size_t _slot, size_t _fileIndex )
+{
+
+}
+
+void CMMBEGui::LockFile( size_t _slot, size_t _fileIndex )
+{
+    std::string errorString;
+    if( !mMMB.LockFile( _slot, _fileIndex, errorString ) )
+    {
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+    }
+
+    mTable->redraw();
+
+    RefreshDiskContent( _slot );
+}
+
+void CMMBEGui::UnlockFile( size_t _slot, size_t _fileIndex )
+{
+    std::string errorString;
+    if( !mMMB.UnlockFile( _slot, _fileIndex, errorString ) )
+    {
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+    }
+
+    mTable->redraw();
+
+    RefreshDiskContent( _slot );
+}
+
+void CMMBEGui::GetSelectedFiles( std::vector<int>& _dst )
+{
+    return mMainWindow->GetSelectedFiles( _dst );
+}
+
+void CMMBEGui::RefreshDiskContent( size_t _slot )
+{
+    std::string errorString;
+    unsigned char* data = new unsigned char[MMB_DISKSIZE];
+    if( nullptr == data )
+    {
+        return;
+    }
+    mMMB.ExtractImageInSlot( data, _slot, errorString );
+    mMainWindow->RefreshDiskContent( data, MMB_DISKSIZE );
+    delete[] data;
 }

@@ -4,6 +4,7 @@
         "__locale": "cpp",
         "cctype": "cpp",
         "locale": "cpp",
-        "*.xpm": "cpp"
+        "*.xpm": "cpp",
+        "new": "cpp"
     }
 }

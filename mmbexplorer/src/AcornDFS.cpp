@@ -1,8 +1,9 @@
 #include "AcornDFS.h"
 #include <string.h>
 
-const size_t DFS_SECTOR0_OFFSET = 0;
-const size_t DFS_SECTOR1_OFFSET = 256;
+const size_t DFS_SECTOR0_OFFSET  = 0;
+const size_t DFS_SECTOR1_OFFSET  = 256;
+const size_t DFS_FILENAME_LENGTH = 7;
 
 void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
 {
@@ -14,7 +15,7 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
     _disk.name = diskName;
     _disk.sequence = _data[DFS_SECTOR1_OFFSET+4];
     unsigned int entriesNum = ((unsigned int)_data[DFS_SECTOR1_OFFSET+5] / 8);
-    _disk.sectorsNum = (unsigned short int)((_data[DFS_SECTOR1_OFFSET+6] & 3) << 8);
+    _disk.sectorsNum = (unsigned short int)((_data[DFS_SECTOR1_OFFSET+6] & 7) << 8);
     _disk.sectorsNum |= (unsigned short int) _data[DFS_SECTOR1_OFFSET+7];
     _disk.bootOption = ((_data[DFS_SECTOR1_OFFSET+6] & 0x30) >> 4);
 
@@ -28,9 +29,9 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
         DFSEntry tmpEntry;
 
         // Sector 0
-        memcpy( &fileName[0], &_data[sector_0_offset], 7);
+        memcpy( &fileName[0], &_data[sector_0_offset], DFS_FILENAME_LENGTH );
         tmpEntry.name = fileName;
-        sector_0_offset += 7;
+        sector_0_offset += DFS_FILENAME_LENGTH;
 
         tmpEntry.directory = _data[sector_0_offset] & 0x7F;
         tmpEntry.locked    = (_data[sector_0_offset++] & 0x80) != 0;
@@ -48,8 +49,98 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
         tmpEntry.execAddress |=((_data[sector_1_offset++] & 192)<< 10);
         tmpEntry.startSector |=  _data[sector_1_offset++];
 
+        // Data
+        tmpEntry.data.resize( tmpEntry.fileSize, 0 );
+        memcpy( tmpEntry.data.data(), &_data[tmpEntry.startSector * 256], tmpEntry.fileSize );
+
         _disk.files.push_back( tmpEntry );
     }
+}
+
+bool DFSWrite( unsigned char* _data, size_t _size, const DFSDisk& _disk )
+{
+    if( nullptr == _data || _size < _disk.sectorsNum * 256 )
+    {
+        return false;
+    }
+
+    memset( _data, 0, _size );
+
+    // Write name
+    std::string name0;
+    std::string name1;
+    
+    if( _disk.name.length() <= 8 )
+    {
+        name0 = _disk.name;
+    }
+    else
+    {
+        name0 = _disk.name.substr( 0, 8 );
+        name1 = _disk.name.substr( 8, std::string::npos );
+    }
+
+    if( name0.length() < 8 )
+    {
+        name0.insert( name0.end(), 8 - name0.length(), ' ' );
+    }
+    if( name1.length() < 4 )
+    {
+        name1.insert( name1.end(), 4 - name1.length(), ' ' );
+    }
+
+    memcpy( &_data[DFS_SECTOR0_OFFSET], name0.data(), 8 );
+    memcpy( &_data[DFS_SECTOR1_OFFSET], name1.data(), 4 );
+
+    _data[DFS_SECTOR1_OFFSET+4] = _disk.sequence;
+    _data[DFS_SECTOR1_OFFSET+5] = (unsigned char)(_disk.files.size() * 8);
+    
+    _data[DFS_SECTOR1_OFFSET+6] = (((_disk.sectorsNum >> 8) & 0x07) | (_disk.bootOption << 4));
+    _data[DFS_SECTOR1_OFFSET+7] = (unsigned char)(_disk.sectorsNum & 0xFF);
+
+    // Write files' info and data
+    size_t sector_0_offset = 8 + DFS_SECTOR0_OFFSET;
+    size_t sector_1_offset = 8 + DFS_SECTOR1_OFFSET;
+
+    for( auto entry : _disk.files )
+    {
+        // Sector 0
+        std::string tmpName = entry.name;
+        if( tmpName.length() > DFS_FILENAME_LENGTH )
+        {
+            tmpName = tmpName.substr( 0, DFS_FILENAME_LENGTH );
+        }
+        if( tmpName.length() < DFS_FILENAME_LENGTH )
+        {
+            tmpName.insert( tmpName.end(), DFS_FILENAME_LENGTH - tmpName.length(), ' ' );
+        }
+        
+        memcpy( &_data[sector_0_offset], tmpName.c_str(), DFS_FILENAME_LENGTH );
+        sector_0_offset += DFS_FILENAME_LENGTH;
+
+        _data[sector_0_offset++] = entry.directory | (entry.locked ? 0x80 : 0x00);
+
+        // Sector 1
+        _data[sector_1_offset++]  = (unsigned char) (entry.loadAddress & 0xFF);
+        _data[sector_1_offset++]  = (unsigned char)((entry.loadAddress >> 8) & 0xFF);
+        _data[sector_1_offset++]  = (unsigned char) (entry.execAddress & 0xFF);
+        _data[sector_1_offset++]  = (unsigned char)((entry.execAddress >> 8) & 0xFF);
+        _data[sector_1_offset++]  = (unsigned char) (entry.fileSize & 0xFF);
+        _data[sector_1_offset++]  = (unsigned char)((entry.fileSize >> 8) & 0xFF);
+        _data[sector_1_offset  ]  = (unsigned char)((entry.startSector >> 8) & 3  );
+        _data[sector_1_offset  ] |= (unsigned char)((entry.loadAddress >> 6) & 12 );
+        _data[sector_1_offset  ] |= (unsigned char)((entry.fileSize    >> 4) & 48 );
+        _data[sector_1_offset++] |= (unsigned char)((entry.execAddress >> 2) & 192);
+        _data[sector_1_offset++]  = (unsigned char) (entry.startSector & 0xFF);
+
+        // Data
+        if( !entry.data.empty() )
+        {
+            memcpy( &_data[entry.startSector * 256], entry.data.data(), entry.data.size() );
+        }
+    }
+
+    return true;
 }
 
 std::string BootOptionToString( unsigned char _bootOption )
