@@ -3,6 +3,7 @@
 
 const size_t DFS_SECTOR0_OFFSET  = 0;
 const size_t DFS_SECTOR1_OFFSET  = 256;
+const size_t DFS_SECTOR_SIZE     = 256;
 const size_t DFS_FILENAME_LENGTH = 7;
 
 void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
@@ -127,10 +128,10 @@ bool DFSWrite( unsigned char* _data, size_t _size, const DFSDisk& _disk )
         _data[sector_1_offset++]  = (unsigned char)((entry.execAddress >> 8) & 0xFF);
         _data[sector_1_offset++]  = (unsigned char) (entry.fileSize & 0xFF);
         _data[sector_1_offset++]  = (unsigned char)((entry.fileSize >> 8) & 0xFF);
-        _data[sector_1_offset  ]  = (unsigned char)((entry.startSector >> 8) & 3  );
-        _data[sector_1_offset  ] |= (unsigned char)((entry.loadAddress >> 6) & 12 );
-        _data[sector_1_offset  ] |= (unsigned char)((entry.fileSize    >> 4) & 48 );
-        _data[sector_1_offset++] |= (unsigned char)((entry.execAddress >> 2) & 192);
+        _data[sector_1_offset  ]  = (unsigned char)((entry.startSector >> 16) & 3  );
+        _data[sector_1_offset  ] |= (unsigned char)((entry.loadAddress >> 14) & 12 );
+        _data[sector_1_offset  ] |= (unsigned char)((entry.fileSize    >> 12) & 48 );
+        _data[sector_1_offset++] |= (unsigned char)((entry.execAddress >> 10) & 192);
         _data[sector_1_offset++]  = (unsigned char) (entry.startSector & 0xFF);
 
         // Data
@@ -153,4 +154,20 @@ std::string BootOptionToString( unsigned char _bootOption )
     }
 
     return "*None";
+}
+
+void DFSPackFiles( DFSDisk& _disk )
+{
+    size_t startSector = 2;
+
+    for( auto& file : _disk.files )
+    {
+        file.startSector = startSector;
+
+        startSector += (file.fileSize / DFS_SECTOR_SIZE);
+        if( 0 != (file.fileSize % DFS_SECTOR_SIZE) )
+        {
+            ++startSector;
+        }
+    }    
 }

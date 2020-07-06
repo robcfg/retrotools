@@ -26,4 +26,5 @@ struct DFSDisk
 
 void        DFSRead           ( unsigned char* _data, size_t _size, DFSDisk& _disk );
 bool        DFSWrite          ( unsigned char* _data, size_t _size, const DFSDisk& _disk );
+void        DFSPackFiles      ( DFSDisk& _disk );
 std::string BootOptionToString( unsigned char  _bootOption );

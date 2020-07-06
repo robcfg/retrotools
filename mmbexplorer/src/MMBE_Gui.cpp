@@ -1157,6 +1157,47 @@ void CMMBEGui::ExtractFile( size_t _slot, size_t _fileIndex, const std::string& 
 
 void CMMBEGui::RemoveFile( size_t _slot, size_t _fileIndex )
 {
+    std::string errorString;
+    unsigned char* data = new unsigned char[MMB_DISKSIZE];
+    if( nullptr == data )
+    {
+        return;
+    }
+    if( !mMMB.ExtractImageInSlot( data, _slot, errorString ) )
+    {
+        delete[] data;
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+        return;
+    }
+    
+    DFSDisk disk;
+    DFSRead( data, MMB_DISKSIZE, disk );
+
+    if( _fileIndex >= disk.files.size() )
+    {
+        delete[] data;
+        return;
+    }
+
+    disk.files.erase( disk.files.begin() + _fileIndex );
+    DFSPackFiles( disk );
+    if( !DFSWrite( data, MMB_DISKSIZE, disk) )
+    {
+        delete[] data;
+        return;
+    }
+
+    if( !mMMB.InsertImageInSlot( data, MMB_DISKSIZE, _slot, errorString ) )
+    {
+        delete[] data;
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+        return;
+    }
+
+    //mMainWindow->RefreshDiskContent( data, MMB_DISKSIZE );
+    RefreshDiskContent( _slot );
+    
+    delete[] data;
 
 }
 

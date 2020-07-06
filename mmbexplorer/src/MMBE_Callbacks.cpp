@@ -241,7 +241,22 @@ void extractFile_cb( Fl_Widget* pWidget, void* _gui )
 
 void removeFile_cb( Fl_Widget* pWidget, void* _gui )
 {
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
 
+	std::vector<int> selection;
+	pGui->GetSelectedFiles( selection );
+	size_t slot = 0;
+
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+	slot = pGui->GetSelection()[0];
+
+	for( auto idx : selection )
+	{
+		pGui->RemoveFile( slot, idx );
+	}
 }
 
 void lockFile_cb( Fl_Widget* pWidget, void* _gui )
