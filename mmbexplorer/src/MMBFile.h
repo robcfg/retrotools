@@ -10,6 +10,7 @@ const size_t        MMB_MAXNUMBEROFDISKS          = 511;
 const size_t        MMB_DIRECTORYSIZE             = 8192;
 const size_t        MMB_DIRECTORYENTRYSIZE        = 16;
 const size_t        MMB_DISKSIZE                  = 200 * 1024;
+const size_t        MMB_SECTORSIZE                = 256;
 
 struct SMMBDirectoryEntry
 {
@@ -43,6 +44,7 @@ public:
     const char*   GetEntryName     ( size_t _entry );
     unsigned char GetEntryAttribute( size_t _entry );
 
+    bool NameDisk   ( size_t _slot, const std::string& _diskName, std::string& _errorString );
     bool LockFile   ( size_t _slot, size_t _fileIndex, std::string& _errorString );
     bool UnlockFile ( size_t _slot, size_t _fileIndex, std::string& _errorString );
 

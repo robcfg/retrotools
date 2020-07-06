@@ -125,7 +125,7 @@ public:
     void UnlockSelectedDisks ();
 
     void FormatDisk ( size_t _slot );
-    void NameDisk   ( size_t _slot );
+    void NameDisk   ( size_t _slot, const std::string& _diskname );
     void InsertFile ( size_t _slot, const std::string& _filename );
     void ExtractFile( size_t _slot, size_t _fileIndex, const std::string& _filename );
     void RemoveFile ( size_t _slot, size_t _fileIndex );

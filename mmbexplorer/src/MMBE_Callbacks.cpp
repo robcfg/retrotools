@@ -211,7 +211,22 @@ void formatDisk_cb( Fl_Widget* pWidget, void* _gui )
 
 void nameDisk_cb( Fl_Widget* pWidget, void* _gui )
 {
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
 
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+
+	const char* result = fl_input( "Enter disk name (12 characters max.)", nullptr );
+	if( nullptr == result )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelection()[0];
+
+	pGui->NameDisk( slot, result );
 }
 
 void insertFile_cb( Fl_Widget* pWidget, void* _gui )

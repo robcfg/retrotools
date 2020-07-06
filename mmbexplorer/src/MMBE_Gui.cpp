@@ -1127,9 +1127,22 @@ void CMMBEGui::FormatDisk( size_t _slot )
     }
 }
 
-void CMMBEGui::NameDisk( size_t _slot )
+void CMMBEGui::NameDisk( size_t _slot, const std::string& _diskname )
 {
+    std::string errorString;
+    if( !mMMB.NameDisk( _slot, _diskname, errorString) )
+    {
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+    }
 
+    mTable->redraw();
+
+    if( mTable->GetSelectionSize() == 1 )
+    {
+        size_t slot = mTable->GetSelection()[0];
+        mTable->ClearSelection();
+        mTable->SelectSlot( slot, CMMBETable::EMMBETable_Single );
+    }
 }
 
 void CMMBEGui::InsertFile( size_t _slot, const std::string& _filename )

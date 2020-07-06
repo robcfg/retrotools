@@ -528,3 +528,46 @@ bool CMMBFile::UnlockFile( size_t _slot, size_t _fileIndex, std::string& _errorS
 
     return true;
 }
+
+bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string& _errorString )
+{
+    if( nullptr == mFile )
+    {
+        _errorString = "No MMB file opened.";
+        return false;
+    }
+
+    // Check slot number
+    if( _slot >= GetNumberOfDisks() )
+    {
+        _errorString = "Slot number out of range or invalid: ";
+        _errorString += std::to_string( _slot );
+        _errorString += " ( max slot number is ";
+        _errorString += std::to_string( GetNumberOfDisks() - 1);
+        _errorString += ").";
+        return false;
+    }
+
+    std::string finalName = _diskName;
+    if( finalName.length() > 12 )
+    {
+        finalName = finalName.substr( 0, 12 );
+    }
+    else if( finalName.length() < 12 )
+    {
+        finalName.insert( finalName.end(), 12 - finalName.length(), ' ' );
+    }
+
+    fseek( mFile, (_slot + 1) * MMB_DIRECTORYENTRYSIZE, SEEK_SET );
+    fwrite( finalName.c_str(), 1, 12, mFile );
+
+    fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
+    fwrite( finalName.c_str(), 1, 8, mFile );
+
+    fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + MMB_SECTORSIZE, SEEK_SET );
+    fwrite( &finalName.c_str()[8], 1, 11, mFile );
+
+    ReadDirectory();
+
+    return true;
+}
