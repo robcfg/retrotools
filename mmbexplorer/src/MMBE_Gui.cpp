@@ -1214,5 +1214,8 @@ void CMMBEGui::SetBootOption( size_t _slot, unsigned char _bootOption )
 
     mTable->redraw();
 
-    RefreshDiskContent( _slot );
+    if( GetSelectionSize() == 1 )
+    {
+        RefreshDiskContent( _slot );
+    }
 }
