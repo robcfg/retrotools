@@ -571,3 +571,36 @@ bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string
 
     return true;
 }
+
+bool CMMBFile::SetBootOption( size_t _slot, unsigned char _bootOption, std::string& _errorString )
+{
+    if( nullptr == mFile )
+    {
+        _errorString = "No MMB file opened.";
+        return false;
+    }
+
+    // Check slot number
+    if( _slot >= GetNumberOfDisks() )
+    {
+        _errorString = "Slot number out of range or invalid: ";
+        _errorString += std::to_string( _slot );
+        _errorString += " ( max slot number is ";
+        _errorString += std::to_string( GetNumberOfDisks() - 1);
+        _errorString += ").";
+        return false;
+    }
+
+    unsigned char optionsByte = 0;
+    fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + MMB_SECTORSIZE + 6, SEEK_SET );
+    fread( &optionsByte, 1, 1, mFile );
+
+    _bootOption &= 0x03;
+    optionsByte &= 0xCF;
+    optionsByte |= (_bootOption << 4);
+
+    fseek( mFile, -1, SEEK_CUR );
+    fwrite( &optionsByte, 1, 1, mFile );
+
+    return true;
+}

@@ -44,10 +44,11 @@ public:
     const char*   GetEntryName     ( size_t _entry );
     unsigned char GetEntryAttribute( size_t _entry );
 
-    bool NameDisk   ( size_t _slot, const std::string& _diskName, std::string& _errorString );
-    bool LockFile   ( size_t _slot, size_t _fileIndex, std::string& _errorString );
-    bool UnlockFile ( size_t _slot, size_t _fileIndex, std::string& _errorString );
-
+    bool NameDisk     ( size_t _slot, const std::string& _diskName, std::string& _errorString );
+    bool LockFile     ( size_t _slot, size_t _fileIndex, std::string& _errorString );
+    bool UnlockFile   ( size_t _slot, size_t _fileIndex, std::string& _errorString );
+    bool SetBootOption( size_t _slot, unsigned char _bootOption, std::string& _errorString );
+    
 private:
     void ReadDirectory();
     void ClearDirectory();

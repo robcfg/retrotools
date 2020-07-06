@@ -783,10 +783,10 @@ void CMMBEGui::CreateMenuBar()
     mMenuBar->add( "&Disk/&Lock file"     , FL_SHIFT+mModifierKey+'l', lockFile_cb    , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Unlock file"   , FL_SHIFT+mModifierKey+'u', unlockFile_cb  , (void*)this, 0 );
 
-    mMenuBar->add( "&Disk/&Boot option/&None"   , FL_SHIFT+mModifierKey+'0', unlockFile_cb  , (void*)this, 0 );
-    mMenuBar->add( "&Disk/&Boot option/&Load"   , FL_SHIFT+mModifierKey+'1', unlockFile_cb  , (void*)this, 0 );
-    mMenuBar->add( "&Disk/&Boot option/&Run"    , FL_SHIFT+mModifierKey+'2', unlockFile_cb  , (void*)this, 0 );
-    mMenuBar->add( "&Disk/&Boot option/&Exec"   , FL_SHIFT+mModifierKey+'3', unlockFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&None"   , mModifierKey+'0', setBootOption0_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&Load"   , mModifierKey+'1', setBootOption1_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&Run"    , mModifierKey+'2', setBootOption2_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&Boot option/&Exec"   , mModifierKey+'3', setBootOption3_cb  , (void*)this, 0 );
 
     // Help menu
 	#ifndef __APPLE__
@@ -1202,4 +1202,17 @@ void CMMBEGui::RefreshDiskContent( size_t _slot )
     mMMB.ExtractImageInSlot( data, _slot, errorString );
     mMainWindow->RefreshDiskContent( data, MMB_DISKSIZE );
     delete[] data;
+}
+
+void CMMBEGui::SetBootOption( size_t _slot, unsigned char _bootOption )
+{
+    std::string errorString;
+    if( !mMMB.SetBootOption( _slot, _bootOption, errorString ) )
+    {
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+    }
+
+    mTable->redraw();
+
+    RefreshDiskContent( _slot );
 }

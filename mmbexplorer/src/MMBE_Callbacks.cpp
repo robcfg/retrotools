@@ -283,3 +283,63 @@ void unlockFile_cb( Fl_Widget* pWidget, void* _gui )
 		pGui->UnlockFile( slot, idx );
 	}
 }
+
+void setBootOption0_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+
+	size_t slot = 0;
+
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+	slot = pGui->GetSelection()[0];
+
+	pGui->SetBootOption( slot, 0 );
+}
+
+void setBootOption1_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+
+	size_t slot = 0;
+
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+	slot = pGui->GetSelection()[0];
+
+	pGui->SetBootOption( slot, 1 );
+}
+
+void setBootOption2_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+
+	size_t slot = 0;
+
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+	slot = pGui->GetSelection()[0];
+
+	pGui->SetBootOption( slot, 2 );
+}
+
+void setBootOption3_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+
+	size_t slot = 0;
+
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+	slot = pGui->GetSelection()[0];
+
+	pGui->SetBootOption( slot, 3 );
+}
