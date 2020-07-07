@@ -231,7 +231,20 @@ void nameDisk_cb( Fl_Widget* pWidget, void* _gui )
 
 void insertFile_cb( Fl_Widget* pWidget, void* _gui )
 {
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
 
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+
+	size_t slot = pGui->GetSelection()[0];
+
+	std::string filename;
+	if( ChooseFilename( filename, "All files\t*.*\n", "", false, false ) )
+	{
+		pGui->InsertFile( slot, filename );
+	}
 }
 
 void extractFile_cb( Fl_Widget* pWidget, void* _gui )

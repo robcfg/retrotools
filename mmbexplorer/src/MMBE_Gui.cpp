@@ -12,7 +12,6 @@
 #include "MMBE_Gui.h"
 #include "MMBE_Commands.h"
 #include "MMBE_Callbacks.h"
-#include "AcornDFS.h"
 
 // Icons
 #include "../icons/empty.xpm"
@@ -1147,7 +1146,48 @@ void CMMBEGui::NameDisk( size_t _slot, const std::string& _diskname )
 
 void CMMBEGui::InsertFile( size_t _slot, const std::string& _filename )
 {
+    std::string errorString;
+    unsigned char* data = new unsigned char[MMB_DISKSIZE];
+    if( nullptr == data )
+    {
+        return;
+    }
+    if( !mMMB.ExtractImageInSlot( data, _slot, errorString ) )
+    {
+        delete[] data;
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+        return;
+    }
+    
+    DFSDisk disk;
+    DFSRead( data, MMB_DISKSIZE, disk );
 
+    DFSEntry dfsFile;
+    if( !LoadFile( _filename, dfsFile, errorString) )
+    {
+        delete[] data;
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+        return;
+    }
+
+    disk.files.push_back( dfsFile );
+    DFSPackFiles( disk );
+    if( !DFSWrite( data, MMB_DISKSIZE, disk) )
+    {
+        delete[] data;
+        return;
+    }
+
+    if( !mMMB.InsertImageInSlot( data, MMB_DISKSIZE, _slot, errorString ) )
+    {
+        delete[] data;
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+        return;
+    }
+
+    RefreshDiskContent( _slot );
+
+    delete[] data;
 }
 
 void CMMBEGui::ExtractFile( size_t _slot, size_t _fileIndex, const std::string& _filename )
@@ -1194,11 +1234,9 @@ void CMMBEGui::RemoveFile( size_t _slot, size_t _fileIndex )
         return;
     }
 
-    //mMainWindow->RefreshDiskContent( data, MMB_DISKSIZE );
     RefreshDiskContent( _slot );
-    
-    delete[] data;
 
+    delete[] data;
 }
 
 void CMMBEGui::LockFile( size_t _slot, size_t _fileIndex )
@@ -1259,4 +1297,29 @@ void CMMBEGui::SetBootOption( size_t _slot, unsigned char _bootOption )
     {
         RefreshDiskContent( _slot );
     }
+}
+
+bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::string& _errorString )
+{
+    FILE* pFile = fopen( _filename.c_str(), "rb" );
+    if( nullptr == pFile )
+    {
+        _errorString = "Could not open file ";
+        _errorString += _filename;
+        return false;
+    }
+
+    fseek( pFile, 0, SEEK_END );
+    _dst.fileSize = ftell( pFile );
+    fseek( pFile, 0, SEEK_SET );
+
+    _dst.data.resize( _dst.fileSize );
+    fread( _dst.data.data(), 1, _dst.fileSize, pFile );
+    fclose( pFile );
+
+    _dst.name = "BLAH";
+    _dst.directory = '$';
+    _dst.locked = true;
+
+    return true;
 }

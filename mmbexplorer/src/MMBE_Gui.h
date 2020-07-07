@@ -6,6 +6,7 @@
 #include <FL/Fl_Select_Browser.H>
 #include <FL/Fl_Table.H>
 #include "MMBFile.h"
+#include "AcornDFS.h"
 
 #ifdef __APPLE__
     class Fl_Sys_Menu_Bar;
@@ -148,6 +149,8 @@ private:
     void CreateMenuBar();
     void CreateControls();
 
+    bool LoadFile( const std::string& _filename, DFSEntry& _dst, std::string& _errorString );
+    
     CMMBFile mMMB;
     CAppWindow* mMainWindow = nullptr;
     CMMBETable* mTable = nullptr;
