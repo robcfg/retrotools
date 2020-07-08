@@ -492,7 +492,7 @@ bool CMMBFile::LockFile( size_t _slot, size_t _fileIndex, std::string& _errorStr
 
     unsigned char statusByte = 0;
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + ((_fileIndex + 1) * 8) + 7, SEEK_SET );
-    fread( &statusByte, 1, 1, mFile );
+    size_t bytesRead = fread( &statusByte, 1, 1, mFile );
     statusByte |= 0x80;
     fseek( mFile, -1, SEEK_CUR );
     fwrite( &statusByte, 1, 1, mFile );
@@ -521,7 +521,7 @@ bool CMMBFile::UnlockFile( size_t _slot, size_t _fileIndex, std::string& _errorS
 
     unsigned char statusByte = 0;
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + ((_fileIndex + 1) * 8) + 7, SEEK_SET );
-    fread( &statusByte, 1, 1, mFile );
+    size_t bytesRead = fread( &statusByte, 1, 1, mFile );
     statusByte &= 0x7F;
     fseek( mFile, -1, SEEK_CUR );
     fwrite( &statusByte, 1, 1, mFile );
@@ -593,7 +593,7 @@ bool CMMBFile::SetBootOption( size_t _slot, unsigned char _bootOption, std::stri
 
     unsigned char optionsByte = 0;
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + MMB_SECTORSIZE + 6, SEEK_SET );
-    fread( &optionsByte, 1, 1, mFile );
+    size_t bytesRead = fread( &optionsByte, 1, 1, mFile );
 
     _bootOption &= 0x03;
     optionsByte &= 0xCF;

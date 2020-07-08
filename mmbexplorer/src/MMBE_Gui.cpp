@@ -1373,7 +1373,7 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
     fseek( pFile, 0, SEEK_SET );
 
     _dst.data.resize( _dst.fileSize );
-    fread( _dst.data.data(), 1, _dst.fileSize, pFile );
+    size_t bytesRead = fread( _dst.data.data(), 1, _dst.fileSize, pFile );
     fclose( pFile );
     
     size_t pos = _filename.find_last_of( PATH_SEPARATOR );
@@ -1396,7 +1396,7 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
         fseek( pInfFile, 0, SEEK_SET );
         
         char* infData = new char[infFileSize];
-        fread( infData, 1, infFileSize, pInfFile );
+        size_t infBytesRead = fread( infData, 1, infFileSize, pInfFile );
         fclose( pInfFile );
 
         // Tokenize inf data
