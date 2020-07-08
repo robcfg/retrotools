@@ -241,7 +241,7 @@ void insertFile_cb( Fl_Widget* pWidget, void* _gui )
 	size_t slot = pGui->GetSelection()[0];
 
 	std::string filename;
-	if( ChooseFilename( filename, "All files\t*.*\n", "", false, false ) )
+	if( ChooseFilename( filename, "", "", false, false ) )
 	{
 		pGui->InsertFile( slot, filename );
 	}

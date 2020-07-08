@@ -21,6 +21,12 @@
 
 using namespace std;
 
+#ifdef WIN32
+    const char PATH_SEPARATOR = '\\';
+#else
+    const char PATH_SEPARATOR = '/';
+#endif
+
 //******************************************
 //* CAppWindow class
 //******************************************
@@ -171,8 +177,9 @@ void CAppWindow::GetSelectedFiles( std::vector<int>& _dst )
 //******************************************
 //* CMMBESelectBrowser class
 //******************************************
-CMMBESelectBrowser::CMMBESelectBrowser( int _x, int _y, int _w, int _h, const char* _label ) : 
-                    Fl_Select_Browser( _x, _y, _w, _h, _label )
+CMMBESelectBrowser::CMMBESelectBrowser( CMMBEGui* _gui, int _x, int _y, int _w, int _h, const char* _label ) : 
+                    Fl_Select_Browser( _x, _y, _w, _h, _label ),
+                    mGui( _gui )
 {
 
 }
@@ -198,9 +205,9 @@ int CMMBESelectBrowser::handle(int _event)
 
         case FL_PASTE:
         {
-            /*if( nullptr == mMMB || slot >= mMMB->GetNumberOfDisks() )
+            if( nullptr == mGui || mGui->GetSelectionSize() != 1 )
             {
-                return 1;
+                return 0;
             }
 
             std::string pastedText = Fl::event_text();
@@ -219,17 +226,10 @@ int CMMBESelectBrowser::handle(int _event)
             }
             std::string fileProtocol = "file://";
 
-            // Clear selection
-            SelectSlot( MMB_MAXNUMBEROFDISKS, CMMBETable::EMMBETable_Single );
-            bool isFirstSlot = true;
+            size_t slot = mGui->GetSelection()[0];
 
             for( auto filename : fileNames )
             {
-                if( slot >= mMMB->GetNumberOfDisks() )
-                {
-                    break;
-                }
-
                 // Check for file:// protocol
                 if( 0 == filename.compare(0, fileProtocol.length(), fileProtocol) )
                 {
@@ -240,27 +240,9 @@ int CMMBESelectBrowser::handle(int _event)
                 filename.erase(std::remove(filename.begin(), filename.end(), 0xD), filename.end());
                 filename.erase(std::remove(filename.begin(), filename.end(), 0xA), filename.end());
 
-                std::string errorString;
-                if( !mMMB->InsertImageInSlot( filename, slot, errorString ) )
-                {
-                    wasInsertionOk = false;
-
-                    failedFiles += filename;
-                    failedFiles += "\n";
-                }
-
-                SelectSlot( slot, isFirstSlot ? CMMBETable::EMMBETable_Single : CMMBETable::EMMBETable_SingleAdd );
-                isFirstSlot = false;
-                ++slot;
+                mGui->InsertFile( slot, filename );
             }
 
-            if( !wasInsertionOk )
-            {
-                fl_alert("[ERROR] Could not add these files:\n%s",failedFiles.c_str());
-            }
-
-            return 1;*/
-            cout << "Le vien pasté " << Fl::event_text() << endl;
             retVal = 1;
         }
         break;
@@ -820,7 +802,7 @@ void CMMBEGui::CreateControls()
     mTable->end();			      // end the Fl_Table group
 
     x += 472 + 10;
-    CMMBESelectBrowser* diskContent = new CMMBESelectBrowser( x, y, 300, 384, "Disk content" );
+    CMMBESelectBrowser* diskContent = new CMMBESelectBrowser( this, x, y, 300, 384, "Disk content" );
 	diskContent->color( FL_WHITE );
     diskContent->align( FL_ALIGN_TOP );
 	diskContent->type(FL_MULTI_BROWSER);
@@ -1010,11 +992,8 @@ void CMMBEGui::ExtractSelectedFiles()
     if( !ChooseFilename( folderName, "", "", true, true ) )
         return;
 
-#ifdef WIN32
-    if( folderName.back() != '\\' ) folderName += '\\';
-#else
-    if( folderName.back() != '/' ) folderName += '/';
-#endif
+    if( folderName.back() != PATH_SEPARATOR ) folderName += PATH_SEPARATOR;
+
     DFSDisk disk;
     char buffer[256] = { 0 };
     size_t slot = GetSelection()[0];
@@ -1233,6 +1212,10 @@ void CMMBEGui::InsertFile( size_t _slot, const std::string& _filename )
     {
         return;
     }
+    if( 0 != (mMMB.GetEntryAttribute( _slot ) & 0xF0) )
+    {
+        FormatDisk( _slot );
+    }
     if( !mMMB.ExtractImageInSlot( data, _slot, errorString ) )
     {
         delete[] data;
@@ -1269,11 +1252,6 @@ void CMMBEGui::InsertFile( size_t _slot, const std::string& _filename )
     RefreshDiskContent( _slot );
 
     delete[] data;
-}
-
-void CMMBEGui::ExtractFile( size_t _slot, size_t _fileIndex, const std::string& _filename )
-{
-
 }
 
 void CMMBEGui::RemoveFile( size_t _slot, size_t _fileIndex )
@@ -1397,10 +1375,58 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
     _dst.data.resize( _dst.fileSize );
     fread( _dst.data.data(), 1, _dst.fileSize, pFile );
     fclose( pFile );
-
-    _dst.name = "BLAH";
+    
+    size_t pos = _filename.find_last_of( PATH_SEPARATOR );
+    if( pos == std::string::npos )
+    {
+        pos = 0;
+    }
+    _dst.name = _filename.substr( pos + 1 );
+    HostString2BBC( _dst.name );
     _dst.directory = '$';
-    _dst.locked = true;
+    _dst.locked = false;
+
+    // Try to read inf file
+    std::string infFilename = _filename + ".inf";
+    FILE* pInfFile = fopen( infFilename.c_str(), "r" );
+    if( pInfFile )
+    {
+        fseek( pInfFile, 0, SEEK_END );
+        size_t infFileSize = ftell( pInfFile );
+        fseek( pInfFile, 0, SEEK_SET );
+        
+        char* infData = new char[infFileSize];
+        fread( infData, 1, infFileSize, pInfFile );
+        fclose( pInfFile );
+
+        // Tokenize inf data
+        vector<string> tokens;
+        istringstream infStream( infData );
+        string s;    
+        while (getline(infStream, s,' ')) 
+        {
+            tokens.push_back(s);
+        }
+
+        if( tokens.size() > 0 )
+        {
+            _dst.name = tokens[0];
+        }
+        if( tokens.size() > 1 )
+        {
+            _dst.loadAddress = strtoul( tokens[1].c_str(), nullptr, 16 );
+        }
+        if( tokens.size() > 2 )
+        {
+            _dst.execAddress = strtoul( tokens[2].c_str(), nullptr, 16 );
+        }
+        if( tokens.size() > 3 && tokens[3].length() > 0 && tokens[3].at(0) == 'L' )
+        {
+            _dst.locked = true;
+        }
+
+        delete[] infData;
+    }
 
     return true;
 }

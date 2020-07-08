@@ -15,6 +15,7 @@
 #endif
 class Fl_Table;
 class Fl_Pixmap;
+class CMMBEGui;
 
 //******************************************
 //* CAppWindow class
@@ -43,11 +44,13 @@ private:
 class CMMBESelectBrowser : public Fl_Select_Browser
 {
 public:
-    CMMBESelectBrowser( int _x, int _y, int _w, int _h, const char* _label = 0 );
+    CMMBESelectBrowser( CMMBEGui* _gui, int _x, int _y, int _w, int _h, const char* _label = 0 );
     virtual ~CMMBESelectBrowser();
 
 	virtual int handle(int _event);
 
+private:
+    CMMBEGui* mGui = nullptr;
 };
 
 //******************************************
@@ -129,7 +132,6 @@ public:
     void FormatDisk   ( size_t _slot );
     void NameDisk     ( size_t _slot, const std::string& _diskname );
     void InsertFile   ( size_t _slot, const std::string& _filename );
-    void ExtractFile  ( size_t _slot, size_t _fileIndex, const std::string& _filename );
     void RemoveFile   ( size_t _slot, size_t _fileIndex );
     void LockFile     ( size_t _slot, size_t _fileIndex );
     void UnlockFile   ( size_t _slot, size_t _fileIndex );
