@@ -1011,8 +1011,8 @@ void CMMBEGui::ExtractSelectedFiles()
     for( auto file : selectedFiles )
     {
         std::string filename;
-        filename += (char)disk.files[file].directory;
-        filename += ".";
+        //filename += (char)disk.files[file].directory;
+        //filename += ".";
         filename += disk.files[file].name;
         BBCString2Host( filename );
         auto stringIter = filename.crbegin();
@@ -1034,7 +1034,7 @@ void CMMBEGui::ExtractSelectedFiles()
         fclose( pFile );
 
         // Write inf file
-        sprintf( buffer, "%s %X %X %s", disk.files[file].name.c_str(), 
+        sprintf( buffer, "%s %X %X %s", filename.c_str(), 
                                         disk.files[file].loadAddress,
                                         disk.files[file].execAddress,
                                         disk.files[file].locked ? "L" : "" );
@@ -1405,7 +1405,10 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
         string s;    
         while (getline(infStream, s,' ')) 
         {
-            tokens.push_back(s);
+            if( !s.empty() )
+            {
+                tokens.push_back(s);
+            }
         }
 
         if( tokens.size() > 0 )
