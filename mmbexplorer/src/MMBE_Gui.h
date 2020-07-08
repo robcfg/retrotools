@@ -124,6 +124,7 @@ public:
     void RemoveSelectedDisks ();
     void LockSelectedDisks   ();
     void UnlockSelectedDisks ();
+    void ExtractSelectedFiles();
 
     void FormatDisk   ( size_t _slot );
     void NameDisk     ( size_t _slot, const std::string& _diskname );
@@ -150,7 +151,10 @@ private:
     void CreateControls();
 
     bool LoadFile( const std::string& _filename, DFSEntry& _dst, std::string& _errorString );
-    
+
+    void BBCString2Host( std::string& _string );
+    void HostString2BBC( std::string& _string );
+
     CMMBFile mMMB;
     CAppWindow* mMainWindow = nullptr;
     CMMBETable* mTable = nullptr;

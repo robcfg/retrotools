@@ -249,7 +249,14 @@ void insertFile_cb( Fl_Widget* pWidget, void* _gui )
 
 void extractFile_cb( Fl_Widget* pWidget, void* _gui )
 {
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
 
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+
+	pGui->ExtractSelectedFiles();
 }
 
 void removeFile_cb( Fl_Widget* pWidget, void* _gui )

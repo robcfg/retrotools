@@ -991,6 +991,87 @@ void CMMBEGui::ExtractSelectedDisks()
     }
 }
 
+void CMMBEGui::ExtractSelectedFiles()
+{
+    if( GetSelectionSize() != 1 )
+    {
+        return;
+    }
+
+    std::vector<int> selectedFiles;
+    GetSelectedFiles( selectedFiles );
+    if( selectedFiles.empty() )
+    {
+        return;
+    }
+
+    // Choose export folder
+    string folderName;
+    if( !ChooseFilename( folderName, "", "", true, true ) )
+        return;
+
+#ifdef WIN32
+    if( folderName.back() != '\\' ) folderName += '\\';
+#else
+    if( folderName.back() != '/' ) folderName += '/';
+#endif
+    DFSDisk disk;
+    char buffer[256] = { 0 };
+    size_t slot = GetSelection()[0];
+    std::string errorString;
+    std::vector<unsigned char> data;
+    data.resize( MMB_DISKSIZE );
+
+    if( !mMMB.ExtractImageInSlot( data.data(), slot, errorString ) )
+    {
+        fl_alert( "[ERROR] %s", errorString.c_str() );
+        return;
+    }
+    DFSRead( data.data(), MMB_DISKSIZE, disk );
+
+    for( auto file : selectedFiles )
+    {
+        std::string filename;
+        filename += (char)disk.files[file].directory;
+        filename += ".";
+        filename += disk.files[file].name;
+        BBCString2Host( filename );
+        auto stringIter = filename.crbegin();
+        while( filename.length() && filename.back() == ' ' )
+        {
+            filename.resize( filename.length() - 1 );
+        }
+        std::string destFilename = folderName + filename;
+
+        // Write file
+        FILE* pFile = fopen( destFilename.c_str(), "wb" );
+        if( nullptr == pFile )
+        {
+           fl_alert( "[ERROR] Could not write file %s", destFilename.c_str() ); 
+           continue;
+        }
+
+        fwrite( disk.files[file].data.data(), 1, disk.files[file].data.size(), pFile );
+        fclose( pFile );
+
+        // Write inf file
+        sprintf( buffer, "%s %X %X %s", disk.files[file].name.c_str(), 
+                                        disk.files[file].loadAddress,
+                                        disk.files[file].execAddress,
+                                        disk.files[file].locked ? "L" : "" );
+        destFilename += ".inf";
+        FILE* pInfFile = fopen( destFilename.c_str(), "w" );
+        if( nullptr == pInfFile )
+        {
+           fl_alert( "[ERROR] Could not write inf file %s", destFilename.c_str() ); 
+           continue;
+        }
+
+        fwrite( buffer, 1, strlen(buffer), pInfFile );
+        fclose( pInfFile );
+    }
+}
+
 void CMMBEGui::RemoveSelectedDisks()
 {
     for( auto slot : mTable->GetSelection() )
@@ -1322,4 +1403,39 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
     _dst.locked = true;
 
     return true;
+}
+
+void CMMBEGui::BBCString2Host( std::string& _string )
+{
+    for( auto& character : _string )
+    {
+        switch( character )
+        {
+            case '?':character = '#'; break; 
+            case '/':character = '.'; break; 
+            case '<':character = '$'; break; 
+            case '>':character = '^'; break; 
+            case '+':character = '&'; break; 
+            case '=':character = '@'; break; 
+            case ';':character = '%'; break; 
+        }
+    }
+}
+
+void CMMBEGui::HostString2BBC( std::string& _string )
+{
+    for( auto& character : _string )
+    {
+        switch( character )
+        {
+            case '#':character = '?'; break; 
+            case '.':character = '/'; break; 
+            case '$':character = '<'; break; 
+            case '^':character = '>'; break; 
+            case '&':character = '+'; break; 
+            case '@':character = '='; break; 
+            case '%':character = ';'; break;
+            case ' ':character = '_'; break; 
+        }
+    }
 }
