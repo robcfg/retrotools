@@ -60,7 +60,7 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
 
 bool DFSWrite( unsigned char* _data, size_t _size, const DFSDisk& _disk )
 {
-    if( nullptr == _data || _size < _disk.sectorsNum * 256 )
+    if( nullptr == _data || _size < (size_t)(_disk.sectorsNum * 256) )
     {
         return false;
     }
