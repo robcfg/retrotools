@@ -565,7 +565,7 @@ bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string
     fwrite( finalName.c_str(), 1, 8, mFile );
 
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + MMB_SECTORSIZE, SEEK_SET );
-    fwrite( &finalName.c_str()[8], 1, 11, mFile );
+    fwrite( &finalName.c_str()[8], 1, 4, mFile );
 
     ReadDirectory();
 
