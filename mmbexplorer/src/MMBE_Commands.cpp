@@ -218,8 +218,17 @@ bool ProcessArguments( int argc, char** argv, string& _errorString )
         }
         else
         {
+            // Check if parameter is a file name
+            FILE* pFile = fopen( command.c_str(), "r" );
+            if( nullptr != pFile )
+            {
+                fclose( pFile );
+                return false;
+            }
+
+            // Otherwise show help
             ShowHelp();
-            _errorString = "Unknown command '";
+            _errorString = "Unknown command or file '";
             _errorString += command;
             _errorString += "'.";
             return true;

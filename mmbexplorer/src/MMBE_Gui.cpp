@@ -653,8 +653,13 @@ CMMBEGui::~CMMBEGui()
 
 }
 
-int CMMBEGui::Run()
+int CMMBEGui::Run( int argc, char** argv )
 {
+    if( argc > 1 )
+    {
+        OpenMMB( argv[1] );
+    }
+
     if( nullptr != mMainWindow )
     {
         mMainWindow->show(0, nullptr);

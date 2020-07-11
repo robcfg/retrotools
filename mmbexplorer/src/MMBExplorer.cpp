@@ -24,7 +24,7 @@ int main( int argc, char** argv )
         windowTitle += GetSCMVersion();
         windowTitle += ")";
         CMMBEGui gui( 800, 425, windowTitle.c_str() );
-        return gui.Run();    
+        return gui.Run( argc, argv );    
     }
 
     return 0;

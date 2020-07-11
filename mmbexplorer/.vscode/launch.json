@@ -10,7 +10,8 @@
             "name": "Debug",
             "program": "${workspaceFolder}/build/MMBExplorer_d",
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole"
         }
     ]
 }

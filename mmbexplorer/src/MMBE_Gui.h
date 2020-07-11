@@ -111,7 +111,7 @@ public:
     CMMBEGui( int _w, int _h, const char* _label );
     virtual ~CMMBEGui();
 
-    int Run();
+    int Run( int argc, char** argv );
 
     void OpenMMB  ( const std::string& _filename ); 
     void CreateMMB( const std::string& _filename );
