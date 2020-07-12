@@ -48,14 +48,14 @@ CAppWindow::~CAppWindow()
 int CAppWindow::handle( int _event )
 {
     int ret = Fl_Window::handle( _event );
-    /*switch ( _event ) 
+    switch ( _event ) 
     {
-        case FL_PUSH:               // do 'copy/dnd' when someone clicks on box
+        /*case FL_PUSH:               // do 'copy/dnd' when someone clicks on box
             Fl::copy(blabla.c_str(),(int)blabla.length(),0);//Fl::clipboard_image);
             Fl::dnd();
             ret = 1;
-            break;
-    }*/
+            break;*/
+    }
     return(ret);
 }
 
@@ -254,12 +254,13 @@ int CMMBESelectBrowser::handle(int _event)
 //******************************************
 //* CMMBETable class
 //******************************************
-CMMBETable::CMMBETable( CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label ) : Fl_Table( _x, _y, _w, _h, _label )
+CMMBETable::CMMBETable( CMMBEGui* _gui, CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label ) : Fl_Table( _x, _y, _w, _h, _label )
 {
     mIconEmpty    = new Fl_Pixmap( iconEmpty );
     mIconLocked   = new Fl_Pixmap( iconLocked );
     mIconUnlocked = new Fl_Pixmap( iconUnlocked );
     mMMB          = _mmb;
+    mGui          = _gui;
 }
 
 CMMBETable::~CMMBETable()
@@ -312,6 +313,8 @@ void CMMBETable::DrawUnused( int _x, int _y, int _w, int _h )
 
 int CMMBETable::handle( int _event )
 {
+    int retVal = Fl_Table::handle( _event );
+
     // Compute the targeted slot
     int row = 0;
     int col = 0;
@@ -425,7 +428,7 @@ int CMMBETable::handle( int _event )
         break;
     }
 
-    return Fl_Table::handle( _event );
+    return retVal;
 }
 
 void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, int _y, int _w, int _h )
@@ -490,6 +493,13 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
     default:
         return;
     }
+}
+
+void CMMBETable::resize( int _x, int _y ,int _w ,int _h )
+{
+    Fl_Table::resize( _x, _y, _w, _h );
+
+    mGui->OnWindowResize();
 }
 
 void CMMBETable::SelectSlot( size_t _slot, EMMBETable_SelectionType _selectionType )
@@ -789,9 +799,17 @@ void CMMBEGui::CreateControls()
     mFilenameBox = new Fl_Box( 10, y, 620, 26, "File: " );
     mFilenameBox->align( FL_ALIGN_INSIDE | FL_ALIGN_LEFT );
     y += 21;
-
-    mTable = new CMMBETable( &mMMB, 10, y, 472, 384, 0 );
+    
+    mTable = new CMMBETable( this, &mMMB, 10, y, 472, 384, 0 );
     mTable->begin();
+
+    mSlotContextMenu = new Fl_Menu_Button( 10, y, 472, 384, "Slot actions");
+    mSlotContextMenu->type(Fl_Menu_Button::POPUP3);         // pops menu on right click        
+    mSlotContextMenu->add("Insert disk",     0, insertDisk_cb,  this );
+    mSlotContextMenu->add("Extract disk(s)", 0, extractDisk_cb, this );
+    mSlotContextMenu->add("Remove disk(s)",  0, removeDisk_cb,  this );
+    mSlotContextMenu->add("Lock disk(s)",    0, lockDisk_cb,    this );
+    mSlotContextMenu->add("Unlock disk(s)",  0, unlockDisk_cb,  this );
 
     // Rows
     mTable->rows(32);             // how many rows
@@ -807,11 +825,25 @@ void CMMBEGui::CreateControls()
     mTable->end();			      // end the Fl_Table group
 
     x += 472 + 10;
-    CMMBESelectBrowser* diskContent = new CMMBESelectBrowser( this, x, y, 300, 384, "Disk content" );
-	diskContent->color( FL_WHITE );
-    diskContent->align( FL_ALIGN_TOP );
-	diskContent->type(FL_MULTI_BROWSER);
-    mMainWindow->SetDiskContentWidget( diskContent );
+    mDiskContent = new CMMBESelectBrowser( this, x, y, 300, 384, "Disk content" );
+	mDiskContent->color( FL_WHITE );
+    mDiskContent->align( FL_ALIGN_TOP );
+	mDiskContent->type(FL_MULTI_BROWSER);
+    mMainWindow->SetDiskContentWidget( mDiskContent );
+
+    mDiskContextMenu = new Fl_Menu_Button( mDiskContent->x(), mDiskContent->y(), mDiskContent->w(), mDiskContent->h(), "Disk actions");
+    mDiskContextMenu->type(Fl_Menu_Button::POPUP3);         // pops menu on right click        
+    mDiskContextMenu->add("Format disk"     , 0, formatDisk_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Name disk"       , 0, nameDisk_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Insert file(s)"  , 0, insertFile_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Extract file(s)" , 0, extractFile_cb     , (void*)this, 0 );
+    mDiskContextMenu->add("Remove file(s)"  , 0, removeFile_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Lock file(s)"    , 0, lockFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("_Unlock file(s)" , 0, unlockFile_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option None", 0, setBootOption0_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Load", 0, setBootOption1_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Run" , 0, setBootOption2_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Exec", 0, setBootOption3_cb  , (void*)this, 0 );
 }
 
 size_t CMMBEGui::GetNumberOfSlots() const
@@ -1068,7 +1100,11 @@ void CMMBEGui::LockSelectedDisks()
 {
     for( auto slot : mTable->GetSelection() )
     {
-        LockDisk( slot );
+        unsigned char diskAttribute = mMMB.GetEntryAttribute(slot);
+        if( MMB_DISKATTRIBUTE_INVALID != diskAttribute && MMB_DISKATTRIBUTE_UNFORMATTED != diskAttribute )
+        {
+            LockDisk( slot );
+        }
     }
 }
 
@@ -1076,7 +1112,11 @@ void CMMBEGui::UnlockSelectedDisks()
 {
     for( auto slot : mTable->GetSelection() )
     {
-        UnlockDisk( slot );
+        unsigned char diskAttribute = mMMB.GetEntryAttribute(slot);
+        if( MMB_DISKATTRIBUTE_INVALID != diskAttribute && MMB_DISKATTRIBUTE_UNFORMATTED != diskAttribute )
+        {
+            UnlockDisk( slot );
+        }
     }
 }
 
@@ -1472,4 +1512,10 @@ void CMMBEGui::HostString2BBC( std::string& _string )
             case ' ':character = '_'; break; 
         }
     }
+}
+
+void CMMBEGui::OnWindowResize()
+{
+    mSlotContextMenu->resize( mTable->x()      , mTable->y()      , mTable->w()      , mTable->h()       );
+    mDiskContextMenu->resize( mDiskContent->x(), mDiskContent->y(), mDiskContent->w(), mDiskContent->h() );
 }

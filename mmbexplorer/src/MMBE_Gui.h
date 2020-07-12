@@ -4,6 +4,7 @@
 #include <vector>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Select_Browser.H>
+#include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Table.H>
 #include "MMBFile.h"
 #include "AcornDFS.h"
@@ -66,15 +67,16 @@ public:
         EMMBETable_Multiple
     };
 
-    CMMBETable( CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label = 0 );
+    CMMBETable( CMMBEGui* _gui, CMMBFile* _mmb, int _x, int _y, int _w, int _h, const char* _label = 0 );
     virtual ~CMMBETable();
 
-    void draw_cell( TableContext context, int _row = 0, int _col = 0, int _x = 0, int _y = 0, int _w = 0, int _h = 0 );
+    virtual void draw_cell( TableContext context, int _row = 0, int _col = 0, int _x = 0, int _y = 0, int _w = 0, int _h = 0 );
+    virtual void resize( int _x, int _y ,int _w ,int _h );
 
     void   SelectSlot      ( size_t _slot, EMMBETable_SelectionType _selectionType );
     bool   IsSlotSelected  ( size_t _slot );
     size_t GetSelectionSize();
-    void   ClearSelection();
+    void   ClearSelection  ();
 
     const std::vector<size_t>& GetSelection();
     
@@ -97,6 +99,7 @@ private:
     Fl_Pixmap* mIconLocked   = nullptr;
 
     CMMBFile* mMMB = nullptr;
+    CMMBEGui* mGui = nullptr;
 
     std::vector<size_t> mSelectedSlots; 
     size_t mLastSelectedSlot = (size_t)-1;   
@@ -148,6 +151,8 @@ public:
 
     void RefreshDiskContent( size_t _slot );
 
+    void OnWindowResize();
+
 private:
     void CreateMenuBar();
     void CreateControls();
@@ -161,6 +166,10 @@ private:
     CAppWindow* mMainWindow = nullptr;
     CMMBETable* mTable = nullptr;
     Fl_Box* mFilenameBox = nullptr;
+    Fl_Menu_Button* mSlotContextMenu = nullptr;
+    Fl_Menu_Button* mDiskContextMenu = nullptr;
+    CMMBESelectBrowser* mDiskContent = nullptr;
+
     char mBuffer[32] = { 0 };
 
 #ifdef __APPLE__
