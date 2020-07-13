@@ -358,3 +358,16 @@ void setBootOption3_cb( Fl_Widget* pWidget, void* _gui )
 		pGui->SetBootOption( slot, 3 );
 	}
 }
+
+size_t GetFileSize( const std::string& _filename )
+{
+	size_t retVal = 0;
+	FILE* pFile = fopen( _filename.c_str(), "rb" );
+	if( nullptr != pFile )
+	{
+		fseek( pFile, 0, SEEK_END );
+		retVal = ftell( pFile );
+	}
+
+	return retVal;
+}

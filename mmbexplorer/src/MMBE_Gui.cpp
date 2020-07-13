@@ -362,11 +362,6 @@ int CMMBETable::handle( int _event )
 
         case FL_PASTE:
         {
-            if( nullptr == mMMB || slot >= mMMB->GetNumberOfDisks() )
-            {
-                return 1;
-            }
-
             std::string pastedText = Fl::event_text();
 
             // Split string in case we have several files to paste
@@ -382,6 +377,41 @@ int CMMBETable::handle( int _event )
                 fileNames.push_back(tempString);
             }
             std::string fileProtocol = "file://";
+
+            if( nullptr != mMMB && nullptr != mGui && !fileNames.empty() )
+            {
+                if( GetFileSize( fileNames[0] ) > MMB_DISKSIZE )
+                {
+                    string currentMMB = mMMB->GetFilename();
+                    string errorString;
+                    string name = fileNames[0];
+                    
+                    if( 0 == name.compare(0, fileProtocol.length(), fileProtocol) )
+                    {
+                        name = name.substr( fileProtocol.length(), std::string::npos );
+                    }
+
+                    if( mMMB->Open( fileNames[0], errorString ) )
+                    {
+                        SelectSlot( 0, CMMBETable::EMMBETable_Single );
+                        return 1;
+                    }
+                    else
+                    {
+                        if( !currentMMB.empty() )
+                        {
+                            mMMB->Open( currentMMB, errorString );
+                            return 1;
+                        }
+                    }
+                }
+            }
+
+            if( nullptr == mMMB || slot >= mMMB->GetNumberOfDisks() )
+            {
+                return 1;
+            }
+
 
             // Clear selection
             SelectSlot( MMB_MAXNUMBEROFDISKS, CMMBETable::EMMBETable_Single );
@@ -805,11 +835,13 @@ void CMMBEGui::CreateControls()
 
     mSlotContextMenu = new Fl_Menu_Button( 10, y, 472, 384, "Slot actions");
     mSlotContextMenu->type(Fl_Menu_Button::POPUP3);         // pops menu on right click        
-    mSlotContextMenu->add("Insert disk",     0, insertDisk_cb,  this );
-    mSlotContextMenu->add("Extract disk(s)", 0, extractDisk_cb, this );
-    mSlotContextMenu->add("Remove disk(s)",  0, removeDisk_cb,  this );
-    mSlotContextMenu->add("Lock disk(s)",    0, lockDisk_cb,    this );
-    mSlotContextMenu->add("Unlock disk(s)",  0, unlockDisk_cb,  this );
+    mSlotContextMenu->add("Format disk(s)" , 0, formatDisk_cb , (void*)this, 0 );
+    mSlotContextMenu->add("Name disk"      , 0, nameDisk_cb   , (void*)this, 0 );
+    mSlotContextMenu->add("Insert disk"    , 0, insertDisk_cb , (void*)this, 0 );
+    mSlotContextMenu->add("Extract disk(s)", 0, extractDisk_cb, (void*)this, 0 );
+    mSlotContextMenu->add("Remove disk(s)" , 0, removeDisk_cb , (void*)this, 0 );
+    mSlotContextMenu->add("Lock disk(s)"   , 0, lockDisk_cb   , (void*)this, 0 );
+    mSlotContextMenu->add("Unlock disk(s)" , 0, unlockDisk_cb , (void*)this, 0 );
 
     // Rows
     mTable->rows(32);             // how many rows
@@ -833,7 +865,7 @@ void CMMBEGui::CreateControls()
 
     mDiskContextMenu = new Fl_Menu_Button( mDiskContent->x(), mDiskContent->y(), mDiskContent->w(), mDiskContent->h(), "Disk actions");
     mDiskContextMenu->type(Fl_Menu_Button::POPUP3);         // pops menu on right click        
-    mDiskContextMenu->add("Format disk"     , 0, formatDisk_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Format disk(s)"  , 0, formatDisk_cb      , (void*)this, 0 );
     mDiskContextMenu->add("Name disk"       , 0, nameDisk_cb        , (void*)this, 0 );
     mDiskContextMenu->add("Insert file(s)"  , 0, insertFile_cb      , (void*)this, 0 );
     mDiskContextMenu->add("Extract file(s)" , 0, extractFile_cb     , (void*)this, 0 );
