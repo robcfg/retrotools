@@ -27,6 +27,9 @@ using namespace std;
     const char PATH_SEPARATOR = '/';
 #endif
 
+const int MMBEGUI_TABLECELL_HEIGHT = 26;   // default height of rows
+const int MMBEGUI_TABLECELL_WIDTH  = 206;  // default width of columns
+
 //******************************************
 //* CAppWindow class
 //******************************************
@@ -465,7 +468,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
 {
     string tmp;
     char cellData[32] = {0};
-    size_t slot = (_col*32)+_row;
+    size_t slot = (_col * Fl_Table::rows()) + _row;
     bool selected = IsSlotSelected( slot );
 
     switch ( context ) 
@@ -474,7 +477,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
         fl_font(FL_COURIER, 16);              // set the font for our drawing operations
         return; 
     case CONTEXT_COL_HEADER:                  // Draw column headers
-        tmp = to_string( _col * 32 );
+        tmp = to_string( _col * Fl_Table::rows() );
         DrawHeader( tmp.c_str(), _x, _y, _w, _h );
         return; 
     case CONTEXT_ROW_HEADER:                  // Draw row headers
@@ -482,7 +485,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
         DrawHeader( tmp.c_str(), _x, _y, _w, _h );
         return; 
     case CONTEXT_CELL:                        // Draw data in cells
-        if( _row == 31 && _col == 15 )
+        if( slot > 510 )
         {
             DrawUnused( _x, _y, _w, _h );
         }
@@ -516,7 +519,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
             }
             else
             {
-                sprintf( cellData, "%03i: %s", (_col*32)+_row, "" );
+                sprintf( cellData, "%03i: %s", (_col * Fl_Table::rows()) + _row, "" );
             }
         }
         return;
@@ -527,6 +530,15 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
 
 void CMMBETable::resize( int _x, int _y ,int _w ,int _h )
 {
+    int cols = max( 1, _w / MMBEGUI_TABLECELL_WIDTH );
+    int rows = 512 / cols;
+    if( 0 != (512 % cols) )
+    {
+        ++rows;
+    }
+    Fl_Table::rows(rows);
+    Fl_Table::cols(cols);
+
     Fl_Table::resize( _x, _y, _w, _h );
 
     mGui->OnWindowResize();
@@ -844,17 +856,18 @@ void CMMBEGui::CreateControls()
     mSlotContextMenu->add("Unlock disk(s)" , 0, unlockDisk_cb , (void*)this, 0 );
 
     // Rows
-    mTable->rows(32);             // how many rows
-    mTable->row_header(0);        // enable row headers (along left)
-    mTable->row_height_all(26);   // default height of rows
-    mTable->row_resize(0);        // disable row resizing
+    mTable->rows(32);                                   // how many rows
+    mTable->row_header(0);                              // enable row headers (along left)
+    mTable->row_height_all(MMBEGUI_TABLECELL_HEIGHT);   // default height of rows
+    mTable->row_resize(0);                              // disable row resizing
     
     // Columns
-    mTable->cols(16);             // how many columns
-    mTable->col_header(0);        // enable column headers (along top)
-    mTable->col_width_all(206);   // default width of columns
-    mTable->col_resize(0);        // enable column resizing
-    mTable->end();			      // end the Fl_Table group
+    mTable->cols(16);                                   // how many columns
+    mTable->col_header(0);                              // enable column headers (along top)
+    mTable->col_width_all(MMBEGUI_TABLECELL_WIDTH);     // default width of columns
+    mTable->col_resize(0);                              // enable column resizing
+    
+    mTable->end();			                            // end the Fl_Table group
 
     x += 472 + 10;
     mDiskContent = new CMMBESelectBrowser( this, x, y, 300, 384, "Disk content" );
