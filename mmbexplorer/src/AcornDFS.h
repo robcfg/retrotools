@@ -5,6 +5,7 @@
 
 struct DFSEntry
 {
+    DFSEntry();
     std::string                name;
     unsigned char              directory;
     unsigned int               loadAddress;

@@ -6,6 +6,16 @@ const size_t DFS_SECTOR1_OFFSET  = 256;
 const size_t DFS_SECTOR_SIZE     = 256;
 const size_t DFS_FILENAME_LENGTH = 7;
 
+DFSEntry::DFSEntry()
+{
+    directory   = '$';
+    loadAddress = 0;
+    execAddress = 0;
+    fileSize    = 0;
+    startSector = 2;
+    locked      = false;
+}
+
 void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
 {
     // Read disk name and parameters
@@ -128,7 +138,7 @@ bool DFSWrite( unsigned char* _data, size_t _size, const DFSDisk& _disk )
         _data[sector_1_offset++]  = (unsigned char)((entry.execAddress >> 8) & 0xFF);
         _data[sector_1_offset++]  = (unsigned char) (entry.fileSize & 0xFF);
         _data[sector_1_offset++]  = (unsigned char)((entry.fileSize >> 8) & 0xFF);
-        _data[sector_1_offset  ]  = (unsigned char)((entry.startSector >> 16) & 3  );
+        _data[sector_1_offset  ]  = (unsigned char)((entry.startSector >> 8) & 3  );
         _data[sector_1_offset  ] |= (unsigned char)((entry.loadAddress >> 14) & 12 );
         _data[sector_1_offset  ] |= (unsigned char)((entry.fileSize    >> 12) & 48 );
         _data[sector_1_offset++] |= (unsigned char)((entry.execAddress >> 10) & 192);
