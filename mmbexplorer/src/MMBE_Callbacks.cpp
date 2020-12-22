@@ -11,6 +11,18 @@ using namespace std;
 
 bool ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory )
 {
+	std::vector<std::string> result;
+	if( ChooseFilename( result, filter, preset, bSaveAsDialog, bDirectory ) && result.size() > 0 )
+	{
+		fileName = result[0];
+		return true;
+	}
+
+	return false;
+}
+
+bool ChooseFilename( std::vector<std::string>& fileNames, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory )
+{
 	// Create native chooser
 	Fl_Native_File_Chooser native;
 	if( bDirectory )
@@ -29,8 +41,8 @@ bool ChooseFilename( std::string& fileName, const std::string& filter, const std
 		}
 		else
 		{
-			native.title("Select file to open");
-			native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+			native.title("Select file(s) to open");
+			native.type(Fl_Native_File_Chooser::BROWSE_MULTI_FILE);
 		}
 		native.filter( filter.c_str() );
 		native.preset_file( preset.c_str() );
@@ -41,10 +53,10 @@ bool ChooseFilename( std::string& fileName, const std::string& filter, const std
 	{
 	case -1: return false; break;	// ERROR
 	case  1: return false; break;	// CANCEL
-	default: 						// PICKED FILE
-		if ( native.filename() )
+	default: 
+		for( int iFilename = 0; iFilename < native.count(); ++iFilename )	// PICKED FILES
 		{
-			fileName = native.filename();
+			fileNames.push_back( native.filename(iFilename) );
 		}
 	}
 
@@ -108,11 +120,17 @@ void insertDisk_cb( Fl_Widget* pWidget, void* _gui )
 		return;
 	}
 
-	std::string filename;
-	if( !ChooseFilename( filename, "SSD files\t*.ssd\n", ".", false) )
+	std::vector<std::string> filenames;
+	if( !ChooseFilename( filenames, "SSD files\t*.ssd\n", ".", false) )
 		return;
 
-	pGui->InsertDisk( filename, slot );
+	for( auto& filename : filenames )
+	{
+		if( slot < pGui->GetNumberOfSlots() )
+		{
+			pGui->InsertDisk( filename, slot++ );
+		}
+	}
 }
 
 void extractDisk_cb( Fl_Widget* pWidget, void* _gui )

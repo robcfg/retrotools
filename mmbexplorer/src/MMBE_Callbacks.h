@@ -32,5 +32,6 @@ void setBootOption3_cb( Fl_Widget* pWidget, void* _gui );
 
 // Auxiliary functions
 bool   ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory = false );
+bool   ChooseFilename( std::vector<std::string>& fileNames, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory = false );
 size_t ChooseSlot    ();
 size_t GetFileSize   ( const std::string& _fileName );
