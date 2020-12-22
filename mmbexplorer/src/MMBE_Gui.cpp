@@ -1504,6 +1504,11 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
         if( tokens.size() > 0 )
         {
             _dst.name = tokens[0];
+            if( _dst.name.length() > 1 && _dst.name[1] == '.' )
+            {
+                _dst.directory = _dst.name[0];
+                _dst.name = _dst.name.substr( 2 );
+            }
         }
         if( tokens.size() > 1 )
         {
