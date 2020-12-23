@@ -224,7 +224,6 @@ int CMMBESelectBrowser::handle(int _event)
 
             while (getline(stringStream, tempString, '\n'))
             {
-                cout << tempString << endl;
                 fileNames.push_back(tempString);
             }
             std::string fileProtocol = "file://";
@@ -376,7 +375,6 @@ int CMMBETable::handle( int _event )
 
             while (getline(stringStream, tempString, '\n'))
             {
-                cout << tempString << endl;
                 fileNames.push_back(tempString);
             }
             std::string fileProtocol = "file://";
@@ -1211,7 +1209,7 @@ void CMMBEGui::ShowAboutDialog()
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.2.2 (";
+    std::string versionStr = "Version 1.2.3 (";
     versionStr += GetSCMVersion();
     versionStr += ")";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
