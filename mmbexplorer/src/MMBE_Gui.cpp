@@ -1209,7 +1209,7 @@ void CMMBEGui::ShowAboutDialog()
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.2.3 (";
+    std::string versionStr = "Version 1.2.4 (";
     versionStr += GetSCMVersion();
     versionStr += ")";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
