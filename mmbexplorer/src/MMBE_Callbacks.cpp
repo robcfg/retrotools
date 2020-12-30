@@ -294,9 +294,11 @@ void removeFile_cb( Fl_Widget* pWidget, void* _gui )
 	}
 	slot = pGui->GetSelection()[0];
 
-	for( auto idx : selection )
+	for( size_t idx = 0; idx < selection.size(); ++idx )
 	{
-		pGui->RemoveFile( slot, idx );
+		// The index of the file to be removed is adjusted because
+		// indices are displaced every time a file is removed.
+		pGui->RemoveFile( slot, selection[idx] - idx );
 	}
 }
 
