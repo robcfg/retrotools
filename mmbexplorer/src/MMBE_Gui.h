@@ -6,6 +6,7 @@
 #include <FL/Fl_Select_Browser.H>
 #include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Table.H>
+#include <FL/Fl_Box.H>
 #include "MMBFile.h"
 #include "AcornDFS.h"
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <FL/Fl.H>
 
 // File menu callbacks
