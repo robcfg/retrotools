@@ -1188,9 +1188,10 @@ void CMMBEGui::ExtractSelectedFiles()
     for( auto file : selectedFiles )
     {
         std::string filename;
-        //filename += (char)disk.files[file].directory;
-        //filename += ".";
+        filename += (char)disk.files[file].directory;
+        filename += ".";
         filename += disk.files[file].name;
+        std::string bbcFilename = filename; // Original BBC name, for inf file
         BBCString2Host( filename );
         auto stringIter = filename.crbegin();
         while( filename.length() && filename.back() == ' ' )
@@ -1211,7 +1212,7 @@ void CMMBEGui::ExtractSelectedFiles()
         fclose( pFile );
 
         // Write inf file
-        sprintf( buffer, "%s %X %X %s", filename.c_str(), 
+        sprintf( buffer, "%s %X %X %s", bbcFilename.c_str(), 
                                         disk.files[file].loadAddress,
                                         disk.files[file].execAddress,
                                         disk.files[file].locked ? "L" : "" );
@@ -1306,7 +1307,7 @@ void CMMBEGui::ShowAboutDialog()
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.2.5 (";
+    std::string versionStr = "Version 1.2.6 (";
     versionStr += GetSCMVersion();
     versionStr += ")";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
@@ -1566,9 +1567,14 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
     {
         pos = 0;
     }
-    _dst.name = _filename.substr( pos + 1 );
-    HostString2BBC( _dst.name );
     _dst.directory = '$';
+    _dst.name = _filename.substr( pos + 1 );
+    if( _dst.name.length() > 1 && _dst.name[1] == '.' )
+    {
+        _dst.directory = _dst.name[0];
+        _dst.name = _dst.name.substr( 2 );
+    }
+    HostString2BBC( _dst.name );
     _dst.locked = false;
 
     // Try to read inf file
@@ -1604,6 +1610,7 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
                 _dst.directory = _dst.name[0];
                 _dst.name = _dst.name.substr( 2 );
             }
+            //HostString2BBC( _dst.name ); // This is not needed as the correct BBC file name should be stored here.
         }
         if( tokens.size() > 1 )
         {
