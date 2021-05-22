@@ -1625,6 +1625,16 @@ bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::stri
             _dst.locked = true;
         }
 
+        // Fix load and exec addresses
+        if( (_dst.loadAddress & 0x30000) == 0x30000 )
+        {
+            _dst.loadAddress |= 0xFF0000;
+        }
+        if( (_dst.execAddress & 0x30000) == 0x30000 )
+        {
+            _dst.execAddress |= 0xFF0000;
+        }
+
         delete[] infData;
     }
 

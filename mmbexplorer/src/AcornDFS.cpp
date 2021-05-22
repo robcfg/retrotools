@@ -64,6 +64,16 @@ void DFSRead( unsigned char* _data, size_t _size, DFSDisk& _disk )
         tmpEntry.data.resize( tmpEntry.fileSize, 0 );
         memcpy( tmpEntry.data.data(), &_data[tmpEntry.startSector * 256], tmpEntry.fileSize );
 
+        // Fix load and exec addresses
+        if( (tmpEntry.loadAddress & 0x30000) == 0x30000 )
+        {
+            tmpEntry.loadAddress |= 0xFF0000;
+        }
+        if( (tmpEntry.execAddress & 0x30000) == 0x30000 )
+        {
+            tmpEntry.execAddress |= 0xFF0000;
+        }
+
         _disk.files.push_back( tmpEntry );
     }
 }
