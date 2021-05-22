@@ -26,6 +26,7 @@ void extractFile_cb   ( Fl_Widget* pWidget, void* _gui );
 void removeFile_cb    ( Fl_Widget* pWidget, void* _gui );
 void lockFile_cb      ( Fl_Widget* pWidget, void* _gui );
 void unlockFile_cb    ( Fl_Widget* pWidget, void* _gui );
+void copyFilesCRC_cb  ( Fl_Widget* pWidget, void* _gui );
 void setBootOption0_cb( Fl_Widget* pWidget, void* _gui );
 void setBootOption1_cb( Fl_Widget* pWidget, void* _gui );
 void setBootOption2_cb( Fl_Widget* pWidget, void* _gui );

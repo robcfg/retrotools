@@ -973,17 +973,18 @@ void CMMBEGui::CreateControls()
 
     mDiskContextMenu = new Fl_Menu_Button( mDiskContent->x(), mDiskContent->y(), mDiskContent->w(), mDiskContent->h(), "Disk actions");
     mDiskContextMenu->type(Fl_Menu_Button::POPUP3);         // pops menu on right click        
-    mDiskContextMenu->add("Format disk(s)"  , 0, formatDisk_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Name disk"       , 0, nameDisk_cb        , (void*)this, 0 );
-    mDiskContextMenu->add("Insert file(s)"  , 0, insertFile_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Extract file(s)" , 0, extractFile_cb     , (void*)this, 0 );
-    mDiskContextMenu->add("Remove file(s)"  , 0, removeFile_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Lock file(s)"    , 0, lockFile_cb        , (void*)this, 0 );
-    mDiskContextMenu->add("_Unlock file(s)" , 0, unlockFile_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option None", 0, setBootOption0_cb  , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option Load", 0, setBootOption1_cb  , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option Run" , 0, setBootOption2_cb  , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option Exec", 0, setBootOption3_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Format disk(s)"   , 0, formatDisk_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Name disk"        , 0, nameDisk_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Insert file(s)"   , 0, insertFile_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Extract file(s)"  , 0, extractFile_cb     , (void*)this, 0 );
+    mDiskContextMenu->add("Remove file(s)"   , 0, removeFile_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("Lock file(s)"     , 0, lockFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Unlock file(s)"   , 0, unlockFile_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("_Copy file(s) CRC", 0, copyFilesCRC_cb    , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option None" , 0, setBootOption0_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Load" , 0, setBootOption1_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Run"  , 0, setBootOption2_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Exec" , 0, setBootOption3_cb  , (void*)this, 0 );
 }
 
 size_t CMMBEGui::GetNumberOfSlots() const
@@ -1542,6 +1543,30 @@ void CMMBEGui::SetBootOption( size_t _slot, unsigned char _bootOption )
     {
         RefreshDiskContent( _slot );
     }
+}
+
+uint32_t CMMBEGui::GetFileCRC( size_t _slot, size_t _fileIndex )
+{
+    uint32_t retVal = 0;
+    std::string errorString;
+    unsigned char* data = new unsigned char[MMB_DISKSIZE];
+    if( nullptr == data )
+    {
+        return retVal;
+    }
+    mMMB.ExtractImageInSlot( data, _slot, errorString );
+
+    DFSDisk disk;
+
+    DFSRead( data, MMB_DISKSIZE, disk );
+    if( _fileIndex < disk.files.size() )
+    {
+        retVal = crc32_byte( disk.files[_fileIndex].data.data(), disk.files[_fileIndex].data.size() );
+    }
+
+    delete[] data;
+
+    return retVal;
 }
 
 bool CMMBEGui::LoadFile( const std::string& _filename, DFSEntry& _dst, std::string& _errorString )

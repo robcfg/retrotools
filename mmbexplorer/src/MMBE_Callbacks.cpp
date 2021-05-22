@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <FL/fl_ask.H>
 #include "MMBE_Callbacks.h"
@@ -340,6 +341,38 @@ void unlockFile_cb( Fl_Widget* pWidget, void* _gui )
 	{
 		pGui->UnlockFile( slot, idx );
 	}
+}
+
+void copyFilesCRC_cb( Fl_Widget* pWidget, void* _gui )
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	if( pGui->GetSelectionSize() == 0 )
+	{
+		return;
+	}
+	size_t slot = pGui->GetSelection()[0];
+    
+    std::stringstream result;
+	std::vector<int> selection;
+	
+    pGui->GetSelectedFiles( selection );
+    if( selection.empty() )
+    {
+        return;
+    }
+
+    result << std::hex << std::uppercase;
+    for( auto fileIdx : selection )
+    {
+        result << pGui->GetFileCRC( slot, fileIdx );
+
+        if( selection.size() > 1 )
+        {
+            result << std::endl;
+        }
+    }
+
+    Fl::copy( result.str().c_str(), result.str().length(), 2, Fl::clipboard_plain_text );
 }
 
 void setBootOption0_cb( Fl_Widget* pWidget, void* _gui )

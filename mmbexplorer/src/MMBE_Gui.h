@@ -141,6 +141,8 @@ public:
     void UnlockFile   ( size_t _slot, size_t _fileIndex );
     void SetBootOption( size_t _slot, unsigned char _bootOption );
 
+    uint32_t GetFileCRC( size_t _slot, size_t _fileIndex );
+
     size_t GetSelectionSize ();
     size_t GetNumberOfSlots () const;
 
