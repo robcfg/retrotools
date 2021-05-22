@@ -177,9 +177,9 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
         string bootOptionStr = "@fBoot option: ";
         bootOptionStr += BootOptionToString( disk.bootOption );
         mDiskContent->add( bootOptionStr.c_str() );
-        mDiskContent->add( "@f-+-+----------+------+-----+-----+--------");
-        mDiskContent->add( "@fL|D|File name |Size  |Load |Exec |CRC32   ");
-        mDiskContent->add( "@f-+-+----------+------+-----+-----+--------");
+        mDiskContent->add( "@f-+-+----------+------+------+------+--------");
+        mDiskContent->add( "@fL|D|File name |Size  |Load  |Exec  |CRC32   ");
+        mDiskContent->add( "@f-+-+----------+------+------+------+--------");
         
         size_t sectorsUsed = 2; // Filesystem sectors
 
@@ -217,9 +217,9 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
             strStream.str("");
             strStream << hex << dfsFile.loadAddress;
             string paddedLoad = strStream.str();
-            if( paddedLoad.length() < 5 )
+            if( paddedLoad.length() < 6 )
             {
-                paddedLoad.insert( paddedLoad.begin(), 5 - paddedLoad.length(), '0' );
+                paddedLoad.insert( paddedLoad.begin(), 6 - paddedLoad.length(), '0' );
             }
             transform( paddedLoad.begin(), paddedLoad.end(), paddedLoad.begin(), ::toupper );
             fileStr += paddedLoad;
@@ -229,9 +229,9 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
             strStream.str("");
             strStream << hex << dfsFile.execAddress;
             std::string paddedExec = strStream.str();
-            if( paddedExec.length() < 5 )
+            if( paddedExec.length() < 6 )
             {
-                paddedExec.insert( paddedExec.begin(), 5 - paddedExec.length(), '0' );
+                paddedExec.insert( paddedExec.begin(), 6 - paddedExec.length(), '0' );
             }
             transform( paddedExec.begin(), paddedExec.end(), paddedExec.begin(), ::toupper );
             fileStr += paddedExec;
@@ -249,7 +249,7 @@ void CAppWindow::RefreshDiskContent( unsigned char* _data, size_t _dataSize )
             mDiskContent->add( fileStr.c_str() );
         }
 
-        mDiskContent->add(    "@f-+-+----------+------+-----+-----+--------");
+        mDiskContent->add(    "@f-+-+----------+------+------+------+--------");
         string freeSpaceStr = "@f    Free Space ";
         string paddedFreeSpace = to_string( (disk.sectorsNum - min(sectorsUsed, (size_t)disk.sectorsNum)) * 256 );
         if( paddedFreeSpace.length() < 6 )
@@ -965,7 +965,7 @@ void CMMBEGui::CreateControls()
     mTable->end();			                            // end the Fl_Table group
 
     x += 472 + 10;
-    mDiskContent = new CMMBESelectBrowser( this, x, y, 350, 384, "Disk content" );
+    mDiskContent = new CMMBESelectBrowser( this, x, y, 365, 384, "Disk content" );
 	mDiskContent->color( FL_WHITE );
     mDiskContent->align( FL_ALIGN_TOP );
 	mDiskContent->type(FL_MULTI_BROWSER);
