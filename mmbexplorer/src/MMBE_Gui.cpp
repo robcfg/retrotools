@@ -966,7 +966,7 @@ void CMMBEGui::CreateControls()
     mTable->end();			                            // end the Fl_Table group
 
     x += 472 + 10;
-    mDiskContent = new CMMBESelectBrowser( this, x, y, 365, 384, "Disk content" );
+    mDiskContent = new CMMBESelectBrowser( this, x, y, 385, 384, "Disk content" );
 	mDiskContent->color( FL_WHITE );
     mDiskContent->align( FL_ALIGN_TOP );
 	mDiskContent->type(FL_MULTI_BROWSER);
