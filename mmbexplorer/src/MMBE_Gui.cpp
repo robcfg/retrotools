@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
 #include <FL/fl_ask.H>
@@ -973,18 +974,19 @@ void CMMBEGui::CreateControls()
 
     mDiskContextMenu = new Fl_Menu_Button( mDiskContent->x(), mDiskContent->y(), mDiskContent->w(), mDiskContent->h(), "Disk actions");
     mDiskContextMenu->type(Fl_Menu_Button::POPUP3);         // pops menu on right click        
-    mDiskContextMenu->add("Format disk(s)"   , 0, formatDisk_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Name disk"        , 0, nameDisk_cb        , (void*)this, 0 );
-    mDiskContextMenu->add("Insert file(s)"   , 0, insertFile_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Extract file(s)"  , 0, extractFile_cb     , (void*)this, 0 );
-    mDiskContextMenu->add("Remove file(s)"   , 0, removeFile_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("Lock file(s)"     , 0, lockFile_cb        , (void*)this, 0 );
-    mDiskContextMenu->add("Unlock file(s)"   , 0, unlockFile_cb      , (void*)this, 0 );
-    mDiskContextMenu->add("_Copy file(s) CRC", 0, copyFilesCRC_cb    , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option None" , 0, setBootOption0_cb  , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option Load" , 0, setBootOption1_cb  , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option Run"  , 0, setBootOption2_cb  , (void*)this, 0 );
-    mDiskContextMenu->add("Boot option Exec" , 0, setBootOption3_cb  , (void*)this, 0 );
+    mDiskContextMenu->add("Format disk(s)"    , 0, formatDisk_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Name disk"         , 0, nameDisk_cb          , (void*)this, 0 );
+    mDiskContextMenu->add("Insert file(s)"    , 0, insertFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Extract file(s)"   , 0, extractFile_cb       , (void*)this, 0 );
+    mDiskContextMenu->add("Remove file(s)"    , 0, removeFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Lock file(s)"      , 0, lockFile_cb          , (void*)this, 0 );
+    mDiskContextMenu->add("Unlock file(s)"    , 0, unlockFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("Copy file(s) CRC"  , 0, copyFilesCRC_cb      , (void*)this, 0 );
+    mDiskContextMenu->add("_Export dir as CSV", 0, exportDirectoryCSV_cb, (void*)this, 0 );
+    mDiskContextMenu->add("Boot option None"  , 0, setBootOption0_cb    , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Load"  , 0, setBootOption1_cb    , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Run"   , 0, setBootOption2_cb    , (void*)this, 0 );
+    mDiskContextMenu->add("Boot option Exec"  , 0, setBootOption3_cb    , (void*)this, 0 );
 }
 
 size_t CMMBEGui::GetNumberOfSlots() const
@@ -1516,6 +1518,30 @@ void CMMBEGui::GetSelectedFiles( std::vector<int>& _dst )
     return mMainWindow->GetSelectedFiles( _dst );
 }
 
+std::string CMMBEGui::GetDiskName( size_t _slot )
+{
+    std::string retVal;
+    if( _slot < mMMB.GetNumberOfDisks() )
+    {
+        std::string errorString;
+        unsigned char* data = new unsigned char[MMB_DISKSIZE];
+        if( nullptr == data )
+        {
+            return retVal;
+        }
+        mMMB.ExtractImageInSlot( data, _slot, errorString );
+
+        DFSDisk disk;
+        DFSRead( data, MMB_DISKSIZE, disk );
+        
+        delete[] data;
+        
+        retVal = disk.name;
+    }
+
+    return retVal;
+}
+
 void CMMBEGui::RefreshDiskContent( size_t _slot )
 {
     std::string errorString;
@@ -1705,4 +1731,38 @@ void CMMBEGui::OnWindowResize()
 {
     mSlotContextMenu->resize( mTable->x()      , mTable->y()      , mTable->w()      , mTable->h()       );
     mDiskContextMenu->resize( mDiskContent->x(), mDiskContent->y(), mDiskContent->w(), mDiskContent->h() );
+}
+
+void CMMBEGui::ExportDirectoryCSV( size_t _slot, const std::string& _filename )
+{
+    std::string errorString;
+    unsigned char* data = new unsigned char[MMB_DISKSIZE];
+    if( nullptr == data )
+    {
+        return;
+    }
+    mMMB.ExtractImageInSlot( data, _slot, errorString );
+    
+    DFSDisk disk;
+    std::ofstream csvFile( _filename );
+    if( !csvFile.is_open() )
+    {
+        fl_alert("[ERROR] Could not write file: %s",_filename.c_str());
+    }
+
+    csvFile << "locked,name,size,loadAddress,execAddress,crc32" << endl;
+
+    DFSRead( data, MMB_DISKSIZE, disk );
+    for( auto file : disk.files )
+    {
+        csvFile << (file.locked ? 1:0) << "," << (char)file.directory << "." << file.name << ",";
+        csvFile << file.fileSize << ",0x" << hex << file.loadAddress << ",0x" << file.execAddress << ",";
+        std::stringstream strStream;
+        strStream << hex << crc32_byte( file.data.data(), file.data.size() );
+        std::string crcStr = strStream.str();
+        transform( crcStr.begin(), crcStr.end(), crcStr.begin(), ::toupper );
+        csvFile << "0x" << crcStr << dec << endl;
+    }
+
+    delete[] data;
 }

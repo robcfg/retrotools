@@ -415,6 +415,33 @@ void setBootOption3_cb( Fl_Widget* pWidget, void* _gui )
 	}
 }
 
+void exportDirectoryCSV_cb( Fl_Widget* pWidget, void* _gui )
+{
+    CMMBEGui* pGui = (CMMBEGui*)_gui;
+    
+	if( pGui->GetSelectionSize() != 1 )
+	{
+		return;
+	}
+
+    size_t slot = pGui->GetSelection()[0];
+
+    std::string preset = std::to_string(slot);
+    preset += "_";
+    preset += pGui->GetDiskName( slot );
+    while(preset.back() <= ' ' )
+    {
+        preset.pop_back();
+    }
+    preset += ".csv";
+
+	std::vector<std::string> filenames;
+	if( !ChooseFilename( filenames, "*.csv", preset.c_str(), true, false ) )
+		return;
+
+    pGui->ExportDirectoryCSV( slot, filenames[0] );
+}
+
 size_t GetFileSize( const std::string& _filename )
 {
 	size_t retVal = 0;

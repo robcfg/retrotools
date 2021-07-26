@@ -150,11 +150,15 @@ public:
 
     void GetSelectedFiles( std::vector<int>& _dst );
 
+    std::string GetDiskName( size_t _slot );
+
     void ShowAboutDialog();
 
     void RefreshDiskContent( size_t _slot );
 
     void OnWindowResize();
+
+    void ExportDirectoryCSV( size_t _slot, const std::string& _filename );
 
 private:
     void CreateMenuBar();
