@@ -29,14 +29,14 @@ bool CMMBFile::Open( const std::string& _filename, std::string& _errorString )
     Close();
 
     // Open file in binary read/write mode
-    mFile = fopen( _filename.c_str(), "rb+" );
-    if( nullptr == mFile )
+    mFilename = _filename;
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "Could not open file ";
         _errorString += _filename;
+        Close();
         return false;
     }
-    mFilename = _filename;
 
     // Get file size and compute maximum number of disks that can be stored on the MMB file.
     fseek( mFile, 0, SEEK_END );
@@ -67,6 +67,7 @@ bool CMMBFile::Open( const std::string& _filename, std::string& _errorString )
 
         return false;
     }
+    CloseMMBFileInternal();
 
     ReadDirectory();
 
@@ -126,6 +127,7 @@ void CMMBFile::Close()
     }
 
     mFileSize = 0;
+    mFilename = "";
     mNumberOfDisks = 0;
 
     ClearDirectory();
@@ -146,9 +148,30 @@ unsigned char CMMBFile::GetEntryAttribute( size_t _entry )
     return mDirectory[_entry].diskAttributes; 
 }
 
+bool CMMBFile::OpenMMBFileInternal()
+{
+    if( nullptr != mFile )
+    {
+        fclose( mFile );
+    }
+
+    mFile = fopen( mFilename.c_str(), "rb+" );
+    
+    return ( nullptr != mFile );
+}
+
+void CMMBFile::CloseMMBFileInternal()
+{
+    if( nullptr != mFile )
+    {
+        fclose( mFile );
+        mFile = nullptr;
+    }
+}
+
 void CMMBFile::ReadDirectory()
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         return;
     }
@@ -176,6 +199,8 @@ void CMMBFile::ReadDirectory()
         // Read disk atributes byte
         bytesRead = fread( &mDirectory[entry].diskAttributes, 1, 1, mFile );
     }
+
+    CloseMMBFileInternal();
 }
 
 void CMMBFile::ClearDirectory()
@@ -194,9 +219,10 @@ size_t CMMBFile::GetNumberOfDisks() const
 
 bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -208,6 +234,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -217,6 +244,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     {
         _errorString = "Could not open disk image file ";
         _errorString += _filename;
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -225,6 +253,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     if( nullptr == pImage )
     {
         fclose( pFile );
+        CloseMMBFileInternal();
         _errorString = "Could not allocate memory for temporal disk image storage.";
         return false;
     }
@@ -239,6 +268,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     {
         delete[] pImage;
         fclose( pFile );
+        CloseMMBFileInternal();
         _errorString = "Disk image size is greater than 200KB (";
         _errorString += std::to_string( fileSize );
         _errorString += ").";
@@ -264,6 +294,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     // Write disk image
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
     fwrite( pImage, 1, MMB_DISKSIZE, mFile );
+    CloseMMBFileInternal();
 
     // Cleanup
     delete[] pImage;
@@ -275,9 +306,10 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
 
 bool CMMBFile::InsertImageInSlot( const unsigned char* _data, size_t _dataSize, size_t _slot, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -289,6 +321,7 @@ bool CMMBFile::InsertImageInSlot( const unsigned char* _data, size_t _dataSize, 
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -306,6 +339,7 @@ bool CMMBFile::InsertImageInSlot( const unsigned char* _data, size_t _dataSize, 
     // Write disk image
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
     fwrite( _data, 1, MMB_DISKSIZE, mFile );
+    CloseMMBFileInternal();
 
     ReadDirectory();
 
@@ -314,9 +348,10 @@ bool CMMBFile::InsertImageInSlot( const unsigned char* _data, size_t _dataSize, 
 
 bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -328,6 +363,7 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -337,6 +373,7 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
     {
         _errorString = "Could not create/overwrite destination file ";
         _errorString = _filename;
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -345,6 +382,7 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
     if( nullptr == pImage )
     {
         _errorString = "Could not allocate memory for temporal storage.";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -354,6 +392,7 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
     fwrite( pImage, 1, MMB_DISKSIZE, pDestinationFile );
 
     fclose( pDestinationFile );
+    CloseMMBFileInternal();
     delete[] pImage;
 
     return true;
@@ -361,18 +400,28 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
 
 bool CMMBFile::ExtractImageInSlot( unsigned char* _data, size_t _slot, std::string& _errorString )
 {
+    if( !OpenMMBFileInternal() )
+    {
+        _errorString = "No MMB file opened.";
+        Close();
+        return false;
+    }
+
     size_t bytesRead = 0;
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
     bytesRead = fread( _data, 1, MMB_DISKSIZE, mFile );
+
+    CloseMMBFileInternal();
     
     return true;
 }
 
 bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -384,11 +433,13 @@ bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
     fseek( mFile, ((_slot + 2) * MMB_DIRECTORYENTRYSIZE) - 1, SEEK_SET );
     fwrite( &MMB_DISKATTRIBUTE_LOCKED, 1, 1, mFile );
+    CloseMMBFileInternal();
 
     ReadDirectory();
 
@@ -397,9 +448,10 @@ bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
 
 bool CMMBFile::UnlockImageInSlot( size_t _slot, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -411,11 +463,13 @@ bool CMMBFile::UnlockImageInSlot( size_t _slot, std::string& _errorString )
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
     fseek( mFile, ((_slot + 2) * MMB_DIRECTORYENTRYSIZE) - 1, SEEK_SET );
     fwrite( &MMB_DISKATTRIBUTE_UNLOCKED, 1, 1, mFile );
+    CloseMMBFileInternal();
 
     ReadDirectory();
 
@@ -424,9 +478,10 @@ bool CMMBFile::UnlockImageInSlot( size_t _slot, std::string& _errorString )
 
 bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -438,6 +493,7 @@ bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -452,13 +508,14 @@ bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
     if( nullptr == pImage )
     {
         _errorString = "Could not allocate memory for temporal storage.";
+        CloseMMBFileInternal();
         return false;
     }
     memset( pImage, 0, MMB_DISKSIZE );
 
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE), SEEK_SET );
     fwrite( pImage, 1, MMB_DISKSIZE, mFile );
-
+    CloseMMBFileInternal();
     delete[] pImage;
 
     ReadDirectory();
@@ -473,9 +530,10 @@ const std::string& CMMBFile::GetFilename()
 
 bool CMMBFile::LockFile( size_t _slot, size_t _fileIndex, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -487,6 +545,7 @@ bool CMMBFile::LockFile( size_t _slot, size_t _fileIndex, std::string& _errorStr
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -496,15 +555,17 @@ bool CMMBFile::LockFile( size_t _slot, size_t _fileIndex, std::string& _errorStr
     statusByte |= 0x80;
     fseek( mFile, -1, SEEK_CUR );
     fwrite( &statusByte, 1, 1, mFile );
+    CloseMMBFileInternal();
     
     return true;
 }
 
 bool CMMBFile::UnlockFile( size_t _slot, size_t _fileIndex, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -516,6 +577,7 @@ bool CMMBFile::UnlockFile( size_t _slot, size_t _fileIndex, std::string& _errorS
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -525,15 +587,17 @@ bool CMMBFile::UnlockFile( size_t _slot, size_t _fileIndex, std::string& _errorS
     statusByte &= 0x7F;
     fseek( mFile, -1, SEEK_CUR );
     fwrite( &statusByte, 1, 1, mFile );
+    CloseMMBFileInternal();
 
     return true;
 }
 
 bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -545,6 +609,7 @@ bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -566,6 +631,7 @@ bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string
 
     fseek( mFile, MMB_DIRECTORYSIZE + (_slot * MMB_DISKSIZE) + MMB_SECTORSIZE, SEEK_SET );
     fwrite( &finalName.c_str()[8], 1, 4, mFile );
+    CloseMMBFileInternal();
 
     ReadDirectory();
 
@@ -574,9 +640,10 @@ bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string
 
 bool CMMBFile::SetBootOption( size_t _slot, unsigned char _bootOption, std::string& _errorString )
 {
-    if( nullptr == mFile )
+    if( !OpenMMBFileInternal() )
     {
         _errorString = "No MMB file opened.";
+        Close();
         return false;
     }
 
@@ -588,6 +655,7 @@ bool CMMBFile::SetBootOption( size_t _slot, unsigned char _bootOption, std::stri
         _errorString += " ( max slot number is ";
         _errorString += std::to_string( GetNumberOfDisks() - 1);
         _errorString += ").";
+        CloseMMBFileInternal();
         return false;
     }
 
@@ -601,6 +669,7 @@ bool CMMBFile::SetBootOption( size_t _slot, unsigned char _bootOption, std::stri
 
     fseek( mFile, -1, SEEK_CUR );
     fwrite( &optionsByte, 1, 1, mFile );
+    CloseMMBFileInternal();
 
     return true;
 }

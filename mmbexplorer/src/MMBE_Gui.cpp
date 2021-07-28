@@ -1752,16 +1752,33 @@ void CMMBEGui::ExportDirectoryCSV( size_t _slot, const std::string& _filename )
 
     csvFile << "locked,name,size,loadAddress,execAddress,crc32" << endl;
 
+    std::stringstream strStream;
+    std::string tmpStr;
     DFSRead( data, MMB_DISKSIZE, disk );
     for( auto file : disk.files )
     {
         csvFile << (file.locked ? 1:0) << "," << (char)file.directory << "." << file.name << ",";
-        csvFile << file.fileSize << ",0x" << hex << file.loadAddress << ",0x" << file.execAddress << ",";
-        std::stringstream strStream;
+
+        // Load address in hex and uppercase
+        strStream.str("");
+        strStream << hex << file.loadAddress;
+        tmpStr = strStream.str();
+        transform( tmpStr.begin(), tmpStr.end(), tmpStr.begin(), ::toupper );
+        csvFile << file.fileSize << ",0x" << tmpStr;
+        
+        // Exec address in hex and uppercase
+        strStream.str("");
+        strStream << hex << file.execAddress;
+        tmpStr = strStream.str();
+        transform( tmpStr.begin(), tmpStr.end(), tmpStr.begin(), ::toupper );
+        csvFile << ",0x" << tmpStr << ",";
+
+        // CRC32 in hex and uppercase
+        strStream.str("");
         strStream << hex << crc32_byte( file.data.data(), file.data.size() );
-        std::string crcStr = strStream.str();
-        transform( crcStr.begin(), crcStr.end(), crcStr.begin(), ::toupper );
-        csvFile << "0x" << crcStr << dec << endl;
+        tmpStr = strStream.str();
+        transform( tmpStr.begin(), tmpStr.end(), tmpStr.begin(), ::toupper );
+        csvFile << "0x" << tmpStr << dec << endl;
     }
 
     delete[] data;

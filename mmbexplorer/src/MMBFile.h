@@ -50,6 +50,8 @@ public:
     bool SetBootOption( size_t _slot, unsigned char _bootOption, std::string& _errorString );
     
 private:
+    bool OpenMMBFileInternal();
+    void CloseMMBFileInternal();
     void ReadDirectory();
     void ClearDirectory();
 
