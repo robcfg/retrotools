@@ -4,7 +4,7 @@
 
 Some time ago I decided to take a look at what can be done on an Atari 800XL computer, as it was my first one, and back in the day there was no internet, so information was scarce.
 
-I find tinkering with an old computer's graphics system the best entry point to the machine. So I learned how to initialize the display lists, how the video memry is organized, and ended up toying with the Atari's Player and Missile graphics.
+I find tinkering with an old computer's graphics system the best entry point to the machine. So I learned how to initialize the display lists, how the video memory is organized, and ended up toying with the Atari's Player and Missile graphics.
 
 At this point, I was entering values for the graphics manually, which is rather cumbersome, so I decided to create these HTML editors to make it easy and fast to create you Player and Missile graphics, and get the byte values in different bases.
 
