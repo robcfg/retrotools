@@ -7,6 +7,11 @@ I'll be publishing some tools that I've made to help me restore media from old c
 There are tools for comparing disk images, for checking and edit data blocks on cassette, virtual filesystems to allow interacting with old media images through you favourite file explorer, image converters... You name it.
 
 ## Available tools
+  * **[Atari PMG Editors](/atari_pgm_editors)
+
+    Easy to use Atari Player and Missile graphics editors. These two HTML+JS pages allow you to create Player and Missile graphics on an 8x16 grid, and show
+    the byte values in decimal, hexadecimal and binary formats.
+
   * **[Dskcomp](/dskcomp)**
   
     A command-line utility that compares structure and contents of disk image files in Marco Vieth, Ulrich Doewich and Kevin Thacker's DSK/EDSK format.
