@@ -1,8 +1,12 @@
-# DOS68
-A command-line utility to manage disk images formatted with Smoke Signal Broadcasting (SSD) DOS68, like those from Southwest Technical Products Corporation SWTPC 6800 machines with SSD disk controllers.
+# DOS68/DOS68UI
+A command-line and a graphic utility to manage disk images formatted with Smoke Signal Broadcasting (SSD) DOS68, like those from Southwest Technical Products Corporation SWTPC 6800 machines with SSD disk controllers.
 
 ## Usage
-Dos68 expect a command (or operation) to perform, followed by necessary and/or optional parameters.
+Dos68ui can be launched by double-clicking on the executable file or typing its name on a terminal window.
+
+Dos68 must be launched from a terminal window, by typing its name.
+
+Dos68 expects a command (or operation) to perform, followed by necessary and/or optional parameters.
 
 **dos68 \<command\> [\<args\> ...]**
 
@@ -64,9 +68,9 @@ The following commands are available:
 
 * Install [FLTK](https://www.fltk.org/)
 
-* Clone this repository (git clone https://github.com/robcfg/dos68.git)
+* Clone this repository (git clone https://github.com/robcfg/retrotools.git)
 
-* Open a terminal to the folder where you cloned the repository and navigate to the mmbexplorer/build folder.
+* Open a terminal to the folder where you cloned the repository and navigate to the retrotools/build folder.
 
 * Type `cmake -DCMAKE_BUILD_TYPE=Release ..` This will generate a Makefile on MacOS and Linux platforms, and a Visual Studio solution on Windows.
 
