@@ -3,6 +3,7 @@ A command-line and a graphic utility to manage disk images formatted with Smoke 
 
 ## Usage
 Dos68ui can be launched by double-clicking on the executable file or typing its name on a terminal window.
+![Dos68ui](/pictures/DOS68UI.png)
 
 Dos68 must be launched from a terminal window, by typing its name.
 
