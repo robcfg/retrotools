@@ -71,6 +71,8 @@ The following commands are available:
 
 * Clone this repository (git clone https://github.com/robcfg/retrotools.git)
 
+* On Windows, edit CMakeLists.txt to set the path of the FLTK installation.
+
 * Open a terminal to the folder where you cloned the repository and navigate to the retrotools/build folder.
 
 * Type `cmake -DCMAKE_BUILD_TYPE=Release ..` This will generate a Makefile on MacOS and Linux platforms, and a Visual Studio solution on Windows.
