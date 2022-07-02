@@ -217,8 +217,8 @@ bool CDOS68_FS::InsertFile( string _fileName, const vector<unsigned char>& _src,
 {
     // Process file name
     filesystem::path filePath( _fileName );
-    string dos68_filename  = filePath.stem     ();
-    string dos68_extension = filePath.extension();
+    string dos68_filename  = filePath.stem     ().string();
+    string dos68_extension = filePath.extension().string();
     if( !dos68_extension.empty() )
     {
         dos68_extension.erase(0,1);
@@ -269,7 +269,6 @@ bool CDOS68_FS::InsertFile( string _fileName, const vector<unsigned char>& _src,
         offset += 4; // Padding?
 
         // Check FIBs
-        char tmpChar;
         for( uint8_t fibIdx = 0; fibIdx < DOS68_FIBS_PER_SECTOR; ++fibIdx )
         {
             if( skipDiskInfoFIB )
@@ -363,7 +362,7 @@ bool CDOS68_FS::InsertFile( string _fileName, const vector<unsigned char>& _src,
             sectorData[3] = 0;
         }
 
-        unsigned char sizeToCopy = DOS68_SECTOR_DATA_SIZE;
+        size_t sizeToCopy = DOS68_SECTOR_DATA_SIZE;
         if( _src.size() - fileBytes <= DOS68_SECTOR_DATA_SIZE )
         {
             sizeToCopy = _src.size() - fileBytes;
@@ -410,7 +409,7 @@ bool CDOS68_FS::InsertFile( string _fileName, const vector<unsigned char>& _src,
     return true;
 }
 
-bool CDOS68_FS::DeleteFile( string _fileName )
+bool CDOS68_FS::RemoveFile( string _fileName )
 {
     if( nullptr == mDisk )
     {

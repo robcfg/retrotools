@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <FL/Fl.H>
 #include <FL/fl_ask.H>
 #include <FL/Fl_Native_File_Chooser.H>
@@ -432,7 +434,7 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
 
     for( auto fileName : fileNames )
     {
-        if( !fs->DeleteFile( fileName ) )
+        if( !fs->RemoveFile( fileName) )
         {
             string error = "Couldn't remove file ";
             error += fileName;

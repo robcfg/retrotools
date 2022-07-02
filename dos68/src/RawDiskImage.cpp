@@ -9,7 +9,7 @@
 //
 ////////////////////////////////////////////////////////////////////
 
-#define _CRT_SECURE_NO_WARNING
+#define _CRT_SECURE_NO_WARNINGS
 
 #include "RawDiskImage.h"
 #include <sstream>

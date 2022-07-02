@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <algorithm>
 #include <iostream>
 
@@ -279,7 +281,7 @@ bool DeleteCommand( const vector<string>& _args )
 
     SFileInfo fi = fs.GetFileInfo( fileIdx );
 
-    if( !fs.DeleteFile( fi.name ) )
+    if( !fs.RemoveFile( fi.name ) )
     {
         cout << "The requested file couldn't be deleted. Please check that the file name is correct." << endl;
         cout << "The disk image may be damaged or corrupted." << endl;

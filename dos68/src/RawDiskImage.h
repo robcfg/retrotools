@@ -26,10 +26,10 @@ public:
     bool Save(const string& _filename); // Save isn't const because it can update the lastError string.
     //NewDisk(tracks,sides,optional sector size)
 
-    int GetSidesNum()   const { return mSidesNum;   }
-    int GetTracksNum()  const { return mTracksNum;  }
-    int GetSectorsNum() const { return mSectorsNum; }
-    int GetSectorsNum(size_t _side, size_t _track) const { return mSectorsNum; }
+    int GetSidesNum()   const { return (int)mSidesNum;   }
+    int GetTracksNum()  const { return (int)mTracksNum;  }
+    int GetSectorsNum() const { return (int)mSectorsNum; }
+    int GetSectorsNum(size_t _side, size_t _track) const { return (int)mSectorsNum; }
 
     string GetFileSpec();
     string GetDiskInfo(); 

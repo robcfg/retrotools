@@ -100,7 +100,7 @@ public:
 
     bool ExtractFile( string _fileName, vector<unsigned char>& _dst );
     bool InsertFile ( string _fileName, const vector<unsigned char>& src, bool _binaryFile );
-    bool DeleteFile ( string _fileName );
+    bool RemoveFile ( string _fileName );
 
     string GetFSName();
     string GetFSVariant();
