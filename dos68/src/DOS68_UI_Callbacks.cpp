@@ -49,7 +49,7 @@ void UpdateUI( SDOS68UI_Context* _context )
 
         uint16_t fileSectors = (fib.sectorsNumHigh << 8) | fib.sectorsNumLow;
 
-        sprintf( tmpBuf, "@f@.%03zu  %s.%s  %02X%02X %02X%02X %02X%02X %3d %5d\n", 
+        sprintf( tmpBuf, "@f@.%03zu  %s.%s  %02X%02X %02X%02X %02X%02X %3d %5zu\n", 
                  fileIdx, 
                  tmpName.c_str(), 
                  tmpExt.c_str(),
@@ -60,7 +60,7 @@ void UpdateUI( SDOS68UI_Context* _context )
                  fib.lastTrack   | DOS68_TRACK_ID_MARK,
                  fib.lastSector  | DOS68_SECTOR_ID_MARK,
                  fileSectors,
-                 fileSectors * DOS68_SECTOR_DATA_SIZE );
+                 pFS->GetFileSize( fileIdx) );
         _context->browser->add(tmpBuf);
     }
 

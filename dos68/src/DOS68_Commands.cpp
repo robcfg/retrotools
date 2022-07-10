@@ -88,7 +88,7 @@ bool ListCommand( const vector<string>& _args )
     for( size_t fileIdx = 0; fileIdx < fs.GetFilesNum(); ++fileIdx )
     {
         SFileInfo fi = fs.GetFileInfo( fileIdx );
-        cout << fileIdx << "\t" << PadFilename(fi.name) << "\t" << fi.size / DOS68_SECTOR_DATA_SIZE << "\t" << fi.size << endl;
+        cout << fileIdx << "\t" << PadFilename(fi.name) << "\t" << fi.size / DOS68_SECTOR_DATA_SIZE << "\t" << fs.GetFileSize(fileIdx) << endl;
     }
     
     return true;

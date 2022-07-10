@@ -113,6 +113,7 @@ public:
     uint8_t  GetLastAvailableTrack();
     uint8_t  GetLastAvailableSector();
     uint16_t GetAvailableSectorsNum();
+    size_t   GetFileSize( size_t _fileIdx );
 
     SDOS68_FileInfoBlock GetFIB( size_t _fileIdx );
 

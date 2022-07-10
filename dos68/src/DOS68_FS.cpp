@@ -207,6 +207,15 @@ bool CDOS68_FS::ExtractFile( string _fileName, vector<unsigned char>& _dst )
             sectorId = sectorData[1] & DOS68_SECTOR_ID_MASK;
         }
 
+        // Remove trailing zeroes if file is an ASCII file.
+        if( result->type == DOS68_FILE_TYPE_SEQ_ASCII )
+        {
+            while( 0 == _dst.back() )
+            {
+                _dst.pop_back();
+            }
+        }
+
         return true;
     }
 
@@ -523,6 +532,21 @@ uint8_t CDOS68_FS::GetLastAvailableSector()
 uint16_t CDOS68_FS::GetAvailableSectorsNum()
 {
     return ((mAvailableSectorsNumHigh << 8) | mAvailableSectorsNumLow);
+}
+
+size_t CDOS68_FS::GetFileSize( size_t _fileIdx )
+{
+    size_t retVal = 0;
+
+    if( _fileIdx < mDirectory.size() )
+    {
+        vector<unsigned char> fileData;
+
+        ExtractFile( mDirectory[_fileIdx].fullName, fileData );
+        retVal = fileData.size();
+    }
+
+    return retVal;
 }
 
 SDOS68_FileInfoBlock CDOS68_FS::GetFIB( size_t _fileIdx )
