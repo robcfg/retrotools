@@ -66,7 +66,7 @@ bool ChooseFilename( std::vector<std::string>& fileNames, const std::string& fil
 
 size_t ChooseSlot()
 {
-	const char* result = fl_input( "Enter slot number (1 - 511)", nullptr );
+	const char* result = fl_input( "Enter slot number (1 - 8176)", nullptr );
 	if( nullptr == result )
 	{
 		return (size_t)-1;

@@ -164,6 +164,9 @@ private:
     void CreateMenuBar();
     void CreateControls();
 
+    void SetTableSize(int ccount, int rcount) const;
+
+
     bool LoadFile( const std::string& _filename, DFSEntry& _dst, std::string& _errorString );
 
     void BBCString2Host( std::string& _string );

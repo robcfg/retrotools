@@ -581,7 +581,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
         DrawHeader( tmp.c_str(), _x, _y, _w, _h );
         return; 
     case CONTEXT_CELL:                        // Draw data in cells
-        if( slot > 510 )
+        if( slot >= (mMMB->GetNumberOfDisks()))
         {
             DrawUnused( _x, _y, _w, _h );
         }
@@ -626,9 +626,10 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
 
 void CMMBETable::resize( int _x, int _y ,int _w ,int _h )
 {
+    int dcount = max(mMMB->GetNumberOfDisks() + 1,512);
     int cols = max( 1, _w / MMBEGUI_TABLECELL_WIDTH );
-    int rows = 512 / cols;
-    if( 0 != (512 % cols) )
+    int rows = dcount / cols;
+    if( 0 != (dcount % cols))
     {
         ++rows;
     }
@@ -827,6 +828,8 @@ void CMMBEGui::OpenMMB( const std::string& _filename )
         fl_alert("[ERROR] %s",errorString.c_str());
     }
 
+    SetTableSize(16, 32 * ((mMMB.GetNumberOfDisks() + 511) / 512));
+
     string filenameStr = "File: ";
     filenameStr += mMMB.GetFilename().c_str();
     mFilenameBox->copy_label( filenameStr.c_str() );
@@ -843,14 +846,14 @@ void CMMBEGui::CreateMMB( const std::string& _filename )
     CloseMMB();
 
     // Ask for MMB size
-    const char* result = fl_input( "Enter number of slots on the new MMB file (1 - 511)", nullptr );
+    const char* result = fl_input( "Enter number of slots on the new MMB file (1 - 8176)", nullptr );
     if( nullptr == result )
     {
         return;
     }
 
     size_t numberOfDisks = (size_t)strtoul( result, nullptr, 0 );
-    if( numberOfDisks == 0 || numberOfDisks > 511 )
+    if( numberOfDisks == 0 || numberOfDisks > MMB_MAXNUMBEROFDISKS2)
     {
         return;
     }
@@ -951,18 +954,8 @@ void CMMBEGui::CreateControls()
     mSlotContextMenu->add("Lock disk(s)"   , 0, lockDisk_cb   , (void*)this, 0 );
     mSlotContextMenu->add("Unlock disk(s)" , 0, unlockDisk_cb , (void*)this, 0 );
 
-    // Rows
-    mTable->rows(32);                                   // how many rows
-    mTable->row_header(0);                              // enable row headers (along left)
-    mTable->row_height_all(MMBEGUI_TABLECELL_HEIGHT);   // default height of rows
-    mTable->row_resize(0);                              // disable row resizing
-    
-    // Columns
-    mTable->cols(16);                                   // how many columns
-    mTable->col_header(0);                              // enable column headers (along top)
-    mTable->col_width_all(MMBEGUI_TABLECELL_WIDTH);     // default width of columns
-    mTable->col_resize(0);                              // enable column resizing
-    
+    SetTableSize(16,32);
+   
     mTable->end();			                            // end the Fl_Table group
 
     x += 472 + 10;
@@ -988,6 +981,22 @@ void CMMBEGui::CreateControls()
     mDiskContextMenu->add("Boot option Run"   , 0, setBootOption2_cb    , (void*)this, 0 );
     mDiskContextMenu->add("Boot option Exec"  , 0, setBootOption3_cb    , (void*)this, 0 );
 }
+
+void CMMBEGui::SetTableSize(int ccount, int rcount) const
+{
+    // Rows
+    mTable->rows(rcount);                                   // how many rows
+    mTable->row_header(0);                              // enable row headers (along left)
+    mTable->row_height_all(MMBEGUI_TABLECELL_HEIGHT);   // default height of rows
+    mTable->row_resize(0);                              // disable row resizing
+
+    // Columns
+    mTable->cols(ccount);                                   // how many columns
+    mTable->col_header(0);                              // enable column headers (along top)
+    mTable->col_width_all(MMBEGUI_TABLECELL_WIDTH);     // default width of columns
+    mTable->col_resize(0);                              // enable column resizing
+}
+
 
 size_t CMMBEGui::GetNumberOfSlots() const
 {

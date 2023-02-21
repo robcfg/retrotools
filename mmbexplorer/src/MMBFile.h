@@ -7,9 +7,11 @@ const unsigned char MMB_DISKATTRIBUTE_UNLOCKED    = 0x0F; // Unlocked
 const unsigned char MMB_DISKATTRIBUTE_LOCKED      = 0x00; // Locked
 const size_t        MMB_MAXDISKNAMELENGTH         = 12;   // As per the Acorn Disk Filing System
 const size_t        MMB_MAXNUMBEROFDISKS          = 511;
+const size_t        MMB_MAXNUMBEROFDISKS2         = 511*15;
 const size_t        MMB_DIRECTORYSIZE             = 8192;
 const size_t        MMB_DIRECTORYENTRYSIZE        = 16;
 const size_t        MMB_DISKSIZE                  = 200 * 1024;
+const size_t        MMB_CHUNKSIZE                 = MMB_DIRECTORYSIZE + (MMB_MAXNUMBEROFDISKS * MMB_DISKSIZE);
 const size_t        MMB_SECTORSIZE                = 256;
 
 struct SMMBDirectoryEntry
@@ -59,5 +61,6 @@ private:
     FILE* mFile = nullptr;
     size_t mFileSize = 0;
     size_t mNumberOfDisks = 0;
-    SMMBDirectoryEntry mDirectory[MMB_MAXNUMBEROFDISKS];
+    size_t mNumberOfChunks = 0;
+    SMMBDirectoryEntry *mDirectory = 0;
 };
