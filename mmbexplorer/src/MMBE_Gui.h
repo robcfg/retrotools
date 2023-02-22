@@ -7,6 +7,7 @@
 #include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Table.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Value_Slider.H>
 #include "MMBFile.h"
 #include "AcornDFS.h"
 
@@ -121,6 +122,12 @@ public:
     void CreateMMB( const std::string& _filename );
     void CloseMMB ();
 
+    void ResizeMMB();
+    void EditBootOptions();
+    void ApplyBootOptions();
+    void FormatAll();
+    void FormatUnformatted();
+    
     void InsertDisk ( const std::string& _filename, size_t _slot );
     void ExtractDisk( const std::string& _filename, size_t _slot );
     void RemoveDisk ( size_t _slot );
@@ -178,8 +185,13 @@ private:
     Fl_Box* mFilenameBox = nullptr;
     Fl_Menu_Button* mSlotContextMenu = nullptr;
     Fl_Menu_Button* mDiskContextMenu = nullptr;
+    Fl_Value_Slider* mBootDiskSlider0 = nullptr;
+    Fl_Value_Slider* mBootDiskSlider1 = nullptr;
+    Fl_Value_Slider* mBootDiskSlider2 = nullptr;
+    Fl_Value_Slider* mBootDiskSlider3 = nullptr;
     CMMBESelectBrowser* mDiskContent = nullptr;
 
+    Fl_Window* mBootOptionsDialog = nullptr;
     char mBuffer[32] = { 0 };
 
 #ifdef __APPLE__

@@ -102,6 +102,39 @@ void createFile_cb( Fl_Widget* pWidget, void* _gui )
     ((CMMBEGui*)_gui)->CreateMMB( filename );
 }
 
+void resizeFile_cb(Fl_Widget* pWidget, void* _gui)
+{
+	((CMMBEGui*)_gui)->ResizeMMB();
+}
+
+void editBoot_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->EditBootOptions();
+}
+
+void formatAll_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->FormatAll();
+}
+
+void formatUnformatted_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->FormatUnformatted();
+}
+
+void editBoot_ok_cb(Fl_Widget* pWidget, void* _gui) {
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pWidget->window()->hide();
+	pGui->ApplyBootOptions();
+}
+
+void editBoot_cancel_cb(Fl_Widget* pWidget, void* _gui) {
+	pWidget->window()->hide();
+}
+
 void menuQuit_cb( Fl_Widget* pWidget, void* )
 {
     pWidget->window()->hide();

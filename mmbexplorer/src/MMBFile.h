@@ -30,8 +30,16 @@ public:
     bool Create( const std::string& _filename, size_t _numberOfDisks, std::string& _errorString ) const;
     void Close ();
 
+
     const SMMBDirectoryEntry* GetDirectory();
     size_t GetNumberOfDisks() const;
+
+    bool Resize(size_t _numberOfDisks, std::string& _errorString);
+    size_t GetBoot0() const;
+    size_t GetBoot1() const;
+    size_t GetBoot2() const;
+    size_t GetBoot3() const;
+    bool ApplyBootOptionValues(size_t disk0, size_t disk1, size_t disk2, size_t disk3, std::string& _errorString);
 
     bool InsertImageInSlot  ( const std::string& _filename, size_t _slot, std::string& _errorString );
     bool InsertImageInSlot  ( const unsigned char* _data, size_t _dataSize, size_t _slot, std::string& _errorString );
@@ -62,5 +70,9 @@ private:
     size_t mFileSize = 0;
     size_t mNumberOfDisks = 0;
     size_t mNumberOfChunks = 0;
+    size_t mBoot0 = 0;
+    size_t mBoot1 = 0;
+    size_t mBoot2 = 0;
+    size_t mBoot3 = 0;
     SMMBDirectoryEntry *mDirectory = 0;
 };

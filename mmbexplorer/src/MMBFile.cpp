@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <string.h> // for memset
 #include "MMBFile.h"
+#include <io.h>
+#ifndef WIN32
+#include <unistd.h>
+#endif
 
 const unsigned char firstDirectoryEntry[MMB_DIRECTORYENTRYSIZE] = { 0,1,2,3,0,0,0,0,0,0,0,0,0,0,0,0 };
 const unsigned char emptyDirectoryEntry[MMB_DIRECTORYENTRYSIZE] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,MMB_DISKATTRIBUTE_UNFORMATTED };
@@ -57,10 +61,10 @@ bool CMMBFile::Open(const std::string& _filename, std::string& _errorString)
 
     size_t remainder = 0;
 
-    mNumberOfChunks = (mFileSize + MMB_CHUNKSIZE - 1) / (MMB_DIRECTORYSIZE + (511 * MMB_DISKSIZE));
+    mNumberOfChunks = (mFileSize + MMB_CHUNKSIZE - 1) / (MMB_DIRECTORYSIZE + (MMB_MAXNUMBEROFDISKS * MMB_DISKSIZE));
     mFileSize -= (mNumberOfChunks-1) * MMB_CHUNKSIZE;
 
-    mNumberOfDisks = (mNumberOfChunks-1) * 511;
+    mNumberOfDisks = (mNumberOfChunks-1) * MMB_MAXNUMBEROFDISKS;
     if (mFileSize > 0) {
         mNumberOfDisks += (mFileSize - MMB_DIRECTORYSIZE) / MMB_DISKSIZE;
         remainder = (mFileSize - MMB_DIRECTORYSIZE) % MMB_DISKSIZE;
@@ -80,9 +84,9 @@ bool CMMBFile::Open(const std::string& _filename, std::string& _errorString)
     }
     CloseMMBFileInternal();
 
-    ReadDirectory();
+ReadDirectory();
 
-    return true;
+return true;
 }
 
 bool CMMBFile::Create(const std::string& _filename, size_t _numberOfDisks, std::string& _errorString) const
@@ -99,12 +103,12 @@ bool CMMBFile::Create(const std::string& _filename, size_t _numberOfDisks, std::
         _errorString += _filename;
         return false;
     }
-    size_t chunks = (_numberOfDisks + 510) / 511;
+    size_t chunks = (_numberOfDisks + MMB_MAXNUMBEROFDISKS-1) / MMB_MAXNUMBEROFDISKS;
 
     while (_numberOfDisks > 0) {
-        
-        if (_numberOfDisks > 511) {
-            ndisks = 511;
+
+        if (_numberOfDisks > MMB_MAXNUMBEROFDISKS) {
+            ndisks = MMB_MAXNUMBEROFDISKS;
         }
         else {
             ndisks = _numberOfDisks;
@@ -138,29 +142,172 @@ bool CMMBFile::Create(const std::string& _filename, size_t _numberOfDisks, std::
 
     if (chunks > 1) {
         fseek(pFile, 8, SEEK_SET);
-        chunks = 0xa0 + chunks -1;
+        chunks = 0xa0 + chunks - 1;
         fwrite(&chunks, 1, 1, pFile);
     }
 
     // Close file
-    fclose( pFile );
-    
+    fclose(pFile);
+
     return true;
 }
 
 void CMMBFile::Close()
-{
-    if( nullptr != mFile )
     {
-        fclose( mFile );
+    if (nullptr != mFile)
+    {
+        fclose(mFile);
         mFile = nullptr;
     }
 
     mFileSize = 0;
     mFilename = "";
     mNumberOfDisks = 0;
+    mBoot0 = 0;
+    mBoot1 = 1;
+    mBoot2 = 2;
+    mBoot3 = 3;
 
     ClearDirectory();
+}
+
+bool CMMBFile::Resize(size_t _numberOfDisks, std::string& _errorString)
+{
+
+    if (!OpenMMBFileInternal())
+    {
+        _errorString = "No MMB file opened.";
+        return false;
+    }
+
+    //Close();
+    size_t chunks = _numberOfDisks / MMB_MAXNUMBEROFDISKS;
+    int ndisks = _numberOfDisks % MMB_MAXNUMBEROFDISKS;
+
+    size_t newsize = chunks * MMB_CHUNKSIZE;
+    if (ndisks > 0) {
+        newsize += MMB_DIRECTORYSIZE + (ndisks * MMB_DISKSIZE);
+    }
+
+    chunks = (_numberOfDisks + MMB_MAXNUMBEROFDISKS - 1) / MMB_MAXNUMBEROFDISKS;
+
+    #ifdef WIN32
+    if (_chsize(fileno(mFile), newsize)!=0) {
+    #else
+    if (ftruncate(fileno(mFile), newsize) != 0) {
+    #endif
+        _errorString = "Error while resizeing ";
+        _errorString += mFilename;
+        return false;
+    }
+
+    size_t diskCount = 1;
+    if (_numberOfDisks > mNumberOfDisks)
+    {
+        while (_numberOfDisks > 0) {
+
+            if (_numberOfDisks > MMB_MAXNUMBEROFDISKS) {
+                ndisks = MMB_MAXNUMBEROFDISKS;
+            }
+            else {
+                ndisks = _numberOfDisks;
+            }
+
+            if (diskCount > mNumberOfDisks) {
+                fwrite(firstDirectoryEntry, 1, MMB_DIRECTORYENTRYSIZE, mFile);
+            }
+            else {
+                fseek(mFile, MMB_DIRECTORYENTRYSIZE, SEEK_CUR);
+            }
+
+
+            // Write usable entries  
+            for (size_t usable = 0; usable < ndisks; ++usable)
+            {
+                if (diskCount>mNumberOfDisks) {
+                    fwrite(emptyDirectoryEntry, 1, MMB_DIRECTORYENTRYSIZE, mFile);
+                }
+                else {
+                    fseek(mFile, MMB_DIRECTORYENTRYSIZE, SEEK_CUR);
+                }
+                diskCount++;
+            }
+
+            // Write non-existant entries
+            for (size_t entry = 0; entry < MMB_MAXNUMBEROFDISKS - ndisks; ++entry)
+            {
+                if (diskCount > mNumberOfDisks) {
+                    fwrite(invalidDirectoryEntry, 1, MMB_DIRECTORYENTRYSIZE, mFile);
+                }
+                else {
+                    fseek(mFile, MMB_DIRECTORYENTRYSIZE, SEEK_CUR);
+                }
+                diskCount++;
+            }
+
+            fseek(mFile, MMB_DISKSIZE * ndisks, SEEK_CUR);
+            _numberOfDisks -= ndisks;
+        }
+    }
+
+    fseek(mFile, 8, SEEK_SET);
+    if (chunks>1) chunks = 0xa0 + chunks - 1;
+    fwrite(&chunks, 1, 1, mFile);
+
+    CloseMMBFileInternal();
+
+    mFileSize = newsize;
+    mNumberOfChunks = (mFileSize + MMB_CHUNKSIZE - 1) / (MMB_DIRECTORYSIZE + (MMB_MAXNUMBEROFDISKS * MMB_DISKSIZE));
+    mFileSize -= (mNumberOfChunks - 1) * MMB_CHUNKSIZE;
+
+    mNumberOfDisks = (mNumberOfChunks - 1) * MMB_MAXNUMBEROFDISKS;
+    if (mFileSize > 0) {
+        mNumberOfDisks += (mFileSize - MMB_DIRECTORYSIZE) / MMB_DISKSIZE;
+    }
+
+    ReadDirectory();
+
+    return true;
+}
+
+bool CMMBFile::ApplyBootOptionValues(size_t disk0, size_t disk1, size_t disk2, size_t disk3, std::string& _errorString)
+{
+    if (!OpenMMBFileInternal())
+    {
+        _errorString = "Could not open file ";
+        Close();
+        return false;
+    }
+
+    fseek(mFile, 0, SEEK_SET);
+
+    char tmpChar = 0;
+
+    tmpChar = disk0 % 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+    tmpChar = disk1 % 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+    tmpChar = disk2 % 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+    tmpChar = disk3 % 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+
+    tmpChar = disk0 / 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+    tmpChar = disk1 / 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+    tmpChar = disk2 / 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+    tmpChar = disk3 / 256;
+    fwrite(&tmpChar, 1, 1, mFile);
+
+    CloseMMBFileInternal();
+
+    mBoot0 = disk0;
+    mBoot1 = disk1;
+    mBoot2 = disk2;
+    mBoot3 = disk3;
+    return true;
 }
 
 const SMMBDirectoryEntry* CMMBFile::GetDirectory()
@@ -208,11 +355,31 @@ void CMMBFile::ReadDirectory()
 
     ClearDirectory();
 
-    
 
+    
     // Read entries
     char tmpChar = 0;
     size_t bytesRead = 0;
+
+    fseek(mFile, 0, SEEK_SET);
+
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot0 = tmpChar;
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot1 = tmpChar;
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot2 = tmpChar;
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot3 = tmpChar;
+
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot0 += 256*tmpChar;
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot1 += 256*tmpChar;
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot2 += 256*tmpChar;
+    bytesRead = fread(&tmpChar, 1, 1, mFile);
+    mBoot3 += 256*tmpChar;
 
     if (mDirectory) delete[] mDirectory;
     mDirectory = new SMMBDirectoryEntry[mNumberOfChunks* MMB_MAXNUMBEROFDISKS];
@@ -252,6 +419,26 @@ void CMMBFile::ClearDirectory()
 size_t CMMBFile::GetNumberOfDisks() const
 {
     return mNumberOfDisks;
+}
+
+size_t CMMBFile::GetBoot0() const
+{
+    return mBoot0;
+}
+
+size_t CMMBFile::GetBoot1() const
+{
+    return mBoot1;
+}
+
+size_t CMMBFile::GetBoot2() const
+{
+    return mBoot2;
+}
+
+size_t CMMBFile::GetBoot3() const
+{
+    return mBoot3;
 }
 
 bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, std::string& _errorString )
@@ -326,8 +513,8 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     memcpy( &directoryEntry[8], &pImage[256], 4 );
 
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     fseek(mFile, MMB_CHUNKSIZE * chunk + ((dnum + 1) * MMB_DIRECTORYENTRYSIZE), SEEK_SET);
     fwrite( directoryEntry, 1, MMB_DIRECTORYENTRYSIZE, mFile );
@@ -374,8 +561,8 @@ bool CMMBFile::InsertImageInSlot( const unsigned char* _data, size_t _dataSize, 
     memcpy( &directoryEntry[0], _data, 8 );
     memcpy( &directoryEntry[8], &_data[256], 4 );
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     fseek( mFile, MMB_CHUNKSIZE * chunk + ((dnum + 1) * MMB_DIRECTORYENTRYSIZE), SEEK_SET );
     fwrite( directoryEntry, 1, MMB_DIRECTORYENTRYSIZE, mFile );
@@ -431,8 +618,8 @@ bool CMMBFile::ExtractImageInSlot( const std::string& _filename, size_t _slot, s
     }
 
     size_t bytesRead = 0;
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     fseek(mFile, MMB_CHUNKSIZE * chunk + MMB_DIRECTORYSIZE + (dnum * MMB_DISKSIZE), SEEK_SET);
     bytesRead = fread( pImage, 1, MMB_DISKSIZE, mFile );
@@ -455,8 +642,8 @@ bool CMMBFile::ExtractImageInSlot( unsigned char* _data, size_t _slot, std::stri
     }
 
     size_t bytesRead = 0;
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
     
     fseek( mFile, MMB_CHUNKSIZE * chunk + MMB_DIRECTORYSIZE + (dnum * MMB_DISKSIZE), SEEK_SET );
     bytesRead = fread( _data, 1, MMB_DISKSIZE, mFile );
@@ -487,8 +674,8 @@ bool CMMBFile::LockImageInSlot( size_t _slot, std::string& _errorString )
         return false;
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     fseek( mFile, MMB_CHUNKSIZE * chunk + ((dnum + 2) * MMB_DIRECTORYENTRYSIZE) - 1, SEEK_SET );
     fwrite( &MMB_DISKATTRIBUTE_LOCKED, 1, 1, mFile );
@@ -520,8 +707,8 @@ bool CMMBFile::UnlockImageInSlot( size_t _slot, std::string& _errorString )
         return false;
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     fseek(mFile, MMB_CHUNKSIZE * chunk + ((dnum + 2) * MMB_DIRECTORYENTRYSIZE) - 1, SEEK_SET);
     fwrite( &MMB_DISKATTRIBUTE_UNLOCKED, 1, 1, mFile );
@@ -553,8 +740,8 @@ bool CMMBFile::RemoveImageFromSlot( size_t _slot, std::string& _errorString )
         return false;
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     // Clear directory entry
     fseek( mFile, MMB_CHUNKSIZE * chunk + (dnum + 1) * MMB_DIRECTORYENTRYSIZE, SEEK_SET );
@@ -608,8 +795,8 @@ bool CMMBFile::LockFile( size_t _slot, size_t _fileIndex, std::string& _errorStr
         return false;
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
     unsigned char statusByte = 0;
     fseek( mFile, MMB_CHUNKSIZE * chunk + MMB_DIRECTORYSIZE + (dnum * MMB_DISKSIZE) + ((_fileIndex + 1) * 8) + 7, SEEK_SET );
     size_t bytesRead = fread( &statusByte, 1, 1, mFile );
@@ -642,8 +829,8 @@ bool CMMBFile::UnlockFile( size_t _slot, size_t _fileIndex, std::string& _errorS
         return false;
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
     unsigned char statusByte = 0;
     fseek( mFile, MMB_CHUNKSIZE * chunk + MMB_DIRECTORYSIZE + (dnum * MMB_DISKSIZE) + ((_fileIndex + 1) * 8) + 7, SEEK_SET );
     size_t bytesRead = fread( &statusByte, 1, 1, mFile );
@@ -686,8 +873,8 @@ bool CMMBFile::NameDisk( size_t _slot, const std::string& _diskName, std::string
         finalName.insert( finalName.end(), 12 - finalName.length(), ' ' );
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
     fseek( mFile, MMB_CHUNKSIZE * chunk + (dnum + 1) * MMB_DIRECTORYENTRYSIZE, SEEK_SET );
     fwrite( finalName.c_str(), 1, 12, mFile );
@@ -725,8 +912,8 @@ bool CMMBFile::SetBootOption( size_t _slot, unsigned char _bootOption, std::stri
         return false;
     }
 
-    size_t chunk = _slot / 511;
-    size_t dnum = _slot % 511;
+    size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
+    size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
     unsigned char optionsByte = 0;
     fseek( mFile, MMB_CHUNKSIZE * chunk + MMB_DIRECTORYSIZE + (dnum * MMB_DISKSIZE) + MMB_SECTORSIZE + 6, SEEK_SET );
     size_t bytesRead = fread( &optionsByte, 1, 1, mFile );
