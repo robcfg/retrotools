@@ -3,8 +3,9 @@
 #include <algorithm>
 #include <string.h> // for memset
 #include "MMBFile.h"
+#ifdef WIN32
 #include <io.h>
-#ifndef WIN32
+#else
 #include <unistd.h>
 #endif
 
@@ -245,7 +246,7 @@ bool CMMBFile::Resize(size_t _numberOfDisks, std::string& _errorString)
                 diskCount++;
             }
 
-            fseek(mFile, MMB_DISKSIZE * ndisks, SEEK_CUR);
+            fseek(mFile,MMB_DISKSIZE * ndisks, SEEK_CUR);
             _numberOfDisks -= ndisks;
         }
     }
@@ -387,7 +388,7 @@ void CMMBFile::ReadDirectory()
     for (size_t chunk = 0; chunk < mNumberOfChunks; chunk++) {
 
         // seek to first entry of correct chunk
-        fseek(mFile, MMB_DIRECTORYENTRYSIZE+MMB_CHUNKSIZE*chunk, SEEK_SET);
+        fseek(mFile,MMB_DIRECTORYENTRYSIZE+MMB_CHUNKSIZE*chunk, SEEK_SET);
         for (size_t entry = 0; entry < MMB_MAXNUMBEROFDISKS; ++entry)
         {
             for (size_t nameChar = 0; nameChar < MMB_MAXDISKNAMELENGTH; ++nameChar)
@@ -516,7 +517,7 @@ bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, st
     size_t chunk = _slot / MMB_MAXNUMBEROFDISKS;
     size_t dnum = _slot % MMB_MAXNUMBEROFDISKS;
 
-    fseek(mFile, MMB_CHUNKSIZE * chunk + ((dnum + 1) * MMB_DIRECTORYENTRYSIZE), SEEK_SET);
+    fseek(mFile,MMB_CHUNKSIZE * chunk + ((dnum + 1) * MMB_DIRECTORYENTRYSIZE), SEEK_SET);
     fwrite( directoryEntry, 1, MMB_DIRECTORYENTRYSIZE, mFile );
 
     // Write disk image

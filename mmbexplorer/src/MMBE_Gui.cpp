@@ -628,7 +628,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
 
 void CMMBETable::resize( int _x, int _y ,int _w ,int _h )
 {
-    int dcount = max(mMMB->GetNumberOfDisks() + 1,512);
+    int dcount = max(mMMB->GetNumberOfDisks() + 1,(size_t)512);
     int cols = max( 1, _w / MMBEGUI_TABLECELL_WIDTH );
     int rows = dcount / cols;
     if( 0 != (dcount % cols))
