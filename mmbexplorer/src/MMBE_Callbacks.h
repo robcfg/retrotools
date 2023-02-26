@@ -11,6 +11,12 @@ void openFile_cb  ( Fl_Widget* pWidget, void* _gui );
 void closeFile_cb ( Fl_Widget* pWidget, void* _gui );
 void createFile_cb( Fl_Widget* pWidget, void* _gui );
 
+// Tools menu callbacks
+void resizeFile_cb( Fl_Widget* pWidget, void* _gui);
+void editBoot_cb(Fl_Widget* pWidget, void* _gui);
+void formatAll_cb(Fl_Widget* pWidget, void* _gui);
+void formatUnformatted_cb(Fl_Widget* pWidget, void* _gui);
+
 // Slot menu callbacks
 void insertDisk_cb  ( Fl_Widget* pWidget, void* _gui );
 void extractDisk_cb ( Fl_Widget* pWidget, void* _gui );
@@ -32,6 +38,10 @@ void setBootOption1_cb    ( Fl_Widget* pWidget, void* _gui );
 void setBootOption2_cb    ( Fl_Widget* pWidget, void* _gui );
 void setBootOption3_cb    ( Fl_Widget* pWidget, void* _gui );
 void exportDirectoryCSV_cb( Fl_Widget* pWidget, void* _gui );
+
+// Edit Boot Options Dialog callbacks
+void editBoot_ok_cb(Fl_Widget* pWidget, void* _gui);
+void editBoot_cancel_cb(Fl_Widget* pWidget, void* _gui);
 
 // Auxiliary functions
 bool   ChooseFilename( std::string& fileName, const std::string& filter, const std::string& preset, bool bSaveAsDialog, bool bDirectory = false );

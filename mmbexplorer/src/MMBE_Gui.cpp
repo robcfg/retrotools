@@ -7,6 +7,8 @@
 #include <fstream>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
+#include <Fl/Fl_Value_Slider.H>
+#include <Fl/Fl_Return_Button.H> 
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
@@ -581,7 +583,7 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
         DrawHeader( tmp.c_str(), _x, _y, _w, _h );
         return; 
     case CONTEXT_CELL:                        // Draw data in cells
-        if( slot > 510 )
+        if( slot >= (mMMB->GetNumberOfDisks()))
         {
             DrawUnused( _x, _y, _w, _h );
         }
@@ -626,9 +628,10 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
 
 void CMMBETable::resize( int _x, int _y ,int _w ,int _h )
 {
+    int dcount = max(mMMB->GetNumberOfDisks() + 1,(size_t)512);
     int cols = max( 1, _w / MMBEGUI_TABLECELL_WIDTH );
-    int rows = 512 / cols;
-    if( 0 != (512 % cols) )
+    int rows = dcount / cols;
+    if( 0 != (dcount % cols))
     {
         ++rows;
     }
@@ -827,6 +830,8 @@ void CMMBEGui::OpenMMB( const std::string& _filename )
         fl_alert("[ERROR] %s",errorString.c_str());
     }
 
+    SetTableSize(16, 32 * ((mMMB.GetNumberOfDisks() + 511) / 512));
+
     string filenameStr = "File: ";
     filenameStr += mMMB.GetFilename().c_str();
     mFilenameBox->copy_label( filenameStr.c_str() );
@@ -843,14 +848,14 @@ void CMMBEGui::CreateMMB( const std::string& _filename )
     CloseMMB();
 
     // Ask for MMB size
-    const char* result = fl_input( "Enter number of slots on the new MMB file (1 - 511)", nullptr );
+    const char* result = fl_input( "Enter number of slots on the new MMB file (1 - 8176)", nullptr );
     if( nullptr == result )
     {
         return;
     }
 
     size_t numberOfDisks = (size_t)strtoul( result, nullptr, 0 );
-    if( numberOfDisks == 0 || numberOfDisks > 511 )
+    if( numberOfDisks == 0 || numberOfDisks > MMB_MAXNUMBEROFDISKS2)
     {
         return;
     }
@@ -868,6 +873,41 @@ void CMMBEGui::CreateMMB( const std::string& _filename )
     OpenMMB( _filename );
 
     // Refresh contents
+    mTable->redraw();
+}
+
+void CMMBEGui::ResizeMMB()
+{
+    std::string errorString;
+
+    if (mMMB.GetFilename().empty())
+    {
+        return;
+    }
+
+    const char* result = fl_input("Enter new number of slots for the MMB file (1 - 8176)", nullptr);
+    if (nullptr == result)
+    {
+        return;
+    }
+
+    size_t numberOfDisks = (size_t)strtoul(result, nullptr, 0);
+    if (numberOfDisks == 0 || numberOfDisks > MMB_MAXNUMBEROFDISKS2)
+    {
+        return;
+    }
+
+    if (!mMMB.Resize(numberOfDisks, errorString))
+    {
+        fl_alert("[ERROR] %s", errorString.c_str());
+        mTable->redraw();
+        return;
+    }
+
+    SetTableSize(16, 32 * ((mMMB.GetNumberOfDisks() + 511) / 512));
+
+    // Refresh contents
+    mTable->SelectSlot(0, CMMBETable::EMMBETable_Single);
     mTable->redraw();
 }
 
@@ -900,6 +940,12 @@ void CMMBEGui::CreateMenuBar()
 	#ifndef __APPLE__
     mMenuBar->add( "&File/&Quit"          , mModifierKey+'q', menuQuit_cb  , (void*)mMainWindow, 0 );
     #endif
+
+    // Tools menu
+    mMenuBar->add("&Tools/Re&size MMB", mModifierKey + 's', resizeFile_cb, (void*)this, 0);
+    mMenuBar->add("&Tools/Edit On&Boot Options", mModifierKey + 'b', editBoot_cb, (void*)this, 0);
+    mMenuBar->add("&Tools/Format All", mModifierKey + 'a', formatAll_cb, (void*)this, 0);
+    mMenuBar->add("&Tools/Format Unformatted", mModifierKey + 'u', formatUnformatted_cb, (void*)this, 0);
 
     // Slot menu
 	mMenuBar->add( "&Slot/&Insert disk(s)", mModifierKey+'i', insertDisk_cb  , (void*)this, 0 ); // If no slot selected, ask for slot
@@ -951,18 +997,8 @@ void CMMBEGui::CreateControls()
     mSlotContextMenu->add("Lock disk(s)"   , 0, lockDisk_cb   , (void*)this, 0 );
     mSlotContextMenu->add("Unlock disk(s)" , 0, unlockDisk_cb , (void*)this, 0 );
 
-    // Rows
-    mTable->rows(32);                                   // how many rows
-    mTable->row_header(0);                              // enable row headers (along left)
-    mTable->row_height_all(MMBEGUI_TABLECELL_HEIGHT);   // default height of rows
-    mTable->row_resize(0);                              // disable row resizing
-    
-    // Columns
-    mTable->cols(16);                                   // how many columns
-    mTable->col_header(0);                              // enable column headers (along top)
-    mTable->col_width_all(MMBEGUI_TABLECELL_WIDTH);     // default width of columns
-    mTable->col_resize(0);                              // enable column resizing
-    
+    SetTableSize(16,32);
+   
     mTable->end();			                            // end the Fl_Table group
 
     x += 472 + 10;
@@ -988,6 +1024,22 @@ void CMMBEGui::CreateControls()
     mDiskContextMenu->add("Boot option Run"   , 0, setBootOption2_cb    , (void*)this, 0 );
     mDiskContextMenu->add("Boot option Exec"  , 0, setBootOption3_cb    , (void*)this, 0 );
 }
+
+void CMMBEGui::SetTableSize(int ccount, int rcount) const
+{
+    // Rows
+    mTable->rows(rcount);                                   // how many rows
+    mTable->row_header(0);                              // enable row headers (along left)
+    mTable->row_height_all(MMBEGUI_TABLECELL_HEIGHT);   // default height of rows
+    mTable->row_resize(0);                              // disable row resizing
+
+    // Columns
+    mTable->cols(ccount);                                   // how many columns
+    mTable->col_header(0);                              // enable column headers (along top)
+    mTable->col_width_all(MMBEGUI_TABLECELL_WIDTH);     // default width of columns
+    mTable->col_resize(0);                              // enable column resizing
+}
+
 
 size_t CMMBEGui::GetNumberOfSlots() const
 {
@@ -1267,6 +1319,133 @@ void CMMBEGui::UnlockSelectedDisks()
 size_t CMMBEGui::GetSelectionSize()
 {
     return mTable->GetSelectionSize();
+}
+
+void CMMBEGui::FormatAll()
+{
+    if (mMMB.GetNumberOfDisks() == 0)
+    {
+        return;
+    }
+    
+    if (fl_ask("Are you sure you wish to format every disk in this MMB file?")) {
+        for (int slot = 0; slot < mMMB.GetNumberOfDisks(); slot++) {
+            FormatDisk(slot);
+        }
+    }
+}
+
+void CMMBEGui::FormatUnformatted()
+{
+    if (mMMB.GetNumberOfDisks() == 0)
+    {
+        return;
+    }
+    
+    for (int slot = 0; slot < mMMB.GetNumberOfDisks(); slot++) {
+        if (mMMB.GetEntryAttribute(slot) == MMB_DISKATTRIBUTE_UNFORMATTED) {
+            FormatDisk(slot);
+        }
+    }
+}
+
+void CMMBEGui::EditBootOptions()
+{
+    if (mMMB.GetNumberOfDisks()==0)
+    {
+        return;
+    }
+
+    if (nullptr != Fl::modal())
+    {
+        return;
+    }
+
+    int editBootDialogWidth = 284;
+    int editBootDialogHeight = 155;
+
+    mBootOptionsDialog = new Fl_Window(editBootDialogWidth, editBootDialogHeight, nullptr);
+    if (nullptr == mBootOptionsDialog)
+    {
+        return;
+    }
+#ifdef WIN32
+    mBootOptionsDialog->resizable(mBootOptionsDialog);
+#endif
+    mBootOptionsDialog->box(FL_FLAT_BOX);
+    mBootOptionsDialog->color(FL_DARK2);
+    mBootOptionsDialog->set_modal();
+    mBootOptionsDialog->begin();
+
+    int ySeparation = 8;
+    int y = ySeparation;
+
+    int textHeight = 15;
+
+    Fl_Box* aboutText1 = new Fl_Box(115, y, 100, textHeight, "OnBoot Options");
+    aboutText1->align(FL_ALIGN_LEFT);
+    aboutText1->labelcolor(FL_BLACK);
+    aboutText1->labelsize(14);
+    aboutText1->labelfont(FL_HELVETICA);
+    y += textHeight + ySeparation;
+    
+    mBootDiskSlider0 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 0");
+    y += textHeight + ySeparation;
+    mBootDiskSlider0->align(FL_ALIGN_LEFT);
+    mBootDiskSlider0->step(1);
+    mBootDiskSlider0->minimum(0);
+    mBootDiskSlider0->maximum(mMMB.GetNumberOfDisks()-1);
+    mBootDiskSlider0->value(mMMB.GetBoot0());
+    mBootDiskSlider0->type(FL_HOR_NICE_SLIDER);
+
+
+    mBootDiskSlider1 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 1");
+    y += textHeight + ySeparation;
+    mBootDiskSlider1->align(FL_ALIGN_LEFT);
+    mBootDiskSlider1->step(1);
+    mBootDiskSlider1->minimum(0);
+    mBootDiskSlider1->maximum(mMMB.GetNumberOfDisks() - 1);
+    mBootDiskSlider1->value(mMMB.GetBoot1());
+    mBootDiskSlider1->type(FL_HOR_NICE_SLIDER);
+
+    mBootDiskSlider2 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 2");
+    y += textHeight + ySeparation;
+    mBootDiskSlider2->align(FL_ALIGN_LEFT);
+    mBootDiskSlider2->step(1);
+    mBootDiskSlider2->minimum(0);
+    mBootDiskSlider2->maximum(mMMB.GetNumberOfDisks() - 1);
+    mBootDiskSlider2->value(mMMB.GetBoot2());
+    mBootDiskSlider2->type(FL_HOR_NICE_SLIDER);
+
+    mBootDiskSlider3 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 3");
+    mBootDiskSlider3->align(FL_ALIGN_LEFT);
+    mBootDiskSlider3->step(1);
+    mBootDiskSlider3->minimum(0);
+    mBootDiskSlider3->maximum(mMMB.GetNumberOfDisks() - 1);
+    mBootDiskSlider3->value(mMMB.GetBoot3());
+    mBootDiskSlider3->type(FL_HOR_NICE_SLIDER);
+    y += textHeight + ySeparation;
+
+    Fl_Return_Button* okButton = new Fl_Return_Button(100, y, 80, textHeight+4, "Ok");
+    okButton->align(FL_ALIGN_CENTER);
+    okButton->callback(editBoot_ok_cb, this);
+    Fl_Return_Button* cancelButton = new Fl_Return_Button(190, y, 80, textHeight+4, "Cancel");
+    cancelButton->callback(editBoot_cancel_cb, this);
+    cancelButton->align(FL_ALIGN_CENTER);
+    y += textHeight + ySeparation;
+
+    mBootOptionsDialog->end();
+    mBootOptionsDialog->show();
+}
+
+void CMMBEGui::ApplyBootOptions()
+{
+    string errorString;
+
+    if (!mMMB.ApplyBootOptionValues(mBootDiskSlider0->value(), mBootDiskSlider1->value(), mBootDiskSlider2->value(), mBootDiskSlider3->value(), errorString))
+    {
+        fl_alert("[ERROR] %s", errorString.c_str());
+    }
 }
 
 void CMMBEGui::ShowAboutDialog()
