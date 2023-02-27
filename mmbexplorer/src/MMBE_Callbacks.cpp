@@ -1,6 +1,7 @@
 #include <string>
 #include <sstream>
 #include <FL/Fl_Native_File_Chooser.H>
+#include <FL/Fl_Text_Display.H>
 #include <FL/fl_ask.H>
 #include "MMBE_Callbacks.h"
 #include "MMBE_Gui.h"
@@ -374,6 +375,44 @@ void unlockFile_cb( Fl_Widget* pWidget, void* _gui )
 	{
 		pGui->UnlockFile( slot, idx );
 	}
+}
+
+void viewFile_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+
+	std::vector<int> selection;
+	pGui->GetSelectedFiles(selection);
+	size_t slot = 0;
+
+	if (pGui->GetSelectionSize() != 1)
+	{
+		return;
+	}
+	slot = pGui->GetSelection()[0];
+
+	for (auto idx : selection)
+	{
+		pGui->ViewFile(slot, idx);
+	}
+}
+
+void changeViewHex_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->setFileViewHex();
+}
+
+void changeViewText_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->setFileViewText();
+}
+
+void changeViewBASIC_cb(Fl_Widget* pWidget, void* _gui)
+{
+	CMMBEGui* pGui = (CMMBEGui*)_gui;
+	pGui->setFileViewBASIC();
 }
 
 void copyFilesCRC_cb( Fl_Widget* pWidget, void* _gui )

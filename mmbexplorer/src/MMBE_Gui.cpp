@@ -9,6 +9,7 @@
 #include <FL/Fl_Sys_Menu_Bar.H>
 #include <Fl/Fl_Value_Slider.H>
 #include <Fl/Fl_Return_Button.H> 
+#include <FL/Fl_Text_Display.H>
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
@@ -962,6 +963,7 @@ void CMMBEGui::CreateMenuBar()
     mMenuBar->add( "&Disk/&Remove file"   , FL_SHIFT+mModifierKey+'r', removeFile_cb  , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Lock file"     , FL_SHIFT+mModifierKey+'l', lockFile_cb    , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Unlock file"   , FL_SHIFT+mModifierKey+'u', unlockFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&View file"     , FL_SHIFT+mModifierKey+'v', viewFile_cb    , (void*)this, 0 );
 
     mMenuBar->add( "&Disk/&Boot option/&None"   , mModifierKey+'0', setBootOption0_cb  , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Boot option/&Load"   , mModifierKey+'1', setBootOption1_cb  , (void*)this, 0 );
@@ -1017,6 +1019,7 @@ void CMMBEGui::CreateControls()
     mDiskContextMenu->add("Remove file(s)"    , 0, removeFile_cb        , (void*)this, 0 );
     mDiskContextMenu->add("Lock file(s)"      , 0, lockFile_cb          , (void*)this, 0 );
     mDiskContextMenu->add("Unlock file(s)"    , 0, unlockFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("View file(s)"      , 0, viewFile_cb          , (void*)this, 0);
     mDiskContextMenu->add("Copy file(s) CRC"  , 0, copyFilesCRC_cb      , (void*)this, 0 );
     mDiskContextMenu->add("_Export dir as CSV", 0, exportDirectoryCSV_cb, (void*)this, 0 );
     mDiskContextMenu->add("Boot option None"  , 0, setBootOption0_cb    , (void*)this, 0 );
@@ -1690,6 +1693,243 @@ void CMMBEGui::UnlockFile( size_t _slot, size_t _fileIndex )
     mTable->redraw();
 
     RefreshDiskContent( _slot );
+}
+
+void CMMBEGui::ViewFile(size_t _slot, size_t _fileIndex)
+{
+    Fl_Window* viewFileWindow;
+    if (mMMB.GetNumberOfDisks() == 0)
+    {
+        return;
+    }
+
+    if (nullptr != Fl::modal())
+    {
+        return;
+    }
+
+    if (GetSelectionSize() != 1)
+    {
+        return;
+    }
+
+    std::vector<int> selectedFiles;
+    GetSelectedFiles(selectedFiles);
+    if (selectedFiles.empty())
+    {
+        return;
+    }
+
+    int dialogWidth = 600;
+    int dialogHeight = 500;
+
+    viewFileWindow = new Fl_Window(dialogWidth, dialogHeight, "View File");
+    if (nullptr == viewFileWindow)
+    {
+        return;
+    }
+#ifdef WIN32
+    viewFileWindow->resizable(viewFileWindow);
+#endif
+    viewFileWindow->box(FL_FLAT_BOX);
+    viewFileWindow->color(FL_DARK2);
+    viewFileWindow->set_modal();
+    viewFileWindow->begin();
+
+    mTextDisplay = new Fl_Text_Display(0,30, viewFileWindow->w(), viewFileWindow->h() -30, "");
+    mTextDisplay->textfont(FL_COURIER);
+
+    mMenuBar = new Fl_Menu_Bar(0, 0, viewFileWindow->w(), 30);
+
+    mHexBuffer = new Fl_Text_Buffer();
+    mTextBuffer = new Fl_Text_Buffer();
+    mBASICBuffer = new Fl_Text_Buffer();
+
+    // View menu
+    int n = mMenuBar->add("&View/View as Hex ", mModifierKey + 'h', changeViewHex_cb, (void*)this, FL_MENU_RADIO);
+    mMenuBar->add("&View/View as Text ", mModifierKey + 't', changeViewText_cb, (void *)this, FL_MENU_RADIO);
+    mMenuBar->add("&View/View as BASIC ", mModifierKey + 'b', changeViewBASIC_cb, (void *)this, FL_MENU_RADIO);
+    mMenuBar->setonly((Fl_Menu_Item*)(&mMenuBar->menu()[n]));
+
+    DFSDisk disk;
+    char buffer[256] = { 0 };
+    size_t slot = GetSelection()[0];
+    std::string errorString;
+    std::vector<unsigned char> data;
+    data.resize(MMB_DISKSIZE);
+
+    if (!mMMB.ExtractImageInSlot(data.data(), slot, errorString))
+    {
+        fl_alert("[ERROR] %s", errorString.c_str());
+        return;
+    }
+    DFSRead(data.data(), MMB_DISKSIZE, disk);
+
+    for (auto file : selectedFiles)
+    {
+        std::string filename;
+        filename += (char)disk.files[file].directory;
+        filename += ".";
+        filename += disk.files[file].name;
+        int c = 0;
+        size_t filesize = disk.files[file].data.size();
+        unsigned char* data = (unsigned char*)disk.files[file].data.data();
+        char* s = new char[8];
+
+        if (selectedFiles.size() > 1) {
+            mHexBuffer->append(filename.c_str());
+            mHexBuffer->append("\n");
+            mTextBuffer->append(filename.c_str());
+            mTextBuffer->append("\n");
+            mBASICBuffer->append(filename.c_str());
+            mBASICBuffer->append("\n");
+        }
+        while (c < filesize) {
+            sprintf(s, "%05X: ", c);
+            mHexBuffer->append(s);
+            for (int x = 0; x < 16; x++) {
+                if (c < filesize) {
+                    sprintf(s, "%02X ",data[c]);
+                    mHexBuffer->append(s);
+                }
+                else {
+                    mHexBuffer->append("   ");
+                }
+                c++;
+            }
+            c -= 16;
+
+            for (int x = 0; x < 16; x++) {
+                sprintf(s, "%c", data[c]);
+                if ((c < filesize) && (data[c]>31) && (data[c] < 128)){
+                    mHexBuffer->append(s);
+                    mTextBuffer->append(s);
+                }
+                else if(c < filesize) {
+                    mHexBuffer->append(".");
+                    if ((data[c] == 13)) {
+                        mTextBuffer->append("\n");
+                    }
+                    else {
+                        mTextBuffer->append(".");
+                    }
+                }
+                c++;
+            }
+
+            mHexBuffer->append("\n");
+        }
+        mHexBuffer->append("\n");
+        mTextBuffer->append("\n\n");
+
+        c = 0;
+
+        unsigned char work;
+        int lineno;
+        int quote = 0, number = 0;
+        char tokens[255][20] = { "AND","DIV","EOR","MOD","OR","ERROR","LINE","OFF","STEP","SPC","TAB(","ELSE",
+                               "THEN","line","OPENIN","PTR","PAGE","TIME","LOMEM","HIMEM","ABS","ACS","ADVAL",
+                               "ASC","ASN","ATN","BGET","COS","COUNT","DEG","ERL","ERR","EVAL","EXP","EXT",
+                               "FALSE","FN","GET","INKEY","INSTR(","INT","LEN","LN","LOG","NOT","OPENUP",
+                               "OPENOUT","PI","POINT(","POS","RAD","RND","SGN","SIN","SQR","TAN","TO","TRUE",
+                               "USR","VAL","VPOS","CHR$","GET$","INKEY$","LEFT$(","MID$(","RIGHT$(","STR$",
+                               "STRING$(","EOF","SUM","WHILE","CASE","WHEN","OF","ENDCASE","OTHERWISE","ENDIF",
+                               "ENDWHILE","PTR","PAGE","TIME","LOMEM","HIMEM","SOUND","BPUT","CALL","CHAIN",
+                               "CLEAR","CLOSE","CLG","CLS","DATA","DEF","DIM","DRAW","END","ENDPROC","ENVELOPE",
+                               "FOR","GOSUB","GOTO","GCOL","IF","INPUT","LET","LOCAL","MODE","MOVE","NEXT","ON",
+                               "VDU","PLOT","PRINT","PROC","READ","REM","REPEAT","REPORT","RESTORE","RETURN",
+                               "RUN","STOP","COLOUR","TRACE","UNTIL","WIDTH","OSCLI" };
+
+        work = data[c++];
+        if (work != 0x0d)
+        {
+            mBASICBuffer->append("This is not a BBC Basic file\n");
+        }
+        else {
+            while (c<filesize)
+            {
+                char* s = new char[255];
+                // first get the line number
+                work = data[c++];
+                if (work == 0xff)
+                {
+                    // End of program
+                    break;
+                }
+                lineno = work * 256 + data[c++];
+                sprintf(s,"%d ", lineno);
+                mBASICBuffer->append(s);
+                // First skip the length as we don't care!
+                work = data[c++];
+
+                quote = 0;
+                //Now the rest of the line
+                do
+                {
+                    work = data[c++];
+                    if (work == 0x8d && !quote)
+                    {
+                        // It's a line number
+                        int num1 = data[c++], num2 = data[c++], num3 = data[c++];
+                        number = num2 - 0x40;
+                        switch (num1)
+                        {
+                        case 0x44: number += 0x40; break;
+                        case 0x54: break;
+                        case 0x64: number += 0xc0; break;
+                        case 0x74: number += 0x80; break;
+                        }
+                        number += (num3 - 0x40) * 256;
+                        sprintf(s, "%d ", number);
+                        mBASICBuffer->append(s);
+                    }
+                    else if (work >= 0x80 && !quote)
+                    {
+                        // It's a token!
+                        sprintf(s,"%s", tokens[work - 0x80]);
+                        mBASICBuffer->append(s);
+                    }
+                    else if (work != 0x0d)
+                    {
+                        // It's a character
+                        sprintf(s,"%c", work);
+                        if (work == '\"')
+                            quote = !quote;
+                        mBASICBuffer->append(s);
+                    }
+                    else
+                    {
+                        // End of line
+                        mBASICBuffer->append("\n");
+                    }
+                } while (work != 0x0d);
+            }
+        }
+        mBASICBuffer->append("\n");
+        
+    }
+
+
+
+    mTextDisplay->buffer(mHexBuffer);
+
+    viewFileWindow->end();
+    viewFileWindow->show();
+}
+
+void CMMBEGui::setFileViewHex()
+{
+    mTextDisplay->buffer(mHexBuffer);
+}
+
+void CMMBEGui::setFileViewText()
+{
+    mTextDisplay->buffer(mTextBuffer);
+}
+
+void CMMBEGui::setFileViewBASIC()
+{
+    mTextDisplay->buffer(mBASICBuffer);
 }
 
 void CMMBEGui::GetSelectedFiles( std::vector<int>& _dst )
