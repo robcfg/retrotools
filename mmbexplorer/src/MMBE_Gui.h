@@ -6,9 +6,11 @@
 #include <FL/Fl_Select_Browser.H>
 #include <FL/Fl_Menu_Button.H>
 #include <FL/Fl_Table.H>
+#include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Value_Slider.H>
 #include "MMBFile.h"
+#include "MMBE_ViewFileWindow.h"
 #include "AcornDFS.h"
 
 #ifdef __APPLE__
@@ -147,6 +149,11 @@ public:
     void LockFile     ( size_t _slot, size_t _fileIndex );
     void UnlockFile   ( size_t _slot, size_t _fileIndex );
     void SetBootOption( size_t _slot, unsigned char _bootOption );
+    void ViewFile     (size_t _slot, size_t _fileIndex);
+
+    void setFileViewHex();
+    void setFileViewText();
+    void setFileViewBASIC();
 
     uint32_t GetFileCRC( size_t _slot, size_t _fileIndex );
 
@@ -191,8 +198,15 @@ private:
     Fl_Value_Slider* mBootDiskSlider3 = nullptr;
     CMMBESelectBrowser* mDiskContent = nullptr;
 
+    Fl_Text_Display* mTextDisplay = nullptr;
+    Fl_Text_Buffer* mHexBuffer = nullptr;
+    Fl_Text_Buffer* mTextBuffer = nullptr;
+    Fl_Text_Buffer* mBASICBuffer = nullptr;
+
     Fl_Window* mBootOptionsDialog = nullptr;
     char mBuffer[32] = { 0 };
+
+    CMMBEViewFileWindow* mViewFileWindow = nullptr;
 
 #ifdef __APPLE__
     Fl_Sys_Menu_Bar* mMenuBar = nullptr;

@@ -6,7 +6,7 @@ project(MMBExplorer)
 # Find required packages
 if( WIN32 )
 	# Set here the path to the FLTK folder
-	set(FLTK_INCLUDE_DIR "C:\\Users\\example\\fltk-1.3.5\\")
+	set(FLTK_INCLUDE_DIR "C:\\Users\\example\\fltk-1.3.8\\")
 endif()
 set(FLTK_SKIP_FLUID True)
 FIND_PACKAGE(FLTK QUIET REQUIRED)
@@ -24,6 +24,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Commands.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Gui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_ViewFileWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/resource.rc
 	)
@@ -34,6 +35,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Commands.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Gui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_ViewFileWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
 	)
 endif()

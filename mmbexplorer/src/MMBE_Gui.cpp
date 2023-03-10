@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <string>
 #include <sstream>
@@ -9,7 +10,9 @@
 #include <FL/Fl_Sys_Menu_Bar.H>
 #include <Fl/Fl_Value_Slider.H>
 #include <Fl/Fl_Return_Button.H> 
+#include <FL/Fl_Text_Display.H>
 #include <FL/fl_ask.H>
+#include <FL/Fl_Choice.H>
 #include <FL/fl_draw.H>
 #include <FL/x.H>
 #include "MMBE_Gui.h"
@@ -30,8 +33,10 @@ using namespace std;
     const char PATH_SEPARATOR = '/';
 #endif
 
-const int MMBEGUI_TABLECELL_HEIGHT = 26;   // default height of rows
-const int MMBEGUI_TABLECELL_WIDTH  = 206;  // default width of columns
+const int MMBEGUI_TABLECELL_HEIGHT = 26;   // Default height of rows
+const int MMBEGUI_TABLECELL_WIDTH  = 206;  // Default width of columns
+const int MMBEGUI_VIEWFILE_WIDTH   = 620;  // Width of the View File window
+const int MMBEGUI_VIEWFILE_HEIGHT  = 540;  // Height of the View File window
 
 //******************************************
 //* CRC32 calculation
@@ -565,7 +570,7 @@ int CMMBETable::handle( int _event )
 void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, int _y, int _w, int _h )
 {
     string tmp;
-    char cellData[32] = {0};
+    std::stringstream cellDataStream;
     size_t slot = (_col * Fl_Table::rows()) + _row;
     bool selected = IsSlotSelected( slot );
 
@@ -593,31 +598,27 @@ void CMMBETable::draw_cell( TableContext context, int _row, int _col, int _x, in
 
             if( nullptr != mMMB )
             {
-                sprintf( cellData, "%03zu: %s", slot, mMMB->GetEntryName( slot ) );
+                cellDataStream << setfill('0') << setw(3) << slot << ": " << mMMB->GetEntryName( slot );
 
                 switch( mMMB->GetEntryAttribute( slot ) )
                 {
                     case MMB_DISKATTRIBUTE_UNFORMATTED:
                         cellIcon = mIconEmpty;
-                        DrawData( cellData, cellIcon, _x, _y, _w, _h, selected );
+                        DrawData( cellDataStream.str().c_str(), cellIcon, _x, _y, _w, _h, selected );
                         break;
                     case MMB_DISKATTRIBUTE_UNLOCKED:
                         cellIcon = mIconUnlocked;
-                        DrawData( cellData, cellIcon, _x, _y, _w, _h, selected );
+                        DrawData( cellDataStream.str().c_str(), cellIcon, _x, _y, _w, _h, selected );
                         break;
                     case MMB_DISKATTRIBUTE_LOCKED:
                         cellIcon = mIconLocked;
-                        DrawData( cellData, cellIcon, _x, _y, _w, _h, selected );
+                        DrawData( cellDataStream.str().c_str(), cellIcon, _x, _y, _w, _h, selected );
                         break;
                     default:
                         DrawUnused( _x, _y, _w, _h );
                         break;
                 }
 
-            }
-            else
-            {
-                sprintf( cellData, "%03i: %s", (_col * Fl_Table::rows()) + _row, "" );
             }
         }
         return;
@@ -962,6 +963,7 @@ void CMMBEGui::CreateMenuBar()
     mMenuBar->add( "&Disk/&Remove file"   , FL_SHIFT+mModifierKey+'r', removeFile_cb  , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Lock file"     , FL_SHIFT+mModifierKey+'l', lockFile_cb    , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Unlock file"   , FL_SHIFT+mModifierKey+'u', unlockFile_cb  , (void*)this, 0 );
+    mMenuBar->add( "&Disk/&View file"     , FL_SHIFT+mModifierKey+'v', viewFile_cb    , (void*)this, 0 );
 
     mMenuBar->add( "&Disk/&Boot option/&None"   , mModifierKey+'0', setBootOption0_cb  , (void*)this, 0 );
     mMenuBar->add( "&Disk/&Boot option/&Load"   , mModifierKey+'1', setBootOption1_cb  , (void*)this, 0 );
@@ -1017,12 +1019,15 @@ void CMMBEGui::CreateControls()
     mDiskContextMenu->add("Remove file(s)"    , 0, removeFile_cb        , (void*)this, 0 );
     mDiskContextMenu->add("Lock file(s)"      , 0, lockFile_cb          , (void*)this, 0 );
     mDiskContextMenu->add("Unlock file(s)"    , 0, unlockFile_cb        , (void*)this, 0 );
+    mDiskContextMenu->add("View file(s)"      , 0, viewFile_cb          , (void*)this, 0);
     mDiskContextMenu->add("Copy file(s) CRC"  , 0, copyFilesCRC_cb      , (void*)this, 0 );
     mDiskContextMenu->add("_Export dir as CSV", 0, exportDirectoryCSV_cb, (void*)this, 0 );
     mDiskContextMenu->add("Boot option None"  , 0, setBootOption0_cb    , (void*)this, 0 );
     mDiskContextMenu->add("Boot option Load"  , 0, setBootOption1_cb    , (void*)this, 0 );
     mDiskContextMenu->add("Boot option Run"   , 0, setBootOption2_cb    , (void*)this, 0 );
     mDiskContextMenu->add("Boot option Exec"  , 0, setBootOption3_cb    , (void*)this, 0 );
+
+    mViewFileWindow = new CMMBEViewFileWindow( MMBEGUI_VIEWFILE_WIDTH, MMBEGUI_VIEWFILE_HEIGHT, "View file(s)" );
 }
 
 void CMMBEGui::SetTableSize(int ccount, int rcount) const
@@ -1267,10 +1272,12 @@ void CMMBEGui::ExtractSelectedFiles()
         fclose( pFile );
 
         // Write inf file
-        sprintf( buffer, "%s %X %X %s", bbcFilename.c_str(), 
+        std::stringstream buffer;
+        buffer << bbcFilename.c_str() << " " << hex << std::uppercase << disk.files[file].loadAddress << " "  << disk.files[file].execAddress << " "  << (disk.files[file].locked ? "L" : "");
+        /*sprintf( buffer, "%s %X %X %s", bbcFilename.c_str(), 
                                         disk.files[file].loadAddress,
                                         disk.files[file].execAddress,
-                                        disk.files[file].locked ? "L" : "" );
+                                        disk.files[file].locked ? "L" : "" );*/
         destFilename += ".inf";
         FILE* pInfFile = fopen( destFilename.c_str(), "w" );
         if( nullptr == pInfFile )
@@ -1279,7 +1286,7 @@ void CMMBEGui::ExtractSelectedFiles()
            continue;
         }
 
-        fwrite( buffer, 1, strlen(buffer), pInfFile );
+        fwrite( buffer.str().c_str(), 1, buffer.str().length(), pInfFile );
         fclose( pInfFile );
     }
 }
@@ -1323,13 +1330,15 @@ size_t CMMBEGui::GetSelectionSize()
 
 void CMMBEGui::FormatAll()
 {
-    if (mMMB.GetNumberOfDisks() == 0)
+    if( mMMB.GetNumberOfDisks() == 0 )
     {
         return;
     }
     
-    if (fl_ask("Are you sure you wish to format every disk in this MMB file?")) {
-        for (int slot = 0; slot < mMMB.GetNumberOfDisks(); slot++) {
+    if( 0 == fl_choice("Are you sure you wish to format every disk in this MMB file?", "Yes", "No", 0) )
+    {
+        for( int slot = 0; slot < mMMB.GetNumberOfDisks(); slot++ )
+        {
             FormatDisk(slot);
         }
     }
@@ -1489,7 +1498,7 @@ void CMMBEGui::ShowAboutDialog()
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.2.8 (";
+    std::string versionStr = "Version 1.3.0 (";
     versionStr += GetSCMVersion();
     versionStr += ")";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
@@ -1690,6 +1699,67 @@ void CMMBEGui::UnlockFile( size_t _slot, size_t _fileIndex )
     mTable->redraw();
 
     RefreshDiskContent( _slot );
+}
+
+void CMMBEGui::ViewFile(size_t _slot, size_t _fileIndex)
+{
+    if (mMMB.GetNumberOfDisks() == 0)
+    {
+        return;
+    }
+
+    if (nullptr != Fl::modal())
+    {
+        return;
+    }
+
+    if (GetSelectionSize() != 1)
+    {
+        return;
+    }
+
+    if( !mViewFileWindow )
+    {
+        return;
+    }
+
+    DFSDisk disk;
+    size_t slot = GetSelection()[0];
+    std::string errorString;
+    std::vector<unsigned char> data;
+    data.resize(MMB_DISKSIZE);
+
+    if( !mMMB.ExtractImageInSlot(data.data(), slot, errorString) )
+    {
+        fl_alert("[ERROR] %s", errorString.c_str());
+        return;
+    }
+    DFSRead(data.data(), MMB_DISKSIZE, disk);
+
+    std::vector<int> selectedFiles;
+    GetSelectedFiles(selectedFiles);
+    if (selectedFiles.empty())
+    {
+        return;
+    }
+
+    mViewFileWindow->SetData( disk, selectedFiles );
+    mViewFileWindow->show();
+}
+
+void CMMBEGui::setFileViewHex()
+{
+    mTextDisplay->buffer(mHexBuffer);
+}
+
+void CMMBEGui::setFileViewText()
+{
+    mTextDisplay->buffer(mTextBuffer);
+}
+
+void CMMBEGui::setFileViewBASIC()
+{
+    mTextDisplay->buffer(mBASICBuffer);
 }
 
 void CMMBEGui::GetSelectedFiles( std::vector<int>& _dst )
