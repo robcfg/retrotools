@@ -28,8 +28,8 @@ class CMMBEGui;
 class CAppWindow : public Fl_Window
 {
 public:
-	CAppWindow( int _w, int _h, const char* _label = nullptr );
-	CAppWindow( int _x, int _y, int _w, int _h, const char* _label = nullptr );
+	CAppWindow( CMMBEGui* _gui, int _w, int _h, const char* _label = nullptr );
+	CAppWindow( CMMBEGui* _gui, int _x, int _y, int _w, int _h, const char* _label = nullptr );
 	virtual ~CAppWindow();
 
 	virtual int handle(int _event);
@@ -41,6 +41,7 @@ public:
 
 private:
     Fl_Select_Browser* mDiskContent = nullptr;
+    CMMBEGui* mGui = nullptr;
 };
 
 //******************************************
@@ -149,7 +150,7 @@ public:
     void LockFile     ( size_t _slot, size_t _fileIndex );
     void UnlockFile   ( size_t _slot, size_t _fileIndex );
     void SetBootOption( size_t _slot, unsigned char _bootOption );
-    void ViewFile     (size_t _slot, size_t _fileIndex);
+    void ViewFile     ( size_t _slot, size_t _fileIndex );
 
     void setFileViewHex();
     void setFileViewText();
@@ -173,6 +174,8 @@ public:
     void OnWindowResize();
 
     void ExportDirectoryCSV( size_t _slot, const std::string& _filename );
+
+    void HideViewFileWindow();
 
 private:
     void CreateMenuBar();

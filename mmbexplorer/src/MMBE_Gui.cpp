@@ -130,13 +130,15 @@ void crc32_fill(uint32_t *table){
 //******************************************
 //* CAppWindow class
 //******************************************
-CAppWindow::CAppWindow( int _w, int _h, const char* _label ) : 
-        Fl_Window( _w, _h, _label ) 
+CAppWindow::CAppWindow( CMMBEGui* _gui, int _w, int _h, const char* _label ) : 
+    Fl_Window( _w, _h, _label ),
+    mGui(_gui)
 {
 }
 
-CAppWindow::CAppWindow( int _x, int _y, int _w, int _h, const char* _label ) : 
-    Fl_Window( _x, _y, _w, _h, _label )
+CAppWindow::CAppWindow( CMMBEGui* _gui, int _x, int _y, int _w, int _h, const char* _label ) : 
+    Fl_Window( _x, _y, _w, _h, _label ),
+    mGui(_gui)
 {
 }
 
@@ -150,6 +152,10 @@ int CAppWindow::handle( int _event )
     int ret = Fl_Window::handle( _event );
     switch ( _event ) 
     {
+        case FL_HIDE:
+        {
+            mGui->HideViewFileWindow();
+        }
         /*case FL_PUSH:               // do 'copy/dnd' when someone clicks on box
             Fl::copy(blabla.c_str(),(int)blabla.length(),0);//Fl::clipboard_image);
             Fl::dnd();
@@ -777,7 +783,7 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 {
     Fl::visual(FL_RGB);
 
-    mMainWindow = new CAppWindow( _w, _h + mMenuBarOffset, _label );
+    mMainWindow = new CAppWindow( this, _w, _h + mMenuBarOffset, _label );
 
     mMainWindow->begin();
 
@@ -802,7 +808,7 @@ CMMBEGui::CMMBEGui( int _w, int _h, const char* _label )
 
 CMMBEGui::~CMMBEGui()
 {
-
+    mViewFileWindow->hide();
 }
 
 int CMMBEGui::Run( int argc, char** argv )
@@ -2031,4 +2037,9 @@ void CMMBEGui::ExportDirectoryCSV( size_t _slot, const std::string& _filename )
     }
 
     delete[] data;
+}
+
+void CMMBEGui::HideViewFileWindow()
+{
+    mViewFileWindow->hide();
 }
