@@ -25,6 +25,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Gui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_ViewFileWindow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_BootOptionsWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/resource.rc
 	)
@@ -36,6 +37,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Gui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_Callbacks.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_ViewFileWindow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MMBE_BootOptionsWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/AcornDFS.cpp
 	)
 endif()

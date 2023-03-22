@@ -154,7 +154,7 @@ bool CMMBFile::Create(const std::string& _filename, size_t _numberOfDisks, std::
 }
 
 void CMMBFile::Close()
-    {
+{
     if (nullptr != mFile)
     {
         fclose(mFile);
@@ -164,10 +164,10 @@ void CMMBFile::Close()
     mFileSize = 0;
     mFilename = "";
     mNumberOfDisks = 0;
-    mBoot0 = 0;
-    mBoot1 = 1;
-    mBoot2 = 2;
-    mBoot3 = 3;
+    for( size_t drive =0; drive < 4; ++drive )
+    {
+        SetDriveBootDisk( drive, drive );
+    }
 
     ClearDirectory();
 }
@@ -304,10 +304,11 @@ bool CMMBFile::ApplyBootOptionValues(size_t disk0, size_t disk1, size_t disk2, s
 
     CloseMMBFileInternal();
 
-    mBoot0 = disk0;
-    mBoot1 = disk1;
-    mBoot2 = disk2;
-    mBoot3 = disk3;
+    SetDriveBootDisk( 0, disk0 );
+    SetDriveBootDisk( 0, disk1 );
+    SetDriveBootDisk( 0, disk2 );
+    SetDriveBootDisk( 0, disk3 );
+
     return true;
 }
 
@@ -355,32 +356,27 @@ void CMMBFile::ReadDirectory()
     }
 
     ClearDirectory();
-
-
     
     // Read entries
     char tmpChar = 0;
     size_t bytesRead = 0;
+    size_t tmpBoot[4];
+    size_t drive;
 
     fseek(mFile, 0, SEEK_SET);
 
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot0 = tmpChar;
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot1 = tmpChar;
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot2 = tmpChar;
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot3 = tmpChar;
+    for( drive = 0; drive < 4; ++drive )
+    {
+        bytesRead = fread(&tmpChar, 1, 1, mFile);
+        tmpBoot[drive] = tmpChar;
+    }
 
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot0 += 256*tmpChar;
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot1 += 256*tmpChar;
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot2 += 256*tmpChar;
-    bytesRead = fread(&tmpChar, 1, 1, mFile);
-    mBoot3 += 256*tmpChar;
+    for( drive = 0; drive < 4; ++drive )
+    {
+        bytesRead = fread(&tmpChar, 1, 1, mFile);
+        tmpBoot[drive] += 256*tmpChar;
+        SetDriveBootDisk( drive, tmpBoot[drive] );
+    }
 
     if (mDirectory) delete[] mDirectory;
     mDirectory = new SMMBDirectoryEntry[mNumberOfChunks* MMB_MAXNUMBEROFDISKS];
@@ -422,24 +418,14 @@ size_t CMMBFile::GetNumberOfDisks() const
     return mNumberOfDisks;
 }
 
-size_t CMMBFile::GetBoot0() const
+size_t CMMBFile::GetDriveBootDisk( size_t _drive ) const
 {
-    return mBoot0;
+    return mDriveBootDisks[_drive];
 }
 
-size_t CMMBFile::GetBoot1() const
+void CMMBFile::SetDriveBootDisk( size_t _drive, size_t _disk )
 {
-    return mBoot1;
-}
-
-size_t CMMBFile::GetBoot2() const
-{
-    return mBoot2;
-}
-
-size_t CMMBFile::GetBoot3() const
-{
-    return mBoot3;
+    mDriveBootDisks[_drive] = _disk;
 }
 
 bool CMMBFile::InsertImageInSlot( const std::string& _filename, size_t _slot, std::string& _errorString )

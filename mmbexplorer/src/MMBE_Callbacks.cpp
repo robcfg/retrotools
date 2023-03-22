@@ -5,6 +5,7 @@
 #include <FL/fl_ask.H>
 #include "MMBE_Callbacks.h"
 #include "MMBE_Gui.h"
+#include "MMBE_BootOptionsWindow.h"
 #include "MMBE_ViewFileWindow.h"
 
 // Debug includes
@@ -127,13 +128,21 @@ void formatUnformatted_cb(Fl_Widget* pWidget, void* _gui)
 	pGui->FormatUnformatted();
 }
 
-void editBoot_ok_cb(Fl_Widget* pWidget, void* _gui) {
-	CMMBEGui* pGui = (CMMBEGui*)_gui;
-	pWidget->window()->hide();
-	pGui->ApplyBootOptions();
+void editBoot_ok_cb(Fl_Widget* pWidget, void* _mmb) 
+{
+    CMMBE_BootOptionsWindow* bow = (CMMBE_BootOptionsWindow*)pWidget->window();
+    string errorString;
+
+    if (!((CMMBFile*)_mmb)->ApplyBootOptionValues( bow->GetSliderValue(0), bow->GetSliderValue(1), bow->GetSliderValue(2), bow->GetSliderValue(3), errorString))
+    {
+        fl_alert("[ERROR] %s", errorString.c_str());
+    }
+
+    pWidget->window()->hide();
 }
 
-void editBoot_cancel_cb(Fl_Widget* pWidget, void* _gui) {
+void editBoot_cancel_cb(Fl_Widget* pWidget, void* _gui)
+{
 	pWidget->window()->hide();
 }
 
@@ -396,24 +405,6 @@ void viewFile_cb(Fl_Widget* pWidget, void* _gui)
 	{
 		pGui->ViewFile(slot, idx);
 	}
-}
-
-void changeViewHex_cb(Fl_Widget* pWidget, void* _gui)
-{
-	CMMBEGui* pGui = (CMMBEGui*)_gui;
-	pGui->setFileViewHex();
-}
-
-void changeViewText_cb(Fl_Widget* pWidget, void* _gui)
-{
-	CMMBEGui* pGui = (CMMBEGui*)_gui;
-	pGui->setFileViewText();
-}
-
-void changeViewBASIC_cb(Fl_Widget* pWidget, void* _gui)
-{
-	CMMBEGui* pGui = (CMMBEGui*)_gui;
-	pGui->setFileViewBASIC();
 }
 
 void copyFilesCRC_cb( Fl_Widget* pWidget, void* _gui )

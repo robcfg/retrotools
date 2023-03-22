@@ -11,6 +11,7 @@
 #include <FL/Fl_Value_Slider.H>
 #include "MMBFile.h"
 #include "MMBE_ViewFileWindow.h"
+#include "MMBE_BootOptionsWindow.h"
 #include "AcornDFS.h"
 
 #ifdef __APPLE__
@@ -127,7 +128,6 @@ public:
 
     void ResizeMMB();
     void EditBootOptions();
-    void ApplyBootOptions();
     void FormatAll();
     void FormatUnformatted();
     
@@ -151,10 +151,6 @@ public:
     void UnlockFile   ( size_t _slot, size_t _fileIndex );
     void SetBootOption( size_t _slot, unsigned char _bootOption );
     void ViewFile     ( size_t _slot, size_t _fileIndex );
-
-    void setFileViewHex();
-    void setFileViewText();
-    void setFileViewBASIC();
 
     uint32_t GetFileCRC( size_t _slot, size_t _fileIndex );
 
@@ -195,21 +191,7 @@ private:
     Fl_Box* mFilenameBox = nullptr;
     Fl_Menu_Button* mSlotContextMenu = nullptr;
     Fl_Menu_Button* mDiskContextMenu = nullptr;
-    Fl_Value_Slider* mBootDiskSlider0 = nullptr;
-    Fl_Value_Slider* mBootDiskSlider1 = nullptr;
-    Fl_Value_Slider* mBootDiskSlider2 = nullptr;
-    Fl_Value_Slider* mBootDiskSlider3 = nullptr;
     CMMBESelectBrowser* mDiskContent = nullptr;
-
-    Fl_Text_Display* mTextDisplay = nullptr;
-    Fl_Text_Buffer* mHexBuffer = nullptr;
-    Fl_Text_Buffer* mTextBuffer = nullptr;
-    Fl_Text_Buffer* mBASICBuffer = nullptr;
-
-    Fl_Window* mBootOptionsDialog = nullptr;
-    char mBuffer[32] = { 0 };
-
-    CMMBEViewFileWindow* mViewFileWindow = nullptr;
 
 #ifdef __APPLE__
     Fl_Sys_Menu_Bar* mMenuBar = nullptr;
@@ -220,4 +202,10 @@ private:
     int mMenuBarOffset = 30;
     int mModifierKey = FL_CTRL;
 #endif
+
+    // File view window
+    CMMBEViewFileWindow* mViewFileWindow = nullptr;
+
+    // Boot options dialog
+    CMMBE_BootOptionsWindow* mBootOptionsWindow = nullptr;
 };

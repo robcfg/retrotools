@@ -33,10 +33,12 @@ using namespace std;
     const char PATH_SEPARATOR = '/';
 #endif
 
-const int MMBEGUI_TABLECELL_HEIGHT = 26;   // Default height of rows
-const int MMBEGUI_TABLECELL_WIDTH  = 206;  // Default width of columns
-const int MMBEGUI_VIEWFILE_WIDTH   = 620;  // Width of the View File window
-const int MMBEGUI_VIEWFILE_HEIGHT  = 540;  // Height of the View File window
+const int MMBEGUI_TABLECELL_HEIGHT   = 26;   // Default height of rows
+const int MMBEGUI_TABLECELL_WIDTH    = 206;  // Default width of columns
+const int MMBEGUI_VIEWFILE_WIDTH     = 620;  // Width of the View File window
+const int MMBEGUI_VIEWFILE_HEIGHT    = 540;  // Height of the View File window
+const int MMBEGUI_BOOTOPTIONS_WIDTH  = 284;  // Width of the Boot Options dialog
+const int MMBEGUI_BOOTOPTIONS_HEIGHT = 155;  // Height of the Boot Options dialog
 
 //******************************************
 //* CRC32 calculation
@@ -1034,6 +1036,7 @@ void CMMBEGui::CreateControls()
     mDiskContextMenu->add("Boot option Exec"  , 0, setBootOption3_cb    , (void*)this, 0 );
 
     mViewFileWindow = new CMMBEViewFileWindow( MMBEGUI_VIEWFILE_WIDTH, MMBEGUI_VIEWFILE_HEIGHT, "View file(s)" );
+    mBootOptionsWindow = new CMMBE_BootOptionsWindow( MMBEGUI_BOOTOPTIONS_WIDTH, MMBEGUI_BOOTOPTIONS_HEIGHT, nullptr );
 }
 
 void CMMBEGui::SetTableSize(int ccount, int rcount) const
@@ -1098,7 +1101,6 @@ void CMMBEGui::InsertDisk ( const std::string& _filename, size_t _slot )
         delete[] pData;
     }
     
-
     // Refresh contents
     mTable->redraw();
 }
@@ -1366,101 +1368,17 @@ void CMMBEGui::FormatUnformatted()
 
 void CMMBEGui::EditBootOptions()
 {
-    if (mMMB.GetNumberOfDisks()==0)
+    if( mMMB.GetNumberOfDisks()==0 )
     {
         return;
     }
 
-    if (nullptr != Fl::modal())
+    if( nullptr != Fl::modal() )
     {
         return;
     }
 
-    int editBootDialogWidth = 284;
-    int editBootDialogHeight = 155;
-
-    mBootOptionsDialog = new Fl_Window(editBootDialogWidth, editBootDialogHeight, nullptr);
-    if (nullptr == mBootOptionsDialog)
-    {
-        return;
-    }
-#ifdef WIN32
-    mBootOptionsDialog->resizable(mBootOptionsDialog);
-#endif
-    mBootOptionsDialog->box(FL_FLAT_BOX);
-    mBootOptionsDialog->color(FL_DARK2);
-    mBootOptionsDialog->set_modal();
-    mBootOptionsDialog->begin();
-
-    int ySeparation = 8;
-    int y = ySeparation;
-
-    int textHeight = 15;
-
-    Fl_Box* aboutText1 = new Fl_Box(115, y, 100, textHeight, "OnBoot Options");
-    aboutText1->align(FL_ALIGN_LEFT);
-    aboutText1->labelcolor(FL_BLACK);
-    aboutText1->labelsize(14);
-    aboutText1->labelfont(FL_HELVETICA);
-    y += textHeight + ySeparation;
-    
-    mBootDiskSlider0 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 0");
-    y += textHeight + ySeparation;
-    mBootDiskSlider0->align(FL_ALIGN_LEFT);
-    mBootDiskSlider0->step(1);
-    mBootDiskSlider0->minimum(0);
-    mBootDiskSlider0->maximum(mMMB.GetNumberOfDisks()-1);
-    mBootDiskSlider0->value(mMMB.GetBoot0());
-    mBootDiskSlider0->type(FL_HOR_NICE_SLIDER);
-
-
-    mBootDiskSlider1 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 1");
-    y += textHeight + ySeparation;
-    mBootDiskSlider1->align(FL_ALIGN_LEFT);
-    mBootDiskSlider1->step(1);
-    mBootDiskSlider1->minimum(0);
-    mBootDiskSlider1->maximum(mMMB.GetNumberOfDisks() - 1);
-    mBootDiskSlider1->value(mMMB.GetBoot1());
-    mBootDiskSlider1->type(FL_HOR_NICE_SLIDER);
-
-    mBootDiskSlider2 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 2");
-    y += textHeight + ySeparation;
-    mBootDiskSlider2->align(FL_ALIGN_LEFT);
-    mBootDiskSlider2->step(1);
-    mBootDiskSlider2->minimum(0);
-    mBootDiskSlider2->maximum(mMMB.GetNumberOfDisks() - 1);
-    mBootDiskSlider2->value(mMMB.GetBoot2());
-    mBootDiskSlider2->type(FL_HOR_NICE_SLIDER);
-
-    mBootDiskSlider3 = new Fl_Value_Slider(100, y, 150, textHeight, "Boot Drive 3");
-    mBootDiskSlider3->align(FL_ALIGN_LEFT);
-    mBootDiskSlider3->step(1);
-    mBootDiskSlider3->minimum(0);
-    mBootDiskSlider3->maximum(mMMB.GetNumberOfDisks() - 1);
-    mBootDiskSlider3->value(mMMB.GetBoot3());
-    mBootDiskSlider3->type(FL_HOR_NICE_SLIDER);
-    y += textHeight + ySeparation;
-
-    Fl_Return_Button* okButton = new Fl_Return_Button(100, y, 80, textHeight+4, "Ok");
-    okButton->align(FL_ALIGN_CENTER);
-    okButton->callback(editBoot_ok_cb, this);
-    Fl_Return_Button* cancelButton = new Fl_Return_Button(190, y, 80, textHeight+4, "Cancel");
-    cancelButton->callback(editBoot_cancel_cb, this);
-    cancelButton->align(FL_ALIGN_CENTER);
-    y += textHeight + ySeparation;
-
-    mBootOptionsDialog->end();
-    mBootOptionsDialog->show();
-}
-
-void CMMBEGui::ApplyBootOptions()
-{
-    string errorString;
-
-    if (!mMMB.ApplyBootOptionValues(mBootDiskSlider0->value(), mBootDiskSlider1->value(), mBootDiskSlider2->value(), mBootDiskSlider3->value(), errorString))
-    {
-        fl_alert("[ERROR] %s", errorString.c_str());
-    }
+    mBootOptionsWindow->show( &mMMB );
 }
 
 void CMMBEGui::ShowAboutDialog()
@@ -1504,7 +1422,7 @@ void CMMBEGui::ShowAboutDialog()
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.3.0 (";
+    std::string versionStr = "Version 1.3.1 (";
     versionStr += GetSCMVersion();
     versionStr += ")";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
@@ -1751,21 +1669,6 @@ void CMMBEGui::ViewFile(size_t _slot, size_t _fileIndex)
 
     mViewFileWindow->SetData( disk, selectedFiles );
     mViewFileWindow->show();
-}
-
-void CMMBEGui::setFileViewHex()
-{
-    mTextDisplay->buffer(mHexBuffer);
-}
-
-void CMMBEGui::setFileViewText()
-{
-    mTextDisplay->buffer(mTextBuffer);
-}
-
-void CMMBEGui::setFileViewBASIC()
-{
-    mTextDisplay->buffer(mBASICBuffer);
 }
 
 void CMMBEGui::GetSelectedFiles( std::vector<int>& _dst )
