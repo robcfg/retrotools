@@ -68,6 +68,6 @@ private:
     size_t mFileSize = 0;
     size_t mNumberOfDisks = 0;
     size_t mNumberOfChunks = 0;
-    size_t mDriveBootDisks[4] = { 0, 1, 2, 3 };
+    size_t mDriveBootDisks[4] = { 0, 0, 0, 0 };
     SMMBDirectoryEntry *mDirectory = 0;
 };

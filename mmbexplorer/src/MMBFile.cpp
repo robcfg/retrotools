@@ -305,9 +305,9 @@ bool CMMBFile::ApplyBootOptionValues(size_t disk0, size_t disk1, size_t disk2, s
     CloseMMBFileInternal();
 
     SetDriveBootDisk( 0, disk0 );
-    SetDriveBootDisk( 0, disk1 );
-    SetDriveBootDisk( 0, disk2 );
-    SetDriveBootDisk( 0, disk3 );
+    SetDriveBootDisk( 1, disk1 );
+    SetDriveBootDisk( 2, disk2 );
+    SetDriveBootDisk( 3, disk3 );
 
     return true;
 }
