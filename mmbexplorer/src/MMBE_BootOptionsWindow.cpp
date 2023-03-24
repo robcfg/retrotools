@@ -26,10 +26,6 @@ CMMBE_BootOptionsWindow::~CMMBE_BootOptionsWindow()
 
 void CMMBE_BootOptionsWindow::CreateControls()
 {
-    #ifdef WIN32
-    resizable(mBootOptionsDialog);
-    #endif
-    
     box(FL_FLAT_BOX);
     color(FL_DARK2);
     set_modal();
