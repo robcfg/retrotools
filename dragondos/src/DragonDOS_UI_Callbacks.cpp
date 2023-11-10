@@ -8,6 +8,7 @@
 
 #include "FileSystemInterface.h"
 #include "DragonDOS_BASIC.h"
+#include "DragonDOS_FS.h"
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
 #include "VDKDiskImage.h"
@@ -25,9 +26,9 @@ using namespace std;
 
 const size_t tmpBufSize = 256;
 
-void UpdateUI( SDRAGONDOS_Context* _context )
+void UpdateUI( const SDRAGONDOS_Context* _context )
 {
-    IFilesystemInterface* pFS = (IFilesystemInterface*)_context->fs;
+    CDragonDOS_FS* pFS = (CDragonDOS_FS*)_context->fs;
     IDiskImageInterface* pDisk = (IDiskImageInterface*)_context->disk;
     char tmpBuf[256] = {0};
 
@@ -35,8 +36,8 @@ void UpdateUI( SDRAGONDOS_Context* _context )
 
 	_context->browser->clear();
 
-	_context->browser->add("@f@.File|Name    |Ext|Type|Sec|Bytes \n");
-    _context->browser->add("@f@.----+--------+---+----+---+------\n");
+	_context->browser->add("@f@.File|Name    |Ext|Type|Sec|Bytes |Load|Exec\n");
+    _context->browser->add("@f@.----+--------+---+----+---+------+----+----\n");
 
     for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
     {
@@ -58,13 +59,17 @@ void UpdateUI( SDRAGONDOS_Context* _context )
         uint16_t fileSectors = pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize(0,0,0); // TODO:Look for a good way to get sector size
         fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize(0,0,0) != 0) ? 1 : 0;
 
-        snprintf( tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu\n", 
-                 fileIdx, 
-                 tmpName.c_str(), 
-                 tmpExt.c_str(),
-                 "....",
-                 fileSectors,
-                 pFS->GetFileSize( fileIdx) );
+        CDGNDosFile ddosFile = pFS->GetFile(fileIdx);
+
+        snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu %04X %04X\n", 
+                    fileIdx, 
+                    tmpName.c_str(), 
+                    tmpExt.c_str(),
+                    "....",
+                    fileSectors,
+                    pFS->GetFileSize( fileIdx),
+                    ddosFile.GetLoadAddress(),
+                    ddosFile.GetExecAddress() );
         _context->browser->add(tmpBuf);
     }
 

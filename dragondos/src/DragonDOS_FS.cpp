@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // DragonDOS_FS.cpp - Implementation for CDragonDOS_FS, a helper 
 //                    class that allows file operations on a disk
@@ -11,7 +11,43 @@
 //
 // Last update: 10/11/2023
 //
-////////////////////////////////////////////////////////////////////
+// File entries in directory table are 25 byte long.
+// Example:
+//  00504D4F 44453200 0042494E 01440D00 00000000 00000000 09
+//  | | | |  | | | |  | | | |  | | | |  | | | |  | | | |  |
+//  | | | |  | | | |  | | | |  | | | |  | | | |  | | | |  +-> Bytes on last sector
+//  | +-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+--+-+-+-+----> File header block or continuation block
+//  +-------------------------------------------------------> Flags
+//
+//  File header block
+//    504D4F 44453200 0042494E 01440D00 00000000 00000000
+//    | | |  | | | |  | | | |  | | | |  | | | |  | | | | 
+//    | | |  | | | |  | | | |  | | | |  | | | |  | +-+-+----> Sector Allocation Block 4
+//    | | |  | | | |  | | | |  | | | |  | | +-+--+----------> Sector Allocation Block 3
+//    | | |  | | | |  | | | |  | | | +--+-+-----------------> Sector Allocation Block 2
+//    | | |  | | | |  | | | |  +-+-+------------------------> Sector Allocation Block 1
+//    | | |  | | | |  | +-+-+-------------------------------> extension, padded with 0x00 ("BIN")
+//    +-+-+--+-+-+-+--+-------------------------------------> filename, padded with 0x00  ("PMODE2")
+//
+//  Continuation block
+//    112233 44556677 8899AABB CCDDEEFF GGHHIIJJ KKLLMMNN
+//    | | |  | | | |  | | | |  | | | |  | | | |  | | | | 
+//    | | |  | | | |  | | | |  | | | |  | | | |  | | +-+----> Unused
+//    | | |  | | | |  | | | |  | | | |  | | | +--+-+--------> Sector Allocation Block 7
+//    | | |  | | | |  | | | |  | | | |  +-+-+---------------> Sector Allocation Block 6
+//    | | |  | | | |  | | | |  | +-+-+----------------------> Sector Allocation Block 5
+//    | | |  | | | |  | | +-+--+----------------------------> Sector Allocation Block 4
+//    | | |  | | | +--+-+-----------------------------------> Sector Allocation Block 3
+//    | | |  +-+-+------------------------------------------> Sector Allocation Block 2
+//    +-+-+-------------------------------------------------> Sector Allocation Block 1
+//
+//  Sector Allocation Block format:
+//                              01440D
+//                              | | |
+//                              | | +------------------------> Count of contiguous sectors in this block
+//                              +-+--------------------------> Logical Sector Number of first sector in this block
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <string.h> // for strcasecmp
 #include <sstream>
 #include "DragonDOS_FS.h"
@@ -186,8 +222,9 @@ bool CDragonDOS_FS::ExtractFile( string _fileName, vector<unsigned char>& dst ) 
 }
 
 // Inserts a file into the DragonDOS file system
-bool CDragonDOS_FS::InsertFile( string _fileName )
+bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _data )
 {
+
     return false;
 }
 

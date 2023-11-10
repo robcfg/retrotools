@@ -108,8 +108,8 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     _context->fileLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
     y += 40;
 
-	_context->browser = new Fl_Multi_Browser( x, y, 360, 540 );
-    x += 370;
+	_context->browser = new Fl_Multi_Browser( x, y, 365, 540 );
+    x += 375;
 
     Fl_Button* newDiskButton = new Fl_Button( x, y, 170, 30, "New disk");
     newDiskButton->callback( newDisk_cb, (void*)_context );
@@ -172,7 +172,7 @@ int main( int argc, char** argv )
 
     SDRAGONDOS_Context context;
 
-    CAppWindow* mainWindow = new CAppWindow( &context, 560, 600 + menuBarOffset, "DragonDOS by Robcfg" );
+    CAppWindow* mainWindow = new CAppWindow( &context, 570, 600 + menuBarOffset, "DragonDOS by Robcfg" );
 
     mainWindow->begin();
 
@@ -183,6 +183,7 @@ int main( int argc, char** argv )
     img.SetSectorsNum( DRAGONDOS_SECTORSPERTRACK );
     img.SetSidesNum  ( 1  );
     img.SetTracksNum ( 40 );
+    fs.InitDisk( &img );
 
     context.disk = &img;
     context.fs = &fs;
@@ -204,6 +205,8 @@ int main( int argc, char** argv )
 #endif
 
     mainWindow->resizable( mTable );*/
+
+    UpdateUI( (const SDRAGONDOS_Context*)&context );
     mainWindow->show(0, nullptr);
     mainWindow->redraw();
     

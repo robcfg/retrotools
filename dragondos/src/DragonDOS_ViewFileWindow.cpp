@@ -292,9 +292,6 @@ void CDragonDOSViewFileWindow::SetData( const IFilesystemInterface* _fs, const s
         _fs->ExtractFile( fileName, mImageFileData );
 
         DecodeImage();
-
-        //mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );
-        //mImage->redraw();
     }
 }
 

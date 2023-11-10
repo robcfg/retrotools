@@ -1,3 +1,5 @@
+#pragma once
+
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Multi_Browser.H>
