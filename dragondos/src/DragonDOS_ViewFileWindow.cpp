@@ -465,22 +465,200 @@ void CDragonDOSViewFileWindow::ShowImageControls( bool _status )
 
 void CDragonDOSViewFileWindow::Decode_PMODE0_Image( const std::vector<unsigned char>& _src )
 {
+    size_t lineBytes = 16; // PMODE0 line size in bytes.
+    size_t rgbBytes = 512 * 3;
+    size_t rgbBytes2 = rgbBytes * 2;
+    size_t rgbBytes3 = rgbBytes * 3;
+    size_t linesNum = _src.size() / lineBytes;
+    if( 0 == linesNum )
+    {
+        lineBytes = _src.size();
+        linesNum = 1;
+    }
+    if( linesNum >= 192 )
+    {
+        linesNum = 192;
+    }
 
+    size_t dataPtr = 0;
+    size_t imagePtr = 0;
+    int paletteIdx = mVideoPalette->value();
+    int palettePixelIdx = 0;
+    unsigned char pixelR = 0;
+    unsigned char pixelG = 0;
+    unsigned char pixelB = 0;
+    unsigned char pixelMask = 0b11000000;
+
+    for( size_t y = 0; y < linesNum; ++y )
+    {
+        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+        {
+            for( unsigned char bit = 0; bit < 8; ++bit )
+            {
+                palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
+                pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
+                pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
+                pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
+
+                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+                {
+                    mImageData[imagePtr+dstPixel  ] = pixelR;
+                    mImageData[imagePtr+dstPixel+1] = pixelG;
+                    mImageData[imagePtr+dstPixel+2] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes2] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes2] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes2] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes3] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes3] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes3] = pixelB;
+                }
+
+                imagePtr += 12;
+            }
+        }
+        imagePtr += rgbBytes3;
+        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+        {
+            return;
+        }
+    }
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE1_Image( const std::vector<unsigned char>& _src )
 {
+    size_t lineBytes = 32; // PMODE1 line size in bytes.
+    size_t rgbBytes = 512 * 3;
+    size_t rgbBytes2 = rgbBytes * 2;
+    size_t rgbBytes3 = rgbBytes * 3;
+    size_t linesNum = _src.size() / lineBytes;
+    if( 0 == linesNum )
+    {
+        lineBytes = _src.size();
+        linesNum = 1;
+    }
+    if( linesNum >= 192 )
+    {
+        linesNum = 192;
+    }
 
+    size_t dataPtr = 0;
+    size_t imagePtr = 0;
+    int paletteIdx = mVideoPalette->value();
+    int palettePixelIdx = 0;
+    unsigned char pixelR = 0;
+    unsigned char pixelG = 0;
+    unsigned char pixelB = 0;
+    unsigned char pixelMask = 0b11000000;
+
+    for( size_t y = 0; y < linesNum; ++y )
+    {
+        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+        {
+            pixelMask = 0b11000000;
+            for( int pixel = 3; pixel >= 0; --pixel )
+            {
+                palettePixelIdx = ((_src[dataPtr] & pixelMask) >> (pixel * 2));
+                pixelR = FourColorPalettes[paletteIdx][palettePixelIdx][0];
+                pixelG = FourColorPalettes[paletteIdx][palettePixelIdx][1];
+                pixelB = FourColorPalettes[paletteIdx][palettePixelIdx][2];
+
+                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+                {
+                    mImageData[imagePtr+dstPixel  ] = pixelR;
+                    mImageData[imagePtr+dstPixel+1] = pixelG;
+                    mImageData[imagePtr+dstPixel+2] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes2] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes2] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes2] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes3] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes3] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes3] = pixelB;
+                }
+
+                imagePtr += 12;
+                pixelMask >>= 2;
+            }
+        }
+        imagePtr += rgbBytes3;
+        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+        {
+            return;
+        }
+    }
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE2_Image( const std::vector<unsigned char>& _src )
 {
+    size_t lineBytes = 16; // PMODE2 line size in bytes.
+    size_t rgbBytes = 512 * 3;
+    size_t linesNum = _src.size() / lineBytes;
+    if( 0 == linesNum )
+    {
+        lineBytes = _src.size();
+        linesNum = 1;
+    }
+    if( linesNum >= 192 )
+    {
+        linesNum = 192;
+    }
 
+    size_t dataPtr = 0;
+    size_t imagePtr = 0;
+    int paletteIdx = mVideoPalette->value();
+    int palettePixelIdx = 0;
+    unsigned char pixelR = 0;
+    unsigned char pixelG = 0;
+    unsigned char pixelB = 0;
+    unsigned char pixelMask = 0b11000000;
+
+    for( size_t y = 0; y < linesNum; ++y )
+    {
+        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+        {
+            for( unsigned char bit = 0; bit < 8; ++bit )
+            {
+                palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
+                pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
+                pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
+                pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
+
+                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+                {
+                    mImageData[imagePtr+dstPixel  ] = pixelR;
+                    mImageData[imagePtr+dstPixel+1] = pixelG;
+                    mImageData[imagePtr+dstPixel+2] = pixelB;
+
+                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+                }
+
+                imagePtr += 12;
+            }
+        }
+        imagePtr += rgbBytes;
+        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+        {
+            return;
+        }
+    }
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE3_Image( const std::vector<unsigned char>& _src )
 {
-    size_t lineBytes = 32; // PMODE2 line size in bytes.
+    size_t lineBytes = 32; // PMODE3 line size in bytes.
     size_t rgbBytes = 512 * 3;
     size_t linesNum = _src.size() / lineBytes;
     if( 0 == linesNum )
@@ -530,6 +708,10 @@ void CDragonDOSViewFileWindow::Decode_PMODE3_Image( const std::vector<unsigned c
             }
         }
         imagePtr += rgbBytes;
+        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+        {
+            return;
+        }
     }
 }
 
@@ -582,6 +764,10 @@ void CDragonDOSViewFileWindow::Decode_PMODE4_Image( const std::vector<unsigned c
             }
         }
         imagePtr += rgbBytes;
+        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+        {
+            return;
+        }
     }
 }
 
