@@ -47,6 +47,9 @@ public:
     void ViewAsBasic();
     void ViewAsImage();
 
+    void DecodeImage();
+    void ExportImage();
+
 private:
     void CreateControls  ();
     void AddHexViewData  ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
@@ -82,8 +85,11 @@ private:
 
     Fl_Box* mImage;
     unsigned char * mImageData = nullptr;
+    vector<unsigned char> mImageFileData;
     Fl_Choice* mVideoMode = nullptr;
     Fl_Choice* mVideoPalette = nullptr;
+
+    Fl_Button* mExportAsPNG = nullptr;
 
     EDRAGONDOSVFW_ViewMode mViewMode = VM_HEX;
 };

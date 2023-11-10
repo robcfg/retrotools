@@ -234,7 +234,7 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
     {
         fl_alert( "Error processing file %s\nImage may be damaged or corrupt.", fileName.c_str() );
     }
-    
+
     pContext->diskFilename = fileName;
     UpdateUI( pContext );
 }
@@ -528,5 +528,29 @@ void viewFileAsImage_cb( Fl_Widget* pWidget, void* _viewFileWindow )
     if( _viewFileWindow )
     {
         ((CDragonDOSViewFileWindow*)_viewFileWindow)->ViewAsImage();
+    }
+}
+
+void viewFileModeChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow )
+{
+    if( _viewFileWindow )
+    {
+        ((CDragonDOSViewFileWindow*)_viewFileWindow)->DecodeImage();
+    }
+}
+
+void viewFilePaletteChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow )
+{
+    if( _viewFileWindow )
+    {
+        ((CDragonDOSViewFileWindow*)_viewFileWindow)->DecodeImage();
+    }
+}
+
+void viewFileExportPNG_cb( Fl_Widget* pWidget, void* _viewFileWindow )
+{
+    if( _viewFileWindow )
+    {
+        ((CDragonDOSViewFileWindow*)_viewFileWindow)->ExportImage();
     }
 }

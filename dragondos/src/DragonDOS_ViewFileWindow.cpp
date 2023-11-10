@@ -70,6 +70,7 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_IMAGE_VIEW_HEIGHT       384
 #define DRAGONDOSVFW_IMAGE_VIEW_DEPTH        3
 #define DRAGONDOSVFW_IMAGE_VIEW_SIZE         DRAGONDOSVFW_IMAGE_VIEW_WIDTH*DRAGONDOSVFW_IMAGE_VIEW_HEIGHT*DRAGONDOSVFW_IMAGE_VIEW_DEPTH
+#define DRAGONDOSVFW_IMAGE_VIEW_STRIDE       DRAGONDOSVFW_IMAGE_VIEW_WIDTH*DRAGONDOSVFW_IMAGE_VIEW_DEPTH
 #define DRAGONDOSVFW_PMODE0                  0
 #define DRAGONDOSVFW_PMODE1                  1
 #define DRAGONDOSVFW_PMODE2                  2
@@ -227,6 +228,7 @@ void CDragonDOSViewFileWindow::CreateControls()
     mVideoMode->value(4);
     mVideoMode->align( FL_ALIGN_TOP_LEFT );
     mVideoMode->copy_label("Video mode");
+    mVideoMode->callback( viewFileModeChanged_cb, (void*)this );
     x += DRAGONDOSVFW_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
 
     mVideoPalette = new Fl_Choice( x, y, DRAGONDOSVFW_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
@@ -235,7 +237,12 @@ void CDragonDOSViewFileWindow::CreateControls()
     mVideoPalette->value(1);
     mVideoPalette->align( FL_ALIGN_TOP_LEFT );
     mVideoPalette->copy_label("Palette");
+    mVideoPalette->callback( viewFilePaletteChanged_cb, (void*)this );
     x += DRAGONDOSVFW_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
+
+    mExportAsPNG = new Fl_Button( x, y, 100, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Export as PNG" );
+    mExportAsPNG->callback( viewFileExportPNG_cb, (void*)this );
+    y += 23;
 
     end();
 }
@@ -281,23 +288,13 @@ void CDragonDOSViewFileWindow::SetData( const IFilesystemInterface* _fs, const s
     if( !_selectedFiles.empty() )
     {
         std::string fileName = _fs->GetFileName( _selectedFiles[0] );
-        vector<unsigned char> fileData;
-        _fs->ExtractFile( fileName, fileData );
+        mImageFileData.clear();
+        _fs->ExtractFile( fileName, mImageFileData );
 
-        ClearImage();
-        
-        switch( mVideoMode->value() )
-        {
-            case DRAGONDOSVFW_PMODE0: Decode_PMODE0_Image(fileData); break;
-            case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(fileData); break;
-            case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(fileData); break;
-            case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(fileData); break;
-            default:                  Decode_PMODE4_Image(fileData); break;
-        }
+        DecodeImage();
 
-        mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );
-        mImage->redraw();
-        stbi_write_png("/Users/robcfg/Downloads/ddos.png", 512, 384, 3, (const void *)mImageData, 1536);
+        //mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );
+        //mImage->redraw();
     }
 }
 
@@ -454,6 +451,7 @@ void CDragonDOSViewFileWindow::ShowImageControls( bool _status )
         mImage->show();
         mVideoMode->show();
         mVideoPalette->show();
+        mExportAsPNG->show();
     }
     else
     {
@@ -461,6 +459,7 @@ void CDragonDOSViewFileWindow::ShowImageControls( bool _status )
         mImage->hide();
         mVideoMode->hide();
         mVideoPalette->hide();
+        mExportAsPNG->hide();
     }
 }
 
@@ -589,4 +588,38 @@ void CDragonDOSViewFileWindow::Decode_PMODE4_Image( const std::vector<unsigned c
 void CDragonDOSViewFileWindow::ClearImage()
 {
     memset( mImageData, 0, DRAGONDOSVFW_IMAGE_VIEW_SIZE );
+}
+
+void CDragonDOSViewFileWindow::DecodeImage()
+{
+    ClearImage();
+    
+    switch( mVideoMode->value() )
+    {
+        case DRAGONDOSVFW_PMODE0: Decode_PMODE0_Image(mImageFileData); break;
+        case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
+        case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
+        case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
+        default:                  Decode_PMODE4_Image(mImageFileData); break;
+    }
+
+    mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );
+    mImage->redraw();
+}
+
+void CDragonDOSViewFileWindow::ExportImage()
+{
+    string fileName;
+
+    if( !ChooseFilename( fileName, true, false ) )
+    {
+        return;
+    }
+
+    stbi_write_png( fileName.c_str(), 
+                    DRAGONDOSVFW_IMAGE_VIEW_WIDTH, 
+                    DRAGONDOSVFW_IMAGE_VIEW_HEIGHT, 
+                    DRAGONDOSVFW_IMAGE_VIEW_DEPTH, 
+                    (const void *)mImageData, 
+                    DRAGONDOSVFW_IMAGE_VIEW_STRIDE );
 }

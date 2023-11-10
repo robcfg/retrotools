@@ -24,6 +24,8 @@ struct SDRAGONDOS_Context
 };
 
 void UpdateUI( const SDRAGONDOS_Context* _context );
+bool ChooseFilename( string& fileName, bool bSaveAsDialog, bool bDirectory );
+
 void newDisk_cb(Fl_Widget* pWidget,void* _context);
 void openDisk_cb(Fl_Widget* pWidget,void* _context);
 void saveDisk_cb(Fl_Widget* pWidget,void* _context);
@@ -38,3 +40,6 @@ void viewFileAsHex_cb  ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileAsText_cb ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileAsBasic_cb( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileAsImage_cb( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileModeChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFilePaletteChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileExportPNG_cb( Fl_Widget* pWidget, void* _viewFileWindow );
