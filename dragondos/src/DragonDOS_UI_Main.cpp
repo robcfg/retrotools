@@ -85,9 +85,12 @@ void CreateMenuBar( int _menuBarWidth, int _menuBarHeight, int _modifierKey, SDR
 	menuBar->add( "&File/&New disk"              , _modifierKey+'n', newDisk_cb      , (void*)_context, 0 );
 	menuBar->add( "&File/_&Open disk"            , _modifierKey+'o', openDisk_cb     , (void*)_context, 0 );
 	menuBar->add( "&File/_&Save disk changes"    , _modifierKey+'s', saveDisk_cb     , (void*)_context, 0 );
-	menuBar->add( "&File/Insert &Ascii file(s)"  , _modifierKey+'a', insertAscii_cb  , (void*)_context, 0 );
+	menuBar->add( "&File/Insert &BASIC file(s)"  , _modifierKey+'a', insertBasic_cb  , (void*)_context, 0 );
 	menuBar->add( "&File/Insert &Binary file(s)" , _modifierKey+'b', insertBinary_cb , (void*)_context, 0 );
+	menuBar->add( "&File/Insert &Data file(s)"   , _modifierKey+'d', insertBinary_cb , (void*)_context, 0 );
 	menuBar->add( "&File/&Extract file(s)"       , _modifierKey+'e', extractFiles_cb , (void*)_context, 0 );
+	menuBar->add( "&File/&Remove file(s)"        , _modifierKey+'r', removeFiles_cb  , (void*)_context, 0 );
+	menuBar->add( "&File/&View file(s)"          , _modifierKey+'v', viewFiles_cb    , (void*)_context, 0 );
 	#ifndef __APPLE__
     mMenuBar->add( "&File/&Quit"          , _modifierKey+'q', menuQuit_cb  , (void*)mMainWindow, 0 );
     #endif
@@ -123,12 +126,16 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     saveDiskButton->callback( saveDisk_cb, (void*)_context );
     y += 35;
 
-    Fl_Button* insertAsciiFilesButton = new Fl_Button( x, y, 170, 30, "Insert ASCII file(s)");
-    insertAsciiFilesButton->callback( insertAscii_cb, (void*)_context );
+    Fl_Button* insertBasicFilesButton = new Fl_Button( x, y, 170, 30, "Insert BASIC file(s)");
+    insertBasicFilesButton->callback( insertBasic_cb, (void*)_context );
     y += 35;
 
     Fl_Button* insertBinaryFilesButton = new Fl_Button( x, y, 170, 30, "Insert binary file(s)");
     insertBinaryFilesButton->callback( insertBinary_cb, (void*)_context );
+    y += 35;
+
+    Fl_Button* insertDataFilesButton = new Fl_Button( x, y, 170, 30, "Insert data file(s)");
+    insertDataFilesButton->callback( insertData_cb, (void*)_context );
     y += 35;
 
     Fl_Button* extractFilesButton = new Fl_Button( x, y, 170, 30, "Extract selected file(s)");
@@ -141,12 +148,12 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     
     Fl_Button* viewFilesButton = new Fl_Button( x, y, 170, 30, "View selected file(s)");
     viewFilesButton->callback( viewFiles_cb, (void*)_context );
-    y += 40;
+    y += 35;
 
     _context->diskInfoLabel = new Fl_Box( FL_NO_BOX, x, y, 170, 140, "Disk info:\n- side(s)\n- tracks\n- total bytes\n- free bytes\n- free sectors" );
     _context->diskInfoLabel->align( FL_ALIGN_LEFT | FL_ALIGN_TOP | FL_ALIGN_INSIDE );
     _context->diskInfoLabel->color2( FL_YELLOW );
-    y += 115;
+    y += 90;
 
     // Decoration 160x140. Edit XPM file to set the data to be static const char[] and change the color names
     // like 'white' and 'black' for their hex values (#000000 and #FFFFFF).
@@ -207,6 +214,7 @@ int main( int argc, char** argv )
     mainWindow->resizable( mTable );*/
 
     UpdateUI( (const SDRAGONDOS_Context*)&context );
+    context.fileLabel->copy_label("(No disk)");
     mainWindow->show(0, nullptr);
     mainWindow->redraw();
     

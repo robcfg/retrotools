@@ -319,7 +319,7 @@ void InsertFile( SDRAGONDOS_Context* _context, const string& _filename, bool _is
     }*/
 }
 
-void insertAscii_cb(Fl_Widget* pWidget,void* _context)
+void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 {
     vector<string> fileNames;
 
@@ -346,6 +346,32 @@ void insertAscii_cb(Fl_Widget* pWidget,void* _context)
 }
 
 void insertBinary_cb(Fl_Widget* pWidget,void* _context)
+{
+    vector<string> fileNames;
+
+    if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
+    {
+        return;
+    }
+
+    string errorStr;
+
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+    for( auto file : fileNames )
+    {
+        InsertFile( pContext, file, true, errorStr );
+    }
+
+    if( !errorStr.empty() )
+    {
+        fl_alert( "%s", errorStr.c_str() );
+    }
+
+    pContext->fs->Load( pContext->disk );
+    UpdateUI( pContext );
+}
+
+void insertData_cb(Fl_Widget* pWidget,void* _context)
 {
     vector<string> fileNames;
 
