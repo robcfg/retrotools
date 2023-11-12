@@ -263,13 +263,27 @@ bool CDragonDOS_FS::DeleteFile( string _fileName )
 
     unsigned short int bitmapPos = 0;
     unsigned short int bytePos = 0;
+    unsigned short int lsn = 0;
     // TODO: Check how this works for double sided disks and 80 track disks.
     for( auto fab : directory[entry].fileBlock.FABs )
     {
+        // Check for LSNs 0x5a0 - 0xb3f (80 Track, DS only), which are in sector 1
+        lsn = fab.LSN;
+        if( lsn > DRAGONDOS_FABS_PER_SECTOR )
+        {
+            lsn -= DRAGONDOS_FABS_PER_SECTOR;
+            sector = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, 1 );
+        }
+        else
+        {
+            sector = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, 0 );
+        }
+
+        // Mark sectors as free
         for( size_t contSector = 0; contSector < fab.numSectors; ++contSector )
         {
-            bitmapPos = (fab.LSN + contSector) / 8;
-            bytePos   = (fab.LSN + contSector) % 8;
+            bitmapPos = (lsn + contSector) / 8;
+            bytePos   = (lsn + contSector) % 8;
 
             sector[bitmapPos] |= (1 << bytePos);
         }

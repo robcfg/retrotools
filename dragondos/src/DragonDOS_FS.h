@@ -43,6 +43,7 @@ using namespace std;
 #define DRAGONDOS_MAX_FILE_NAME_LEN         8
 #define DRAGONDOS_MAX_FILE_EXT_LEN          3
 #define DRAGONDOS_MAX_FILE_FULL_NAME_LEN    (DRAGONDOS_MAX_FILE_NAME_LEN + DRAGONDOS_MAX_FILE_EXT_LEN + 1)
+#define DRAGONDOS_FABS_PER_SECTOR           0x5A0
 
 #define DRAGONDOS_INVALID                   0xFFFF // To signal invalid indices. DragonDOS can only have 160 entries max.
 

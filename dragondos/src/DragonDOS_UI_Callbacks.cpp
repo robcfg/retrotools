@@ -493,8 +493,6 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
         }
     }
 
-    string testFilename = "/Users/robcfg/Projects/delete_test.vdk";
-    pContext->disk->Save(testFilename);
     fs->Load( pContext->disk );
     UpdateUI( pContext );
 }
