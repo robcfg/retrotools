@@ -21,6 +21,7 @@
 using namespace std;
 
 #define DRAGONDOS_DIR_TRACK                 20   // Directory track
+#define DRAGONDOS_TEMP_DIR_TRACK            16   // Track to perform operations before copying it to track 20.
 #define DRAGONDOS_DIR_ENTRY_SIZE            25   // Directory entry size
 #define DRAGONDOS_DIR_START_SECTOR          2    // Start sector of directory info on directory track
 #define DRAGONDOS_DIR_ENTRIES_PER_SECT      10   // Number of directory entries per sector
@@ -75,6 +76,10 @@ struct SDGNDosDirectoryEntry
     unsigned short int        lastSectorSize;
     unsigned char             nextBlock;
 
+    // Location of the directory entry on the directory track
+    unsigned int              sector;
+    unsigned int              entry;
+
     SDGNDosDirectoryEntry()
     {
         bProtected     = false;
@@ -87,6 +92,8 @@ struct SDGNDosDirectoryEntry
         execAddress    = 0;
         lastSectorSize = 0;
         nextBlock      = 0;
+        sector         = 0;
+        entry          = 0;
     }
 };
 
@@ -170,5 +177,6 @@ private:
 
     bool                ParseDirectory();
     bool                ParseFiles    ();
+    bool                BackUpDirTrack();
     unsigned short int  GetFileEntry  ( string _fileName ) const;
 };

@@ -482,7 +482,7 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
 
     for( auto fileName : fileNames )
     {
-        /*if( !fs->RemoveFile( fileName) )
+        if( !fs->DeleteFile( fileName) )
         {
             string error = "Couldn't remove file ";
             error += fileName;
@@ -490,9 +490,12 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
             fl_alert( "%s", error.c_str() );
             UpdateUI( pContext );
             return;
-        }*/
+        }
     }
 
+    string testFilename = "/Users/robcfg/Projects/delete_test.vdk";
+    pContext->disk->Save(testFilename);
+    fs->Load( pContext->disk );
     UpdateUI( pContext );
 }
 

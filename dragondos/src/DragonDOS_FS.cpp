@@ -231,7 +231,53 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
 // Deletes a file from the DragonDOS file system
 bool CDragonDOS_FS::DeleteFile( string _fileName )
 {
-    return false;
+    unsigned short int entry = GetFileEntry( _fileName );
+
+    if( entry >= directory.size() )
+    {
+        return false;
+    }
+
+    // Go through all File Allocation Blocks (FABs) belonging
+    // to this file mark them as deleted/free and mark the 
+    // associated sectors as free on the bitmap.
+    unsigned int entrySector = directory[entry].sector;
+    unsigned int entryIndex  = directory[entry].entry;
+
+    // On directory table, entry's flag is set to 0x81. Deleted/free + continuation.
+    // On the bitmap, sectors belongimg to this files have their bits set (1).
+    unsigned char* sector = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, entrySector );
+    if( nullptr == sector )
+    {
+        return false;
+    }
+
+    sector[entryIndex * DRAGONDOS_DIR_ENTRY_SIZE] = (DRAGONDOS_FLAG_DELETED | DRAGONDOS_FLAG_CONTINUATION);
+
+    // Track 20, sector 1. Sector bitmap and disk geometry.
+    sector = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, 0 );
+    if( nullptr == sector )
+    {
+        return false;
+    }
+
+    unsigned short int bitmapPos = 0;
+    unsigned short int bytePos = 0;
+    // TODO: Check how this works for double sided disks and 80 track disks.
+    for( auto fab : directory[entry].fileBlock.FABs )
+    {
+        for( size_t contSector = 0; contSector < fab.numSectors; ++contSector )
+        {
+            bitmapPos = (fab.LSN + contSector) / 8;
+            bytePos   = (fab.LSN + contSector) % 8;
+
+            sector[bitmapPos] |= (1 << bytePos);
+        }
+    }
+
+    BackUpDirTrack();
+
+    return true;
 }
 
 // Saves changes to the DragonDOS file system to the specified file
@@ -265,7 +311,7 @@ bool CDragonDOS_FS::ParseDirectory()
     }
 
     // Check disk geometry
-    unsigned char numTracks    = sector[0xFC];
+    unsigned char numTracks    = sector[0xFC];  
     unsigned char secsPerTrack = sector[0xFD];
 
     if( sector[0xFE] != (~numTracks    & 0xFF) )
@@ -302,6 +348,8 @@ bool CDragonDOS_FS::ParseDirectory()
             }
 
             SDGNDosDirectoryEntry dirEntry;
+            dirEntry.sector = dirSector;
+            dirEntry.entry  = entry;
 
             // Flags
             dirEntry.bDeleted      = (flag & DRAGONDOS_FLAG_DELETED     ) != 0;
@@ -657,10 +705,7 @@ bool CDragonDOS_FS::InitDisk( IDiskImageInterface* _disk )
     }
 
     // Copy track 20 to track 16
-    for( size_t sectorNum = 0; sectorNum < DRAGONDOS_SECTORSPERTRACK; ++sectorNum )
-    {
-        memcpy( _disk->GetSector(16,0,sectorNum), _disk->GetSector(20,0,sectorNum), DRAGONDOS_SECTOR_SIZE );
-    }
+    BackUpDirTrack();
 
 	return true;
 }
@@ -685,4 +730,19 @@ SFileInfo CDragonDOS_FS::GetFileInfo(size_t _fileIdx)
 const CDirectoryEntryWrapper& CDragonDOS_FS::GetFSRoot() const
 {
     return rootDir;
+}
+
+bool CDragonDOS_FS::BackUpDirTrack()
+{
+    if( nullptr == disk )
+    {
+        return false;
+    }
+
+    for( size_t sectorNum = 0; sectorNum < DRAGONDOS_SECTORSPERTRACK; ++sectorNum )
+    {
+        memcpy( disk->GetSector(DRAGONDOS_TEMP_DIR_TRACK,0,sectorNum), disk->GetSector(DRAGONDOS_DIR_TRACK,0,sectorNum), DRAGONDOS_SECTOR_SIZE );
+    }
+
+    return true;
 }

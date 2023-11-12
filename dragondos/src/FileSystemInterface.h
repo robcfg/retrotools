@@ -89,6 +89,7 @@ public:
 
     virtual bool ExtractFile( string _fileName, vector<unsigned char>& dst ) const { return false; }
     virtual bool InsertFile ( string _fileName, const vector<unsigned char>& src ) { return false; }
+    virtual bool DeleteFile ( string _fileName ) { return false; }
 
     virtual bool NeedManualSetup() { return false; }
 
