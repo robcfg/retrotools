@@ -367,12 +367,34 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         fileData.resize( insertFileSize );
         size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
         fclose( pIn );
-        
+
         vector<unsigned char> encodedData; 
+        
+        // Add file header /////////////////////////////////
+        // For BASIC files, load address is usually always 
+        // 0x2401 and the exec address 0x8B8D
+        ////////////////////////////////////////////////////
+        encodedData.push_back( DRAGONDOS_FILE_HEADER_BEGIN ); // Constant
+        encodedData.push_back( DRAGONDOS_FILETYPE_BASIC    ); // File type
+        encodedData.push_back( 0x24                        ); // Load address high byte
+        encodedData.push_back( 0x01                        ); // Load address low byte
+        encodedData.push_back( 0x00                        ); // File size high byte (updated below)
+        encodedData.push_back( 0x00                        ); // File size low byte (updated below)
+        encodedData.push_back( 0x8B                        ); // Load address high byte
+        encodedData.push_back( 0x8D                        ); // Load address low byte
+        encodedData.push_back( DRAGONDOS_FILE_HEADER_END   ); // Load address low byte
+        ////////////////////////////////////////////////////
+
         DragonDOS_BASIC::Encode( fileData, encodedData );
+
+        encodedData[4] = (encodedData.size() / 256) & 0xFF;
+        encodedData[5] = encodedData.size() & 0xFF;
+
         //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
         //fwrite( encodedData.data(), 1, encodedData.size(), phile );
         //fclose( phile );
+        filesystem::path filePath( file );
+        fs->InsertFile( filePath.filename(), encodedData );
         // InsertFile( pContext, file, false, errorStr );
     }
 

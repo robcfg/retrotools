@@ -35,7 +35,7 @@ using namespace std;
 #define DRAGONDOS_FLAG_UNUSED2              0x04 // bit 2	Unused
 #define DRAGONDOS_FLAG_PROTECTED            0x02 // bit 1	Protect Flag - file should not be overwritten
 #define DRAGONDOS_FLAG_CONTINUATION         0x01 // bit 0	Continuation Entry - this entry is a Continuation Block
-#define DRAGONDOS_FILETYPE_DATA             0x0  // .DAT file type
+#define DRAGONDOS_FILETYPE_DATA             0x00 // .DAT file type
 #define DRAGONDOS_FILETYPE_BASIC            0x01 // .BAS file type
 #define DRAGONDOS_FILETYPE_BINARY           0x02 // .BIN file type
 #define DRAGONDOS_FILEHEADER_SIZE           9
@@ -45,6 +45,8 @@ using namespace std;
 #define DRAGONDOS_MAX_FILE_EXT_LEN          3
 #define DRAGONDOS_MAX_FILE_FULL_NAME_LEN    (DRAGONDOS_MAX_FILE_NAME_LEN + DRAGONDOS_MAX_FILE_EXT_LEN + 1)
 #define DRAGONDOS_FABS_PER_SECTOR           0x5A0
+#define DRAGONDOS_FILE_HEADER_BEGIN         0x55
+#define DRAGONDOS_FILE_HEADER_END           0xAA
 
 #define DRAGONDOS_INVALID                   0xFFFF // To signal invalid indices. DragonDOS can only have 160 entries max.
 

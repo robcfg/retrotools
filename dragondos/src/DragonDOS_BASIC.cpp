@@ -368,7 +368,7 @@ namespace DragonDOS_BASIC
                 }
 
                 // Regular ASCII characters
-                if( _in[dataPos] >= 0x20 && _in[dataPos] < DDBD_TOKEN_START )
+                if( _in[dataPos] >= 0x20 /*&& _in[dataPos] < DDBD_TOKEN_START*/ )
                 {
                     if( _in[dataPos] == '\"' )
                     {
@@ -394,7 +394,7 @@ namespace DragonDOS_BASIC
         // Add end of data marker (two zero bytes)
         _out.push_back( 0x00 );
         _out.push_back( 0x00 );
-        
+
         return true;
     }
 }
