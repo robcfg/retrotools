@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef __DOS68_COMMANDS_H__
-#define __DOS68_COMMANDS_H__
+#ifndef __DRAGONDOS_COMMANDS_H__
+#define __DRAGONDOS_COMMANDS_H__
 
 #include <string>
 #include <vector>

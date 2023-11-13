@@ -430,7 +430,7 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
         textColors += "\n";
     }
 
-    unsigned short int programStart = 0x1E01;
+    unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
     DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
 
     strStream << endl;

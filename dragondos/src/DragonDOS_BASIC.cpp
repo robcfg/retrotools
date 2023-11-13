@@ -15,12 +15,17 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
+#include <stdlib.h>
 #include <string>
+#include <string.h>
 
 #include "DragonDOS_BASIC.h"
 
 using namespace std;
 
+#ifndef _WIN32
+#define _stricmp strcasecmp
+#endif
 
 namespace DragonDOS_BASIC
 {
@@ -32,12 +37,14 @@ namespace DragonDOS_BASIC
     static const int  DDBD_TOKEN_MAX_DDOS          = 0xE7;
     static const int  DDBD_TOKEN_FUNCTION_MAX      = 0xA1;
     static const int  DDBD_TOKEN_FUNCTION_MAX_DDOS = 0xA8;
+    static const int  DDBD_RESERVED_WORDS_NUM      = 104;
+    static const int  DDBD_FUNCTIONS_NUM           = 41;
     static const char DDBD_COLOR_TEXT              = 'A';
     static const char DDBD_COLOR_ERROR             = 'B';
     static const char DDBD_COLOR_BASIC_TOKEN       = 'C';
     static const char DDBD_COLOR_STRING            = 'D';
     static const char DDBD_COLOR_LINE_NUMBER       = 'E';
-
+    
     // Token index is byte - 0x80
     static const string reservedWords[] = 
     {
@@ -295,6 +302,99 @@ namespace DragonDOS_BASIC
             _fltkTextColor += '\n';
         }
 
+        return true;
+    }
+
+    size_t FindNextChar( char _char, const std::vector<char>& _in, size_t _pos )
+    {
+        while( _in[_pos] != _char && _pos < _in.size() )
+        {
+            ++_pos;
+        }
+
+        return _pos;
+    }
+
+    bool Encode( const std::vector<char>& _in, std::vector<unsigned char>& _out )
+    {
+        size_t dataPos = 0;
+        size_t newDataPos = 0;
+        unsigned short int nextLineAddress = DRAGONDOS_BASIC_PROGRAM_START;
+
+        vector<unsigned char> lineData;
+        string tmpString;
+        bool isString = false;
+
+        while( dataPos < _in.size() )
+        {
+            lineData.clear();
+
+            // Line Number
+            int lineNumber = atoi( &_in.data()[dataPos] );
+
+            unsigned char lineNumberHigh = (lineNumber / 256) & 0xFF;
+            unsigned char lineNumberLow  = lineNumber  & 0xFF;
+            lineData.push_back( lineNumberHigh );
+            lineData.push_back( lineNumberLow  );
+
+            dataPos = FindNextChar( ' ', _in, dataPos ) + 1;
+
+            while( dataPos < _in.size() && _in[dataPos] != 0x0D && _in[dataPos] != 0x0A )
+            {
+                if( ! isString )
+                {
+                    // Search for keywords
+                    for( size_t keyword = 0; keyword < DDBD_RESERVED_WORDS_NUM; ++keyword )
+                    {
+                        if( 0 == strncmp( &_in.data()[dataPos], reservedWords[keyword].c_str(), reservedWords[keyword].length()) )
+                        {
+                            lineData.push_back( (unsigned char)(keyword+DDBD_TOKEN_START) );
+                            dataPos += reservedWords[keyword].length();
+                            continue;
+                        }
+                    }
+
+                    // Search for function names
+                    for( size_t func = 0; func < DDBD_FUNCTIONS_NUM; ++func )
+                    {
+                        if( 0 == strncmp( &_in.data()[dataPos], functionTokens[func].c_str(), functionTokens[func].length() ) )
+                        {
+                            lineData.push_back( DDBD_TOKEN_FUNCTION );
+                            lineData.push_back( (unsigned char)(func+DDBD_TOKEN_START) );
+                            dataPos += functionTokens[func].length();
+                            continue;
+                        }
+                    }
+                }
+
+                // Regular ASCII characters
+                if( _in[dataPos] >= 0x20 && _in[dataPos] < DDBD_TOKEN_START )
+                {
+                    if( _in[dataPos] == '\"' )
+                    {
+                        isString = !isString;
+                    }
+                    lineData.push_back( _in[dataPos++] );
+                }
+                else
+                {
+                    ++dataPos;
+                }
+            }
+
+            lineData.push_back( DDBD_TOKEN_ENDOFLINE );
+            nextLineAddress += lineData.size() + 2;
+            _out.push_back( (nextLineAddress/256) & 0xFF);
+            _out.push_back( nextLineAddress & 0xFF);
+            _out.insert( _out.end(), lineData.begin(), lineData.end() );
+            ++dataPos;
+            isString = false;
+        }
+
+        // Add end of data marker (two zero bytes)
+        _out.push_back( 0x00 );
+        _out.push_back( 0x00 );
+        
         return true;
     }
 }

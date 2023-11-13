@@ -321,6 +321,8 @@ void InsertFile( SDRAGONDOS_Context* _context, const string& _filename, bool _is
 
 void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 {
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+    CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
     vector<string> fileNames;
 
     if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
@@ -330,10 +332,48 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 
     string errorStr;
 
-    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     for( auto file : fileNames )
     {
-        InsertFile( pContext, file, false, errorStr );
+        FILE* pIn = fopen( file.c_str(), "rb" );
+        if( nullptr == pIn )
+        {
+            errorStr = "Could not open requested file ";
+            errorStr += file;
+            errorStr += "\n";
+            fl_alert( "%s", errorStr.c_str() );
+            return;
+        }
+
+        fseek( pIn, 0, SEEK_END );
+        size_t insertFileSize = ftell( pIn );
+        fseek( pIn, 0, SEEK_SET );
+
+        // Check if there's enough room on the disk for the file to be inserted.
+        size_t freeBytes = fs->GetFreeSize();
+        if( insertFileSize > freeBytes )
+        {
+            fclose( pIn );
+
+            errorStr = "Not enough room to insert ";
+            errorStr += file;
+            errorStr += ". Another ";
+            errorStr += to_string(insertFileSize - freeBytes);
+            errorStr += " are needed.\n";
+            fl_alert( "%s", errorStr.c_str() );
+            return;
+        }
+
+        vector<char> fileData;
+        fileData.resize( insertFileSize );
+        size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
+        fclose( pIn );
+        
+        vector<unsigned char> encodedData; 
+        DragonDOS_BASIC::Encode( fileData, encodedData );
+        //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
+        //fwrite( encodedData.data(), 1, encodedData.size(), phile );
+        //fclose( phile );
+        // InsertFile( pContext, file, false, errorStr );
     }
 
     if( !errorStr.empty() )
@@ -433,7 +473,6 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
                 continue;
             }
             
-            ///////////////////////////////////////////////////////////////////////////////////////////////////
             unsigned short int fileIdx = fs->GetFileEntry( fi.name );
             if( fileIdx == DRAGONDOS_INVALID )
             {
@@ -457,7 +496,7 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
                 stringstream strStream;
                 stringstream clrStream;
                 std::string textColors;
-                unsigned short int programStart = 0x1E01;
+                unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
 
                 DragonDOS_BASIC::Decode( fileData, strStream, textColors, programStart, false, false );
 
@@ -550,7 +589,7 @@ void viewFiles_cb(Fl_Widget* pWidget,void* _context)
             vector<unsigned char> file;
             fs->ExtractFile( fs->GetFileName(line - DRAGONDOSUI_BROWSER_LINE_OFFSET), file );
 
-            unsigned short int programStart = 0x1E01;
+            unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
             DragonDOS_BASIC::Decode( file, decodedFiles, fltkTextColors, programStart, false, false );
         }
     }

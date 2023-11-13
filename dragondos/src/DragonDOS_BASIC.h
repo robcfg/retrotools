@@ -18,6 +18,8 @@
 #include <sstream>
 #include <vector>
 
+#define DRAGONDOS_BASIC_PROGRAM_START 0x2401
+
 namespace DragonDOS_BASIC
 {
     bool Decode( const std::vector<unsigned char>& _in, 
@@ -27,6 +29,6 @@ namespace DragonDOS_BASIC
                  bool _bIgnoreLineHeader = false, 
                  bool _bShowLineAddresses = false );
 
-    bool Encode(
-                 const std::vector<unsigned char>& _out );
+    bool Encode( const std::vector<char>& _in,
+                       std::vector<unsigned char>& _out );
 }

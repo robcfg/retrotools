@@ -18,9 +18,9 @@
 #include "VDKDiskImage.h"
 
 #ifndef __APPLE__
-#define DOS68UI_MENUBARHEIGHT 30
+#define DRAGONDOSUI_MENUBARHEIGHT 30
 #else
-#define DOS68UI_MENUBARHEIGHT 0
+#define DRAGONDOSUI_MENUBARHEIGHT 0
 #endif
 
 const int DRAGONDOS_UI_VIEWFILE_WIDTH     = 620;  // Width of the View File window
@@ -111,8 +111,8 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     _context->fileLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
     y += 40;
 
-	_context->browser = new Fl_Multi_Browser( x, y, 365, 540 );
-    x += 375;
+	_context->browser = new Fl_Multi_Browser( x, y, 380, 540 );
+    x += 390;
 
     Fl_Button* newDiskButton = new Fl_Button( x, y, 170, 30, "New disk");
     newDiskButton->callback( newDisk_cb, (void*)_context );
@@ -179,7 +179,7 @@ int main( int argc, char** argv )
 
     SDRAGONDOS_Context context;
 
-    CAppWindow* mainWindow = new CAppWindow( &context, 570, 600 + menuBarOffset, "DragonDOS by Robcfg" );
+    CAppWindow* mainWindow = new CAppWindow( &context, 585, 600 + menuBarOffset, "DragonDOS by Robcfg" );
 
     mainWindow->begin();
 
@@ -195,9 +195,9 @@ int main( int argc, char** argv )
     context.disk = &img;
     context.fs = &fs;
 
-    CreateMenuBar( mainWindow->w(), DOS68UI_MENUBARHEIGHT, modifierKey, &context );
+    CreateMenuBar( mainWindow->w(), DRAGONDOSUI_MENUBARHEIGHT, modifierKey, &context );
 
-    CreateControls( mainWindow->w(), DOS68UI_MENUBARHEIGHT, &context );
+    CreateControls( mainWindow->w(), DRAGONDOSUI_MENUBARHEIGHT, &context );
 
     mainWindow->end();
 /*
