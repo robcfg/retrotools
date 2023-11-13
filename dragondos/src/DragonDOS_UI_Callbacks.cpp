@@ -19,9 +19,9 @@ using namespace std;
 #define UI_MAX_FILE_EXT_LEN  3
 #define DRAGONDOSUI_BROWSER_LINE_OFFSET 3 // Skip two lines, 1-based
 #ifdef WIN32
-#define DOS68UI_PATH_SEPARATOR '\\';
+#define DRAGONDOSUI_PATH_SEPARATOR '\\';
 #else
-#define DOS68UI_PATH_SEPARATOR '/';
+#define DRAGONDOSUI_PATH_SEPARATOR '/';
 #endif
 
 const size_t tmpBufSize = 256;
@@ -400,7 +400,7 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
 void extractFiles_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-    IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
+    CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
     string path;
 
     if( pContext->browser->size() < DRAGONDOSUI_BROWSER_LINE_OFFSET )
@@ -422,7 +422,7 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
             SFileInfo fi = fs->GetFileInfo( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
             vector<unsigned char> fileData;
             string fileName = path;
-            fileName += DOS68UI_PATH_SEPARATOR;
+            fileName += DRAGONDOSUI_PATH_SEPARATOR;
             fileName += fi.name;
 
             if( !fs->ExtractFile(fi.name, fileData) )
@@ -433,6 +433,14 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
                 continue;
             }
             
+            ///////////////////////////////////////////////////////////////////////////////////////////////////
+            unsigned short int fileIdx = fs->GetFileEntry( fi.name );
+            if( fileIdx == DRAGONDOS_INVALID )
+            {
+                continue;
+            }
+
+            size_t bytesWritten = 0;
             FILE* pOut = fopen( fileName.c_str(), "wb" );
             if( nullptr == pOut )
             {
@@ -442,19 +450,36 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
                 continue;
             }
 
-            size_t bytesWritten = fwrite( fileData.data(), 1, fileData.size(), pOut );
-            fclose( pOut );
-
-            if( bytesWritten != fileData.size() )
+            // Detokenize BASIC
+            SDGNDosDirectoryEntry entry = fs->GetDirectory()[fileIdx];
+            if( entry.fileType == DRAGONDOS_FILETYPE_BASIC  )
             {
-                errors += "Error writing file ";
-                errors += fileName;
-                errors += " ";
-                errors += to_string(bytesWritten);
-                errors += " of ";
-                errors += to_string(fileData.size());
-                errors += " bytes written.\n";
-                continue;
+                stringstream strStream;
+                stringstream clrStream;
+                std::string textColors;
+                unsigned short int programStart = 0x1E01;
+
+                DragonDOS_BASIC::Decode( fileData, strStream, textColors, programStart, false, false );
+
+                bytesWritten = fwrite( strStream.str().c_str(), 1, strStream.str().length(), pOut );
+                fclose( pOut );
+            }
+            else
+            {
+                size_t bytesWritten = fwrite( fileData.data(), 1, fileData.size(), pOut );
+                fclose( pOut );
+
+                if( bytesWritten != fileData.size() )
+                {
+                    errors += "Error writing file ";
+                    errors += fileName;
+                    errors += " ";
+                    errors += to_string(bytesWritten);
+                    errors += " of ";
+                    errors += to_string(fileData.size());
+                    errors += " bytes written.\n";
+                    continue;
+                }
             }
         }
     }

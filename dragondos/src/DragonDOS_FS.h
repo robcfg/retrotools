@@ -5,11 +5,12 @@
 //                  formatted with the DragonDOS file system.
 //
 // For info on the DragonDOS file system go to:
-//             http://dragon32.info/info/drgndos.txt
+//              http://dragon32.info/info/drgndos.txt
+//              http://dragon32.info/info/binformt.txt
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 10/11/2023
+// Last update: 12/11/2023
 //
 ////////////////////////////////////////////////////////////////////
 
@@ -139,7 +140,8 @@ public:
     bool                  SetDisk         ( IDiskImageInterface* _disk );
     IDiskImageInterface*  GetDisk         ()                              { return disk; }
     unsigned short int    GetNumberOfFiles() const                        { return (unsigned short int)files.size(); }
-    unsigned short int    GetFileIdx      ( string _fileName );
+    unsigned short int    GetFileIdx      ( string _fileName ) const;
+    unsigned short int    GetFileEntry    ( string _fileName ) const;
     const CDGNDosFile&    GetFile         ( unsigned short int fileIdx )  { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
     bool                  InsertFile      ( string _fileName, const vector<unsigned char>& _data );
     bool                  DeleteFile      ( string _fileName );
@@ -179,5 +181,4 @@ private:
     bool                ParseDirectory();
     bool                ParseFiles    ();
     bool                BackUpDirTrack();
-    unsigned short int  GetFileEntry  ( string _fileName ) const;
 };

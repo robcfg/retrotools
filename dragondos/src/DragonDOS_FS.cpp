@@ -5,11 +5,12 @@
 //                    image formatted with the DragonDOS file system
 //
 // For info on the DragonDOS file system go to:
-//             http://dragon32.info/info/drgndos.txt
+//              http://dragon32.info/info/drgndos.txt
+//              http://dragon32.info/info/binformt.txt
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 10/11/2023
+// Last update: 12/11/2023
 //
 // File entries in directory table are 25 byte long.
 // Example:
@@ -20,7 +21,7 @@
 //  +-------------------------------------------------------> Flags
 //
 //  File header block
-//    504D4F 44453200 0042494E 01440D00 00000000 00000000
+//  --504D4F 44453200 0042494E 01440D00 00000000 00000000 --
 //    | | |  | | | |  | | | |  | | | |  | | | |  | | | | 
 //    | | |  | | | |  | | | |  | | | |  | | | |  | +-+-+----> Sector Allocation Block 4
 //    | | |  | | | |  | | | |  | | | |  | | +-+--+----------> Sector Allocation Block 3
@@ -30,7 +31,7 @@
 //    +-+-+--+-+-+-+--+-------------------------------------> filename, padded with 0x00  ("PMODE2")
 //
 //  Continuation block
-//    112233 44556677 8899AABB CCDDEEFF GGHHIIJJ KKLLMMNN
+//  --112233 44556677 8899AABB CCDDEEFF GGHHIIJJ KKLLMMNN --
 //    | | |  | | | |  | | | |  | | | |  | | | |  | | | | 
 //    | | |  | | | |  | | | |  | | | |  | | | |  | | +-+----> Unused
 //    | | |  | | | |  | | | |  | | | |  | | | +--+-+--------> Sector Allocation Block 7
@@ -42,10 +43,10 @@
 //    +-+-+-------------------------------------------------> Sector Allocation Block 1
 //
 //  Sector Allocation Block format:
-//                              01440D
-//                              | | |
-//                              | | +------------------------> Count of contiguous sectors in this block
-//                              +-+--------------------------> Logical Sector Number of first sector in this block
+//  -------- -------- -------- 01440D-- -------- -------- --
+//                             | | |
+//                             | | +-------------------------> Count of contiguous sectors in this block
+//                             +-+---------------------------> Logical Sector Number of first sector in this block
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <string.h> // for strcasecmp
@@ -121,7 +122,7 @@ bool CDragonDOS_FS::SetDisk( IDiskImageInterface* _disk )
 }
 
 // Returns a file's index based on its name
-unsigned short int CDragonDOS_FS::GetFileIdx( string _fileName )
+unsigned short int CDragonDOS_FS::GetFileIdx( string _fileName ) const
 {
     unsigned short int retVal = DRAGONDOS_INVALID;
 
@@ -264,7 +265,7 @@ bool CDragonDOS_FS::DeleteFile( string _fileName )
     unsigned short int bitmapPos = 0;
     unsigned short int bytePos = 0;
     unsigned short int lsn = 0;
-    // TODO: Check how this works for double sided disks and 80 track disks.
+    
     for( auto fab : directory[entry].fileBlock.FABs )
     {
         // Check for LSNs 0x5a0 - 0xb3f (80 Track, DS only), which are in sector 1
