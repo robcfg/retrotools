@@ -256,69 +256,6 @@ void saveDisk_cb(Fl_Widget* pWidget,void* _context)
     }
 }
 
-void InsertFile( SDRAGONDOS_Context* _context, const string& _filename, bool _isBinary, string& _errors )
-{
-    IFilesystemInterface* fs = (IFilesystemInterface*)_context->fs;
-
-    string errorStr;
-
-    FILE* pIn = fopen( _filename.c_str(), "rb" );
-    if( nullptr == pIn )
-    {
-        errorStr = "Could not open requested file ";
-        errorStr += _filename;
-        errorStr += "\n";
-        _errors += errorStr;
-        return;
-    }
-
-    fseek( pIn, 0, SEEK_END );
-    size_t insertFileSize = ftell( pIn );
-    fseek( pIn, 0, SEEK_SET );
-
-    // Check if there's enough room on the disk for the file to be inserted.
-    size_t freeBytes = fs->GetFreeSize();
-    if( insertFileSize > freeBytes )
-    {
-        fclose( pIn );
-
-        errorStr = "Not enough room to insert ";
-        errorStr += _filename;
-        errorStr += ". Another ";
-        errorStr += to_string(insertFileSize - freeBytes);
-        errorStr += " are needed.\n";
-        _errors += errorStr;
-        return;
-    }
-
-    vector<unsigned char> fileData;
-    fileData.resize( insertFileSize );
-    size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
-    fclose( pIn );
-
-    if( bytesRead < insertFileSize )
-    {
-        errorStr = "Error loading file ";
-        errorStr += _filename;
-        errorStr += " (";
-        errorStr += to_string(bytesRead);
-        errorStr += " of ";
-        errorStr += to_string(insertFileSize);
-        errorStr += " bytes read).\n";
-        _errors += errorStr;
-        return;
-    }
-
-    /*if( !fs->InsertFile( _filename, fileData, _isBinary ) )
-    {
-        errorStr = "File ";
-        errorStr += _filename;
-        errorStr += " could not be inserted.\n";
-        _errors += errorStr;
-        return;
-    }*/
-}
-
 void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
@@ -337,11 +274,10 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         FILE* pIn = fopen( file.c_str(), "rb" );
         if( nullptr == pIn )
         {
-            errorStr = "Could not open requested file ";
+            errorStr += "Could not open requested file ";
             errorStr += file;
             errorStr += "\n";
-            fl_alert( "%s", errorStr.c_str() );
-            return;
+            continue;
         }
 
         fseek( pIn, 0, SEEK_END );
@@ -350,17 +286,25 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 
         // Check if there's enough room on the disk for the file to be inserted.
         size_t freeBytes = fs->GetFreeSize();
+        if( insertFileSize > DRAGONDOS_MAX_FILE_SIZE - DRAGONDOS_FILEHEADER_SIZE )
+        {
+            fclose( pIn );
+
+            errorStr += "Cannot insert file ";
+            errorStr += file;
+            errorStr += " ,size is greater than 65535 bytes.";
+            continue;
+        }
         if( insertFileSize > freeBytes )
         {
             fclose( pIn );
 
-            errorStr = "Not enough room to insert ";
+            errorStr += "Not enough room to insert ";
             errorStr += file;
             errorStr += ". Another ";
             errorStr += to_string(insertFileSize - freeBytes);
             errorStr += " are needed.\n";
-            fl_alert( "%s", errorStr.c_str() );
-            return;
+            continue;
         }
 
         vector<char> fileData;
@@ -380,9 +324,9 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         encodedData.push_back( 0x01                        ); // Load address low byte
         encodedData.push_back( 0x00                        ); // File size high byte (updated below)
         encodedData.push_back( 0x00                        ); // File size low byte (updated below)
-        encodedData.push_back( 0x8B                        ); // Load address high byte
-        encodedData.push_back( 0x8D                        ); // Load address low byte
-        encodedData.push_back( DRAGONDOS_FILE_HEADER_END   ); // Load address low byte
+        encodedData.push_back( 0x8B                        ); // Exec address high byte
+        encodedData.push_back( 0x8D                        ); // Exec address low byte
+        encodedData.push_back( DRAGONDOS_FILE_HEADER_END   ); // Constant
         ////////////////////////////////////////////////////
 
         DragonDOS_BASIC::Encode( fileData, encodedData );
@@ -395,7 +339,6 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         //fclose( phile );
         filesystem::path filePath( file );
         fs->InsertFile( filePath.filename(), encodedData );
-        // InsertFile( pContext, file, false, errorStr );
     }
 
     if( !errorStr.empty() )
@@ -409,6 +352,8 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 
 void insertBinary_cb(Fl_Widget* pWidget,void* _context)
 {
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+    CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
     vector<string> fileNames;
 
     if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
@@ -418,10 +363,69 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
 
     string errorStr;
 
-    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     for( auto file : fileNames )
     {
-        InsertFile( pContext, file, true, errorStr );
+        FILE* pIn = fopen( file.c_str(), "rb" );
+        if( nullptr == pIn )
+        {
+            errorStr += "Could not open requested file ";
+            errorStr += file;
+            errorStr += "\n";
+            continue;
+        }
+
+        fseek( pIn, 0, SEEK_END );
+        size_t insertFileSize = ftell( pIn );
+        fseek( pIn, 0, SEEK_SET );
+
+        // Check if there's enough room on the disk for the file to be inserted.
+        size_t freeBytes = fs->GetFreeSize();
+        if( insertFileSize > DRAGONDOS_MAX_FILE_SIZE - DRAGONDOS_FILEHEADER_SIZE )
+        {
+            fclose( pIn );
+
+            errorStr += "Cannot insert file ";
+            errorStr += file;
+            errorStr += " ,size is greater than 65535 bytes.";
+            continue;
+        }
+        if( insertFileSize > freeBytes )
+        {
+            fclose( pIn );
+
+            errorStr += "Not enough room to insert ";
+            errorStr += file;
+            errorStr += ". Another ";
+            errorStr += to_string(insertFileSize - freeBytes);
+            errorStr += " are needed.\n";
+            continue;
+        }
+
+        vector<unsigned char> fileData;
+        fileData.resize( insertFileSize + DRAGONDOS_FILEHEADER_SIZE );
+        size_t bytesRead = fread( fileData.data()+DRAGONDOS_FILEHEADER_SIZE, 1, insertFileSize, pIn );
+        fclose( pIn );
+        
+        // Add file header /////////////////////////////////
+        // For BASIC files, load address is usually always 
+        // 0x2401 and the exec address 0x8B8D
+        ////////////////////////////////////////////////////
+        fileData[0] = DRAGONDOS_FILE_HEADER_BEGIN;          // Constant
+        fileData[1] = DRAGONDOS_FILETYPE_BINARY;            // File type
+        fileData[2] = (pContext->loadAddress / 256) & 0xFF; // Load address high byte
+        fileData[3] = pContext->loadAddress & 0x0F;         // Load address low byte
+        fileData[4] = (fileData.size() / 256) & 0xFF;       // File size high byte
+        fileData[5] = fileData.size() & 0xFF;               // File size low byte
+        fileData[6] = (pContext->execAddress / 256) & 0xFF; // Exec address high byte
+        fileData[7] = pContext->execAddress & 0x0F;         // Exec address low byte
+        fileData[8] = DRAGONDOS_FILE_HEADER_END;            // Constant
+        ////////////////////////////////////////////////////
+
+        //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
+        //fwrite( encodedData.data(), 1, encodedData.size(), phile );
+        //fclose( phile );
+        filesystem::path filePath( file );
+        fs->InsertFile( filePath.filename(), fileData );
     }
 
     if( !errorStr.empty() )
@@ -435,6 +439,8 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
 
 void insertData_cb(Fl_Widget* pWidget,void* _context)
 {
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+    CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
     vector<string> fileNames;
 
     if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
@@ -444,10 +450,54 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
 
     string errorStr;
 
-    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     for( auto file : fileNames )
     {
-        InsertFile( pContext, file, true, errorStr );
+        FILE* pIn = fopen( file.c_str(), "rb" );
+        if( nullptr == pIn )
+        {
+            errorStr += "Could not open requested file ";
+            errorStr += file;
+            errorStr += "\n";
+            continue;
+        }
+
+        fseek( pIn, 0, SEEK_END );
+        size_t insertFileSize = ftell( pIn );
+        fseek( pIn, 0, SEEK_SET );
+
+        // Check if there's enough room on the disk for the file to be inserted.
+        size_t freeBytes = fs->GetFreeSize();
+        if( insertFileSize > DRAGONDOS_MAX_FILE_SIZE - DRAGONDOS_FILEHEADER_SIZE )
+        {
+            fclose( pIn );
+
+            errorStr += "Cannot insert file ";
+            errorStr += file;
+            errorStr += " ,size is greater than 65535 bytes.";
+            continue;
+        }
+        if( insertFileSize > freeBytes )
+        {
+            fclose( pIn );
+
+            errorStr += "Not enough room to insert ";
+            errorStr += file;
+            errorStr += ". Another ";
+            errorStr += to_string(insertFileSize - freeBytes);
+            errorStr += " are needed.\n";
+            continue;
+        }
+
+        vector<unsigned char> fileData;
+        fileData.resize( insertFileSize );
+        size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
+        fclose( pIn );
+
+        //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
+        //fwrite( encodedData.data(), 1, encodedData.size(), phile );
+        //fclose( phile );
+        filesystem::path filePath( file );
+        fs->InsertFile( filePath.filename(), fileData );
     }
 
     if( !errorStr.empty() )

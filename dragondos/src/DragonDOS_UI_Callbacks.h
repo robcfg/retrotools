@@ -23,6 +23,9 @@ struct SDRAGONDOS_Context
     Fl_Multi_Browser*           browser         = nullptr;
 
     CDragonDOSViewFileWindow*   viewFileWindow  = nullptr;
+
+    unsigned short int          loadAddress     = 0;
+    unsigned short int          execAddress     = 0;
 };
 
 void UpdateUI( const SDRAGONDOS_Context* _context );
