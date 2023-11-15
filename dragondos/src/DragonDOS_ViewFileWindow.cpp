@@ -377,6 +377,11 @@ void CDragonDOSViewFileWindow::AddHexViewData( const std::string _fileHeader, co
 
 void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
+    if( _fileData.empty() )
+    {
+        mTextView = "";
+        return;
+    }
     stringstream strStream;
     if( !_fileHeader.empty() )
     {
@@ -419,6 +424,13 @@ void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, 
 
 void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
+    if( _fileData.empty() )
+    {
+        mBasicView = "";
+        mBasicViewColors = "";
+        return;
+    }
+
     stringstream strStream;
     stringstream clrStream;
     std::string textColors;
@@ -776,14 +788,16 @@ void CDragonDOSViewFileWindow::ClearImage()
 void CDragonDOSViewFileWindow::DecodeImage()
 {
     ClearImage();
-    
-    switch( mVideoMode->value() )
+    if( !mImageFileData.empty())
     {
-        case DRAGONDOSVFW_PMODE0: Decode_PMODE0_Image(mImageFileData); break;
-        case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
-        case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
-        case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
-        default:                  Decode_PMODE4_Image(mImageFileData); break;
+        switch( mVideoMode->value() )
+        {
+            case DRAGONDOSVFW_PMODE0: Decode_PMODE0_Image(mImageFileData); break;
+            case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
+            case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
+            case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
+            default:                  Decode_PMODE4_Image(mImageFileData); break;
+        }
     }
 
     mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );

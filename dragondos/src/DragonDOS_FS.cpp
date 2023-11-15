@@ -49,6 +49,7 @@
 //                             +-+---------------------------> Logical Sector Number of first sector in this block
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <filesystem>
 #include <string.h> // for strcasecmp
 #include <sstream>
 #include "DragonDOS_FS.h"
@@ -225,6 +226,69 @@ bool CDragonDOS_FS::ExtractFile( string _fileName, vector<unsigned char>& dst ) 
 // Inserts a file into the DragonDOS file system
 bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _data )
 {
+    // TODO: Maybe should add the type to the parameters and add the header data here...
+    if( nullptr == disk || _fileName.empty() )
+    {
+        return false;
+    }
+
+    size_t freeSize = GetFreeSize();
+
+    // Check file size
+    if( _data.size() > freeSize )
+    {
+        return false;
+    }
+
+    // Look for a deleted or unused directory entry
+    unsigned char* entryPtr = nullptr;
+
+    for( unsigned int sectorIdx = DRAGONDOS_DIR_START_SECTOR; sectorIdx < DRAGONDOS_SECTORSPERTRACK; ++sectorIdx )
+    {
+        unsigned char* sector = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+        if( nullptr == sector )
+        {
+            return false;
+        }
+
+        for( unsigned int entry = 0; entry < DRAGONDOS_DIR_ENTRIES_PER_SECT; ++entry )
+        {
+            entryPtr = sector + (entry * DRAGONDOS_DIR_ENTRY_SIZE);
+
+            if( 0 != (*entryPtr & DRAGONDOS_FLAG_DELETED) ) // Usable Entry found
+            {
+                entry = DRAGONDOS_DIR_ENTRIES_PER_SECT;
+                sectorIdx = DRAGONDOS_SECTORSPERTRACK;
+            }
+        }
+    }
+
+    *entryPtr = 0; // Clear all flags
+
+    // Set name and extension
+    filesystem::path filePath( _fileName );
+
+    string name = filePath.stem();
+    string extension = filePath.extension();
+    if( name.length() > DRAGONDOS_MAX_FILE_NAME_LEN )
+    {
+        name = name.substr( 0, DRAGONDOS_MAX_FILE_NAME_LEN );
+    }
+    if( extension[0] == '.' )
+    {
+        extension = extension.substr(1);
+    }
+    if( extension.length() > DRAGONDOS_MAX_FILE_EXT_LEN )
+    {
+        extension = extension.substr( 0, DRAGONDOS_MAX_FILE_EXT_LEN );
+    }
+
+    memcpy( entryPtr + 1, name.c_str()     , name.length()      );
+    memcpy( entryPtr + 9, extension.c_str(), extension.length() );
+    //0x01 - 0x08	filename (padded with 0x00)
+    //0x09 - 0x0b 	extension (padded with 0x00)
+
+    // Look for an available File Allocation Block
 
     return false;
 }
