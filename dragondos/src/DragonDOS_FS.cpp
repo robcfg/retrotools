@@ -49,6 +49,7 @@
 //                             +-+---------------------------> Logical Sector Number of first sector in this block
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <algorithm>
 #include <filesystem>
 #include <string.h> // for strcasecmp
 #include <sstream>
@@ -58,6 +59,17 @@
 #ifndef _WIN32
 #define _stricmp strcasecmp
 #endif
+
+uint8_t count_ones (uint8_t byte)
+{
+    static const uint8_t NIBBLE_LOOKUP [16] =
+    {
+        0, 1, 1, 2, 1, 2, 2, 3, 
+        1, 2, 2, 3, 2, 3, 3, 4
+    };
+
+    return NIBBLE_LOOKUP[byte & 0x0F] + NIBBLE_LOOKUP[byte >> 4];
+}
 
 // Get file data
 void CDGNDosFile::GetFileData( vector<unsigned char>& dst ) const
@@ -227,7 +239,7 @@ bool CDragonDOS_FS::ExtractFile( string _fileName, vector<unsigned char>& dst ) 
 bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _data )
 {
     // TODO: Maybe should add the type to the parameters and add the header data here...
-    if( nullptr == disk || _fileName.empty() )
+    if( nullptr == disk || _fileName.empty() || _data.size() > DRAGONDOS_MAX_FILE_SIZE )
     {
         return false;
     }
@@ -285,12 +297,118 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
 
     memcpy( entryPtr + 1, name.c_str()     , name.length()      );
     memcpy( entryPtr + 9, extension.c_str(), extension.length() );
-    //0x01 - 0x08	filename (padded with 0x00)
-    //0x09 - 0x0b 	extension (padded with 0x00)
+
+    // Allocate sectors;
+    size_t maxSectorNumPerSide = disk->GetTracksNum() * DRAGONDOS_SECTORSPERTRACK;
+    unsigned short int sectorsNeeded = _data.size()/DRAGONDOS_SECTOR_SIZE;
+    sectorsNeeded += (_data.size()%DRAGONDOS_SECTOR_SIZE) ? 1 : 0;
+    size_t bitmapSectorNum = (disk->GetTracksNum() > 40 && disk->GetSidesNum() > 1) ? 2 : 1;
+    vector<size_t> freeLSNs;
+
+    size_t bitmapBytesNeeded = (sectorsNeeded / 8) + ((sectorsNeeded % 8) != 0 ? 1 : 0);
+    bool bFound = false;
+    size_t firstBitmapByte = 0;
+    size_t bitmapSector = 0;
+    unsigned char* bitmapSectorPtr = nullptr;
+    for( size_t bmpSec = 0; ((bmpSec < bitmapSectorNum) && !bFound); bmpSec++ )
+    {
+        bitmapSectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, bmpSec );
+
+        for( size_t bitmapByte = 0; ((bitmapByte < DRAGONDOS_BITMAPSIZE - bitmapBytesNeeded) && !bFound); ++bitmapByte )
+        {
+            bFound = true;
+            for( size_t curByte = 0; curByte < bitmapBytesNeeded; ++curByte )
+            {
+                if( bitmapSectorPtr[bitmapByte + curByte] != 0xFF )
+                {
+                    bFound = false;
+                }
+            }
+
+            if( bFound )
+            {
+                firstBitmapByte = bitmapByte;
+                bitmapSector = bmpSec;
+                break;
+            }
+        }
+    }
+
+    if( !bFound )
+    {
+        return false;
+    }
+
+    size_t startLSN = ((bitmapSector * DRAGONDOS_BITMAPSIZE) + firstBitmapByte) * 8;
+    size_t endLSN = startLSN + sectorsNeeded;
+    const unsigned char* data = _data.data();
+    size_t dataSize = _data.size();
+
+    unsigned char* dstSector = nullptr;
+    for( ; startLSN < endLSN; ++startLSN )
+    {
+        dstSector = disk->GetSector( LSNTrack(*disk,startLSN),  LSNHead(*disk,startLSN), LSNSector(*disk,startLSN) );
+        MarkBitmapLSNUsed( startLSN );
+
+        memcpy( dstSector, data, min( (size_t)DRAGONDOS_SECTOR_SIZE, dataSize) );
+
+        if( dataSize >= DRAGONDOS_SECTOR_SIZE )
+        {
+            dataSize -= DRAGONDOS_SECTOR_SIZE;
+        }
+        else // needed?
+        {
+            break;
+        }
+    }
+
+    // for( size_t bitmapSector = 0; bitmapSector < bitmapSectorNum; ++bitmapSector )
+    // {
+    //     // TODO:Maybe try to find completely empty contiguous bitmap bytes first
+    //     // Disks with 40 tracks only use sector bitmap on the 1st sector of the
+    //     // directory track. 80 tracks, 2 side disks use also the 2nd sector of
+    //     // the directory track.
+    //     unsigned char* bitmapSectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, bitmapSector );
+
+    //     for( size_t bitmapByte = 0; bitmapByte < DRAGONDOS_BITMAPSIZE; ++bitmapByte )
+    //     {
+    //         size_t freeSectors = count_ones( bitmapSectorPtr[bitmapByte] );
+    //         if( 0 == freeSectors )
+    //         {
+    //             continue;
+    //         }
+
+    //         unsigned char contiguousSectors = GetMaxContiguousFreeSectorsInBitmapByte( bitmapByte );
+    //         //if( )
+    //     }
+    // }
+    // 0x01 - 0x08	filename (padded with 0x00)
+    // 0x09 - 0x0b 	extension (padded with 0x00)
+    // 0x0c - 0x0e	Sector Allocation Block 1
+    // 0x0f - 0x11	Sector Allocation Block 2
+    // 0x12 - 0x14	Sector Allocation Block 3
+    // 0x15 - 0x17	Sector Allocation Block 4
+
+    // Continuation block:  (flag byte bit 0 == 1)
+
+    // 0x01 - 0x03	Sector Allocation Block 1
+    // 0x04 - 0x06	Sector Allocation Block 2
+    // 0x07 - 0x09	Sector Allocation Block 3
+    // 0x0a - 0x0c	Sector Allocation Block 4
+    // 0x0d - 0x0f	Sector Allocation Block 5
+    // 0x10 - 0x12	Sector Allocation Block 6
+    // 0x13 - 0x15	Sector Allocation Block 7
+    // 0x16 : 0x17	Unused
+
+    // Sector Allocation Block format:
+
+    // 0x00 : 0x01	Logical Sector Number of first sector in this block
+    // 0x02		Count of contiguous sectors in this block    
+    //count_ones
 
     // Look for an available File Allocation Block
 
-    return false;
+    return true;
 }
 
 // Deletes a file from the DragonDOS file system
@@ -334,9 +452,9 @@ bool CDragonDOS_FS::DeleteFile( string _fileName )
     {
         // Check for LSNs 0x5a0 - 0xb3f (80 Track, DS only), which are in sector 1
         lsn = fab.LSN;
-        if( lsn > DRAGONDOS_FABS_PER_SECTOR )
+        if( lsn > DRAGONDOS_SECTORSPERBITMAPSECTOR )
         {
-            lsn -= DRAGONDOS_FABS_PER_SECTOR;
+            lsn -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
             sector = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, 1 );
         }
         else
@@ -641,17 +759,6 @@ size_t CDragonDOS_FS::GetFileSize( size_t _fileIdx ) const
     return 0;
 }
 
-uint8_t count_ones (uint8_t byte)
-{
-    static const uint8_t NIBBLE_LOOKUP [16] =
-    {
-        0, 1, 1, 2, 1, 2, 2, 3, 
-        1, 2, 2, 3, 2, 3, 3, 4
-    };
-
-    return NIBBLE_LOOKUP[byte & 0x0F] + NIBBLE_LOOKUP[byte >> 4];
-}
-
 size_t CDragonDOS_FS::GetFreeSize() const
 {
     if( nullptr == disk )
@@ -747,10 +854,7 @@ bool CDragonDOS_FS::InitDisk( IDiskImageInterface* _disk )
         {
             lsn = LSN( *_disk, trackNum, 0, sectorNum );
 
-            bitmapPos = lsn / 8;
-            bytePos   = lsn % 8;
-
-            sector[bitmapPos] &= ~(1 << bytePos);
+            MarkBitmapLSNUsed( lsn );
         }
     }
 
@@ -824,4 +928,99 @@ bool CDragonDOS_FS::BackUpDirTrack()
     }
 
     return true;
+}
+
+unsigned char CDragonDOS_FS::GetMaxContiguousFreeSectorsInBitmapByte( unsigned char _bitmapByte )
+{
+    unsigned char byteMask = 0;
+    unsigned char retVal = 0;
+    unsigned char count = 0;
+
+    for( unsigned char bit = 0; bit < 8; ++bit )
+    {
+        byteMask = (1 << bit);
+
+        if( _bitmapByte & byteMask )
+        {
+            ++count;
+        }
+        else
+        {
+            if( count > retVal )
+            {
+                retVal = count;
+            }
+            count = 0;
+        }
+    }
+
+    if( count > retVal )
+    {
+        retVal = count;
+    }
+
+    return retVal;
+}
+
+bool CDragonDOS_FS::IsBitmapLSNFree( size_t _LSN )
+{
+    if( nullptr == disk || _LSN >= (DRAGONDOS_SECTORSPERBITMAPSECTOR * 2) )
+    {
+        return false;
+    }
+
+    size_t sectorIdx = (_LSN / DRAGONDOS_SECTORSPERBITMAPSECTOR);
+
+    if( _LSN >= DRAGONDOS_SECTORSPERBITMAPSECTOR )
+    {
+        _LSN -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
+    }
+
+    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+    size_t sectorOffset = _LSN / 8;
+    size_t bitOffset    = _LSN % 8;
+
+    return ((sectorPtr[sectorOffset] & (1 << bitOffset)) != 0);
+}
+
+void CDragonDOS_FS::MarkBitmapLSNFree( size_t _LSN )
+{
+    if( nullptr == disk || _LSN >= (DRAGONDOS_SECTORSPERBITMAPSECTOR * 2) )
+    {
+        return;
+    }
+
+    size_t sectorIdx = (_LSN / DRAGONDOS_SECTORSPERBITMAPSECTOR);
+
+    if( _LSN >= DRAGONDOS_SECTORSPERBITMAPSECTOR )
+    {
+        _LSN -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
+    }
+
+    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+    size_t sectorOffset = _LSN / 8;
+    size_t bitOffset    = _LSN % 8;
+
+    sectorPtr[sectorOffset] |= (1 << bitOffset);
+}
+
+void CDragonDOS_FS::MarkBitmapLSNUsed( size_t _LSN )
+{
+    if( nullptr == disk || _LSN >= (DRAGONDOS_SECTORSPERBITMAPSECTOR * 2) )
+    {
+        return;
+    }
+
+    size_t sectorIdx = (_LSN / DRAGONDOS_SECTORSPERBITMAPSECTOR);
+
+    if( _LSN >= DRAGONDOS_SECTORSPERBITMAPSECTOR )
+    {
+        _LSN -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
+    }
+
+    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+    size_t sectorOffset = _LSN / 8;
+    size_t bitOffset    = _LSN % 8;
+
+    sectorPtr[sectorOffset] &= ~(1 << bitOffset);
 }
