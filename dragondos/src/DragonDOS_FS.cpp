@@ -278,6 +278,7 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
     *entryPtr = 0; // Clear all flags
 
     // Set name and extension
+    transform( _fileName.begin(), _fileName.end(), _fileName.begin(), ::toupper );
     filesystem::path filePath( _fileName );
 
     string name = filePath.stem();
@@ -339,8 +340,11 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
         return false;
     }
 
+    // TODO:Check why file size is greater than expected. Maybe calculating the size with the 9 byte header yields a bad value
+
     size_t startLSN = ((bitmapSector * DRAGONDOS_BITMAPSIZE) + firstBitmapByte) * 8;
     size_t endLSN = startLSN + sectorsNeeded;
+    unsigned short int fabLSN = (unsigned short int)startLSN;
     const unsigned char* data = _data.data();
     size_t dataSize = _data.size();
 
@@ -351,6 +355,7 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
         MarkBitmapLSNUsed( startLSN );
 
         memcpy( dstSector, data, min( (size_t)DRAGONDOS_SECTOR_SIZE, dataSize) );
+        data += DRAGONDOS_SECTOR_SIZE;
 
         if( dataSize >= DRAGONDOS_SECTOR_SIZE )
         {
@@ -407,6 +412,14 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
     //count_ones
 
     // Look for an available File Allocation Block
+
+    // Set flags and sector data
+    entryPtr[0x0C] = (fabLSN >> 8);
+    entryPtr[0x0D] = (fabLSN & 0xFF);
+    entryPtr[0x0E] = (sectorsNeeded & 0xFF);
+    entryPtr[0x00] = 0;
+
+    BackUpDirTrack();
 
     return true;
 }
@@ -731,7 +744,7 @@ bool CDragonDOS_FS::Load(IDiskImageInterface* _disk)
 
 bool CDragonDOS_FS::Save(const string& _filename)
 {
-    return false;
+    return disk->Save(_filename);
 }
 
 size_t CDragonDOS_FS::GetFilesNum() const
