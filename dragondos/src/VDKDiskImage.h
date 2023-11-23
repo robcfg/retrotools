@@ -109,6 +109,7 @@ public:
   STrackInfo  GetTrackInfo ( unsigned int _track, unsigned int _side ) const;
   SSectorInfo GetSectorInfo( unsigned int _track, unsigned int _side, unsigned int _sector ) const;
   size_t      GetSectorSize( unsigned int _track, unsigned int _side, unsigned int _sector  ) { return VDK_SECTORSIZE; }
+  size_t      GetSectorSize() { return VDK_SECTORSIZE; }
 
   bool NeedManualSetup() const { return false; }
   /////////////////////////////////////////////////

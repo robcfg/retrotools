@@ -340,8 +340,6 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
         return false;
     }
 
-    // TODO:Check why file size is greater than expected. Maybe calculating the size with the 9 byte header yields a bad value
-
     size_t startLSN = ((bitmapSector * DRAGONDOS_BITMAPSIZE) + firstBitmapByte) * 8;
     size_t endLSN = startLSN + sectorsNeeded;
     unsigned short int fabLSN = (unsigned short int)startLSN;
@@ -367,57 +365,12 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
         }
     }
 
-    // for( size_t bitmapSector = 0; bitmapSector < bitmapSectorNum; ++bitmapSector )
-    // {
-    //     // TODO:Maybe try to find completely empty contiguous bitmap bytes first
-    //     // Disks with 40 tracks only use sector bitmap on the 1st sector of the
-    //     // directory track. 80 tracks, 2 side disks use also the 2nd sector of
-    //     // the directory track.
-    //     unsigned char* bitmapSectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, bitmapSector );
-
-    //     for( size_t bitmapByte = 0; bitmapByte < DRAGONDOS_BITMAPSIZE; ++bitmapByte )
-    //     {
-    //         size_t freeSectors = count_ones( bitmapSectorPtr[bitmapByte] );
-    //         if( 0 == freeSectors )
-    //         {
-    //             continue;
-    //         }
-
-    //         unsigned char contiguousSectors = GetMaxContiguousFreeSectorsInBitmapByte( bitmapByte );
-    //         //if( )
-    //     }
-    // }
-    // 0x01 - 0x08	filename (padded with 0x00)
-    // 0x09 - 0x0b 	extension (padded with 0x00)
-    // 0x0c - 0x0e	Sector Allocation Block 1
-    // 0x0f - 0x11	Sector Allocation Block 2
-    // 0x12 - 0x14	Sector Allocation Block 3
-    // 0x15 - 0x17	Sector Allocation Block 4
-
-    // Continuation block:  (flag byte bit 0 == 1)
-
-    // 0x01 - 0x03	Sector Allocation Block 1
-    // 0x04 - 0x06	Sector Allocation Block 2
-    // 0x07 - 0x09	Sector Allocation Block 3
-    // 0x0a - 0x0c	Sector Allocation Block 4
-    // 0x0d - 0x0f	Sector Allocation Block 5
-    // 0x10 - 0x12	Sector Allocation Block 6
-    // 0x13 - 0x15	Sector Allocation Block 7
-    // 0x16 : 0x17	Unused
-
-    // Sector Allocation Block format:
-
-    // 0x00 : 0x01	Logical Sector Number of first sector in this block
-    // 0x02		Count of contiguous sectors in this block    
-    //count_ones
-
-    // Look for an available File Allocation Block
-
     // Set flags and sector data
+    entryPtr[0x00] = 0;
     entryPtr[0x0C] = (fabLSN >> 8);
     entryPtr[0x0D] = (fabLSN & 0xFF);
     entryPtr[0x0E] = (sectorsNeeded & 0xFF);
-    entryPtr[0x00] = 0;
+    entryPtr[0x18] = (unsigned char)(_data.size() % DRAGONDOS_SECTOR_SIZE);
 
     BackUpDirTrack();
 
@@ -667,7 +620,6 @@ bool CDragonDOS_FS::ParseDirectory()
                 directory.push_back(dirEntry);
 
                 // DirectoryWrapper version
-                // TODO: need to derive the DirectoryEntryWrapper to add more info
                 CDirectoryEntryWrapper* newEntry = new CDirectoryEntryWrapper;
                 newEntry->SetName( dirEntry.fileBlock.fileName );
                 rootDir.AddChild( newEntry );
@@ -1036,4 +988,22 @@ void CDragonDOS_FS::MarkBitmapLSNUsed( size_t _LSN )
     size_t bitOffset    = _LSN % 8;
 
     sectorPtr[sectorOffset] &= ~(1 << bitOffset);
+}
+
+string CDragonDOS_FS::GetFileTypeString( unsigned short int fileIdx ) const
+{
+    string retVal;
+
+    if( fileIdx < files.size() )
+    {
+        switch( files[fileIdx].GetFileType() )
+        {
+        case DRAGONDOS_FILETYPE_DATA  :retVal = "DAT"; break;
+        case DRAGONDOS_FILETYPE_BASIC :retVal = "BAS"; break;
+        case DRAGONDOS_FILETYPE_BINARY:retVal = "BIN"; break;
+        default:retVal = "???";
+        }
+    }
+
+    return retVal;
 }

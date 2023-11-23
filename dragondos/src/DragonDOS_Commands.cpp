@@ -191,7 +191,7 @@ bool InfoCommand( const vector<string>& _args )
     size_t sides = img.GetSidesNum();
     size_t tracks = img.GetTracksNum();
     size_t sectors = img.GetSectorsNum();
-    size_t sectorSize = img.GetSectorSize(0,0,0);
+    size_t sectorSize = img.GetSectorSize();
     size_t totalBytes = sides * tracks * sectors * sectorSize;
 
     cout << sides            << " sides"             << endl;

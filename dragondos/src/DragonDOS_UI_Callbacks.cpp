@@ -56,16 +56,18 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
             tmpExt.insert( tmpExt.end(), UI_MAX_FILE_EXT_LEN - tmpExt.length(), ' ' );
         }
 
-        uint16_t fileSectors = pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize(0,0,0); // TODO:Look for a good way to get sector size
-        fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize(0,0,0) != 0) ? 1 : 0;
+        uint16_t fileSectors = pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize();
+        fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize() != 0) ? 1 : 0;
 
         CDGNDosFile ddosFile = pFS->GetFile(fileIdx);
+        string fileType = pFS->GetFileTypeString(fileIdx);
+        fileType += ' '; // padding
 
         snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu %04X %04X\n", 
                     fileIdx, 
                     tmpName.c_str(), 
                     tmpExt.c_str(),
-                    "....",
+                    fileType.c_str(),
                     fileSectors,
                     pFS->GetFileSize( fileIdx),
                     ddosFile.GetLoadAddress(),
@@ -76,9 +78,9 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
     snprintf( tmpBuf, tmpBufSize, "Disk info:\n%s side(s)\n%s tracks\n%zu total bytes\n%zu free bytes\n%zu free sectors",
         to_string(pDisk->GetSidesNum()).c_str(),
         to_string(pDisk->GetTracksNum()).c_str(),
-        pDisk->GetSidesNum()*pDisk->GetTracksNum()*pDisk->GetSectorsNum()*pDisk->GetSectorSize(0,0,0),
+        pDisk->GetSidesNum()*pDisk->GetTracksNum()*pDisk->GetSectorsNum()*pDisk->GetSectorSize(),
         pFS->GetFreeSize(),
-        pFS->GetFreeSize()/pDisk->GetSectorSize(0,0,0)
+        pFS->GetFreeSize()/pDisk->GetSectorSize()
     );
     _context->diskInfoLabel->copy_label( tmpBuf );
 }

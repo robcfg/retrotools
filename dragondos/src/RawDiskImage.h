@@ -50,6 +50,7 @@ public:
     void SetSectorSize( size_t _size    ) { mSectorSize = _size;    }
     
     size_t GetSectorSize( unsigned int _track, unsigned int _side, unsigned int _sector ) { return mSectorSize; }
+    size_t GetSectorSize() { return mSectorSize; }
 
     /////////////////////////////////////////////////
 

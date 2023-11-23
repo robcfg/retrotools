@@ -72,4 +72,5 @@ public:
     virtual void   SetSectorsNum( size_t _sectors  ) { }
     virtual void   SetSectorSize( size_t _size     ) { }
     virtual size_t GetSectorSize( unsigned int _track, unsigned int _side, unsigned int _sector ) { return 0; }
+    virtual size_t GetSectorSize() { return 0; }
 };

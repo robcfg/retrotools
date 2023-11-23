@@ -151,6 +151,8 @@ public:
     bool                  DeleteFile      ( string _fileName );
     bool                  Save            ( string _fileName );
 
+    string GetFileTypeString( unsigned short int fileIdx ) const;
+
     const vector<SDGNDosDirectoryEntry>& GetDirectory() { return directory; }
 
     // IFilesystemInterface
