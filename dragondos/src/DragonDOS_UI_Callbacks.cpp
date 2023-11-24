@@ -363,6 +363,34 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
         return;
     }
 
+    // Ask load address
+    pContext->loadAddress = 0;
+    const char* strLoadAddress = fl_input( "Enter load address as dec (3072) or hex (0xC00), for example.","0" );
+    if( nullptr != strLoadAddress )
+    {
+        unsigned long int parsedLoadAddress = strtoul( strLoadAddress, nullptr, 0 );
+        if( parsedLoadAddress > 0xFFFF )
+        {
+            fl_alert( "Out of range address %zu\nValid range is 0 to 65535 (0xFFFF)", parsedLoadAddress );
+            return;
+        }
+        pContext->loadAddress = (unsigned short int)parsedLoadAddress;
+    }
+
+    // Ask exec address
+    pContext->execAddress = 0;
+    const char* strExecAddress = fl_input( "Enter exec address as dec (3072) or hex (0xC00), for example.","0" );
+    if( nullptr != strExecAddress )
+    {
+        unsigned long int parsedExecAddress = strtoul( strExecAddress, nullptr, 0 );
+        if( parsedExecAddress > 0xFFFF )
+        {
+            fl_alert( "Out of range address %zu\nValid range is 0 to 65535 (0xFFFF)", parsedExecAddress );
+            return;
+        } 
+        pContext->execAddress = (unsigned short int)parsedExecAddress;
+    }
+
     string errorStr;
 
     for( auto file : fileNames )
