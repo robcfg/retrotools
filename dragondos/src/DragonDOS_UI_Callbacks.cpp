@@ -194,11 +194,8 @@ void newDisk_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
  
-    int diskSize = fl_choice_n( "Please select disk size:", "180KB", "360KB", "720KB");
-    if( diskSize < 0 )
-    {
-        return; // Dialog was cancelled.
-    }
+    // fl_choice_n was giving link errors on Linux and Windows, so back to fl_choice.
+    int diskSize = fl_choice( "Please select disk size:", "180KB", "360KB", "720KB");
 
     string fileName;
     if( !ChooseFilename( fileName, true, false ) )
