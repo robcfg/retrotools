@@ -22,6 +22,8 @@ struct SDRAGONDOS_Context
     Fl_Box*                     diskInfoLabel   = nullptr;
     Fl_Multi_Browser*           browser         = nullptr;
 
+    Fl_Window*                  mainWindow      = nullptr;
+    Fl_Window*                  aboutWindow     = nullptr;
     CDragonDOSViewFileWindow*   viewFileWindow  = nullptr;
 
     unsigned short int          loadAddress     = 0;
@@ -31,6 +33,10 @@ struct SDRAGONDOS_Context
 void UpdateUI( const SDRAGONDOS_Context* _context );
 bool ChooseFilename( string& fileName, bool bSaveAsDialog, bool bDirectory );
 
+#ifndef __APPLE__
+void menuQuit_cb(Fl_Widget* pWidget,void* _context);
+void menuAbout_cb(Fl_Widget* pWidget,void* _context);
+#endif
 void newDisk_cb(Fl_Widget* pWidget,void* _context);
 void openDisk_cb(Fl_Widget* pWidget,void* _context);
 void saveDisk_cb(Fl_Widget* pWidget,void* _context);

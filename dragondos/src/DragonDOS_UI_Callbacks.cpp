@@ -169,6 +169,27 @@ bool ChooseFilename( std::vector<std::string>& fileNames, const std::string& fil
 	return true;
 }
 
+#ifndef __APPLE__
+void menuQuit_cb(Fl_Widget* pWidget,void* _context)
+{
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+
+    pContext->mainWindow->hide();
+}
+
+void menuAbout_cb(Fl_Widget* pWidget,void* _context)
+{
+    if( nullptr != Fl::modal() )
+    {
+        return;
+    }
+
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+
+	pContext->aboutWindow->show();	
+}
+#endif
+
 void newDisk_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
