@@ -44,7 +44,8 @@ namespace DragonDOS_BASIC
     static const char DDBD_COLOR_BASIC_TOKEN       = 'C';
     static const char DDBD_COLOR_STRING            = 'D';
     static const char DDBD_COLOR_LINE_NUMBER       = 'E';
-    
+    static const char DDBD_KEYWORD_REM             = 2;
+
     // Token index is byte - 0x80
     static const string reservedWords[] = 
     {
@@ -202,7 +203,7 @@ namespace DragonDOS_BASIC
         "LOC",
         "FRE$"
     };
-
+//TODO: ELSE is not just 0x84, it's 0x3A84. Don't ask me why...
     bool Decode( const vector<unsigned char>& _in, 
                     stringstream& _out, 
                     string& _fltkTextColor, 
@@ -324,6 +325,7 @@ namespace DragonDOS_BASIC
         vector<unsigned char> lineData;
         string tmpString;
         bool isString = false;
+        bool isRemark = false;
 
         while( dataPos < _in.size() )
         {
@@ -338,10 +340,13 @@ namespace DragonDOS_BASIC
             lineData.push_back( lineNumberLow  );
 
             dataPos = FindNextChar( ' ', _in, dataPos ) + 1;
+            bool hasBeenProcessed = false;
 
             while( dataPos < _in.size() && _in[dataPos] != 0x0D && _in[dataPos] != 0x0A )
             {
-                if( ! isString )
+                hasBeenProcessed = false;
+
+                if( !isString && !isRemark )
                 {
                     // Search for keywords
                     for( size_t keyword = 0; keyword < DDBD_RESERVED_WORDS_NUM; ++keyword )
@@ -350,8 +355,17 @@ namespace DragonDOS_BASIC
                         {
                             lineData.push_back( (unsigned char)(keyword+DDBD_TOKEN_START) );
                             dataPos += reservedWords[keyword].length();
-                            continue;
+                            if( keyword == DDBD_KEYWORD_REM )
+                            {
+                                isRemark = true;
+                            }
+                            hasBeenProcessed = true;
+                            break;
                         }
+                    }
+                    if( hasBeenProcessed )
+                    {
+                        continue;
                     }
 
                     // Search for function names
@@ -362,8 +376,13 @@ namespace DragonDOS_BASIC
                             lineData.push_back( DDBD_TOKEN_FUNCTION );
                             lineData.push_back( (unsigned char)(func+DDBD_TOKEN_START) );
                             dataPos += functionTokens[func].length();
-                            continue;
+                            hasBeenProcessed = true;
+                            break;
                         }
+                    }
+                    if( hasBeenProcessed )
+                    {
+                        continue;
                     }
                 }
 
@@ -378,7 +397,7 @@ namespace DragonDOS_BASIC
                 }
                 else
                 {
-                    ++dataPos;
+                    break;
                 }
             }
 
@@ -389,6 +408,7 @@ namespace DragonDOS_BASIC
             _out.insert( _out.end(), lineData.begin(), lineData.end() );
             ++dataPos;
             isString = false;
+            isRemark = false;
         }
 
         // Add end of data marker (two zero bytes)
