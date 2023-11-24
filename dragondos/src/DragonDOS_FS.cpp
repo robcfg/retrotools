@@ -208,7 +208,14 @@ bool CDragonDOS_FS::ExtractFile( string _fileName, vector<unsigned char>& dst ) 
 
                 if( skipHeader )
                 {
-                    dst.insert( dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + DRAGONDOS_SECTOR_SIZE );
+                    if( sectorsNum == 1 )
+                    {
+                        dst.insert( dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + entry.lastSectorSize );
+                    }
+                    else
+                    {
+                        dst.insert( dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + DRAGONDOS_SECTOR_SIZE );
+                    }
                     skipHeader = false; // Only need to skip header once.
                 }
                 else if( !entry.bContinued && fab == fabNum - 1 && sector == sectorsNum - 1) // extract the right number of bytes from last sector

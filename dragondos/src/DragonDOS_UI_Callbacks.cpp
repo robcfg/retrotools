@@ -69,7 +69,7 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
                     tmpExt.c_str(),
                     fileType.c_str(),
                     fileSectors,
-                    pFS->GetFileSize( fileIdx),
+                    pFS->GetFileSize(fileIdx),
                     ddosFile.GetLoadAddress(),
                     ddosFile.GetExecAddress() );
         _context->browser->add(tmpBuf);
