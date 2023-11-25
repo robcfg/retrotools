@@ -308,7 +308,7 @@ bool CDragonDOS_FS::InsertFile( std::string _fileName, const std::vector<unsigne
 
     // Allocate sectors;
     size_t maxSectorNumPerSide = disk->GetTracksNum() * DRAGONDOS_SECTORSPERTRACK;
-    unsigned short int sectorsNeeded = _data.size()/DRAGONDOS_SECTOR_SIZE;
+    unsigned short int sectorsNeeded = (unsigned short int)(_data.size()/DRAGONDOS_SECTOR_SIZE);
     sectorsNeeded += (_data.size()%DRAGONDOS_SECTOR_SIZE) ? 1 : 0;
     size_t bitmapSectorNum = (disk->GetTracksNum() > 40 && disk->GetSidesNum() > 1) ? 2 : 1;
     std::vector<size_t> freeLSNs;
@@ -320,7 +320,7 @@ bool CDragonDOS_FS::InsertFile( std::string _fileName, const std::vector<unsigne
     unsigned char* bitmapSectorPtr = nullptr;
     for( size_t bmpSec = 0; ((bmpSec < bitmapSectorNum) && !bFound); bmpSec++ )
     {
-        bitmapSectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, bmpSec );
+        bitmapSectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, (unsigned int)bmpSec );
 
         for( size_t bitmapByte = 0; ((bitmapByte < DRAGONDOS_BITMAPSIZE - bitmapBytesNeeded) && !bFound); ++bitmapByte )
         {
@@ -356,7 +356,7 @@ bool CDragonDOS_FS::InsertFile( std::string _fileName, const std::vector<unsigne
     unsigned char* dstSector = nullptr;
     for( ; startLSN < endLSN; ++startLSN )
     {
-        dstSector = disk->GetSector( LSNTrack(*disk,startLSN),  LSNHead(*disk,startLSN), LSNSector(*disk,startLSN) );
+        dstSector = disk->GetSector( LSNTrack(*disk,(unsigned short int)startLSN),  LSNHead(*disk,(unsigned short int)startLSN), LSNSector(*disk,(unsigned short int)startLSN) );
         MarkBitmapLSNUsed( startLSN );
 
         memcpy( dstSector, data, std::min( (size_t)DRAGONDOS_SECTOR_SIZE, dataSize) );
@@ -438,7 +438,7 @@ bool CDragonDOS_FS::DeleteFile( std::string _fileName )
         // Mark sectors as free
         for( size_t contSector = 0; contSector < fab.numSectors; ++contSector )
         {
-            bitmapPos = (lsn + contSector) / 8;
+            bitmapPos = (unsigned short int)((lsn + contSector) / 8);
             bytePos   = (lsn + contSector) % 8;
 
             sector[bitmapPos] |= (1 << bytePos);
@@ -743,7 +743,7 @@ size_t CDragonDOS_FS::GetFreeSize() const
 
     for( size_t side = 0; side < disk->GetSidesNum(); ++side )
     {
-        unsigned char* pSector = disk->GetSector(DRAGONDOS_DIR_TRACK, 0, side);
+        unsigned char* pSector = disk->GetSector(DRAGONDOS_DIR_TRACK, 0, (unsigned int)side);
         for( int byte=0; byte < 0xB4; ++byte )
         {
             freeSectors += count_ones( pSector[byte] );
@@ -896,7 +896,7 @@ bool CDragonDOS_FS::BackUpDirTrack()
 
     for( size_t sectorNum = 0; sectorNum < DRAGONDOS_SECTORSPERTRACK; ++sectorNum )
     {
-        memcpy( disk->GetSector(DRAGONDOS_TEMP_DIR_TRACK,0,sectorNum), disk->GetSector(DRAGONDOS_DIR_TRACK,0,sectorNum), DRAGONDOS_SECTOR_SIZE );
+        memcpy( disk->GetSector(DRAGONDOS_TEMP_DIR_TRACK,0,(unsigned int)sectorNum), disk->GetSector(DRAGONDOS_DIR_TRACK,0,(unsigned int)sectorNum), DRAGONDOS_SECTOR_SIZE );
     }
 
     return true;
@@ -948,7 +948,7 @@ bool CDragonDOS_FS::IsBitmapLSNFree( size_t _LSN )
         _LSN -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
     }
 
-    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, (unsigned int)sectorIdx );
     size_t sectorOffset = _LSN / 8;
     size_t bitOffset    = _LSN % 8;
 
@@ -969,7 +969,7 @@ void CDragonDOS_FS::MarkBitmapLSNFree( size_t _LSN )
         _LSN -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
     }
 
-    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, (unsigned int)sectorIdx );
     size_t sectorOffset = _LSN / 8;
     size_t bitOffset    = _LSN % 8;
 
@@ -990,7 +990,7 @@ void CDragonDOS_FS::MarkBitmapLSNUsed( size_t _LSN )
         _LSN -= DRAGONDOS_SECTORSPERBITMAPSECTOR;
     }
 
-    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, sectorIdx );
+    unsigned char* sectorPtr = disk->GetSector( DRAGONDOS_DIR_TRACK, 0, (unsigned int)sectorIdx );
     size_t sectorOffset = _LSN / 8;
     size_t bitOffset    = _LSN % 8;
 

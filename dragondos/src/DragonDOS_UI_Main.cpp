@@ -185,7 +185,7 @@ void CreateAboutDialog( SDRAGONDOS_Context* _context )
         return;
     }
 #ifdef WIN32
-    _context->aboutWindow->resizable( aboutDialog );
+    _context->aboutWindow->resizable( _context->aboutWindow );
 #endif
     _context->aboutWindow->box(FL_FLAT_BOX);
     _context->aboutWindow->color( FL_DARK2 );

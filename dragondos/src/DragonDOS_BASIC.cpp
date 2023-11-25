@@ -401,7 +401,7 @@ namespace DragonDOS_BASIC
             }
 
             lineData.push_back( DDBD_TOKEN_ENDOFLINE );
-            nextLineAddress += lineData.size() + 2;
+            nextLineAddress += (unsigned short int)lineData.size() + 2;
             _out.push_back( (nextLineAddress/256) & 0xFF);
             _out.push_back( nextLineAddress & 0xFF);
             _out.insert( _out.end(), lineData.begin(), lineData.end() );

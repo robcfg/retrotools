@@ -54,11 +54,11 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
             tmpExt.insert( tmpExt.end(), UI_MAX_FILE_EXT_LEN - tmpExt.length(), ' ' );
         }
 
-        uint16_t fileSectors = pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize();
+        uint16_t fileSectors = (uint16_t)(pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize());
         fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize() != 0) ? 1 : 0;
 
-        CDGNDosFile ddosFile = pFS->GetFile(fileIdx);
-        std::string fileType = pFS->GetFileTypeString(fileIdx);
+        CDGNDosFile ddosFile = pFS->GetFile((unsigned short int)fileIdx);
+        std::string fileType = pFS->GetFileTypeString((unsigned short int)fileIdx);
         fileType += ' '; // padding
 
         snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu %04X %04X\n", 

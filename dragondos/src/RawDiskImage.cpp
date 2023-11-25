@@ -107,14 +107,14 @@ std::string CRAWDiskImage::GetDiskInfo()
 
 STrackInfo CRAWDiskImage::GetTrackInfo ( unsigned int _track, unsigned int _side ) const
 {
-    STrackInfo retVal;
+    STrackInfo retVal{};
 
     return retVal;
 }
 
 SSectorInfo CRAWDiskImage::GetSectorInfo( unsigned int _track, unsigned int _side, unsigned int _sector ) const
 {
-    SSectorInfo retVal;
+    SSectorInfo retVal{};
 
     return retVal;
 }
