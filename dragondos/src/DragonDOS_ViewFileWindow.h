@@ -85,7 +85,7 @@ private:
 
     Fl_Box* mImage;
     unsigned char * mImageData = nullptr;
-    vector<unsigned char> mImageFileData;
+    std::vector<unsigned char> mImageFileData;
     Fl_Choice* mVideoMode = nullptr;
     Fl_Choice* mVideoPalette = nullptr;
 

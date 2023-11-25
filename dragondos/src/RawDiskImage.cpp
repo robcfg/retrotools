@@ -14,7 +14,7 @@
 #include "RawDiskImage.h"
 #include <sstream>
 
-bool CRAWDiskImage::Load(const string& _filename)
+bool CRAWDiskImage::Load(const std::string& _filename)
 {
     mFileName = _filename;
 
@@ -52,7 +52,7 @@ bool CRAWDiskImage::Load(const string& _filename)
     return true;
 }
 
-bool CRAWDiskImage::Save(const string& _filename)
+bool CRAWDiskImage::Save(const std::string& _filename)
 {
     // Open file
     FILE* pOut = fopen( _filename.c_str(), "wb" );
@@ -72,21 +72,21 @@ bool CRAWDiskImage::Save(const string& _filename)
     return true;
 }
 
-string CRAWDiskImage::GetFileSpec()
+std::string CRAWDiskImage::GetFileSpec()
 {
     return "Raw image files\t*.*\n"; // Native chooser format.
 }
 
-string CRAWDiskImage::GetDiskInfo()
+std::string CRAWDiskImage::GetDiskInfo()
 {
-    string retVal;
+    std::string retVal;
 
     if( mFileName.empty() )
         return retVal;
 
-    stringstream sstream;
+    std::stringstream sstream;
 
-    string shortFileName;
+    std::string shortFileName;
     size_t found = mFileName.find_last_of("/\\");
     if( found )
         shortFileName = mFileName.substr(found+1);
@@ -94,12 +94,12 @@ string CRAWDiskImage::GetDiskInfo()
         shortFileName = mFileName;
 
     size_t diskSize = mSidesNum * mTracksNum * mSectorsNum * mSectorSize;
-    sstream << shortFileName.c_str() << endl << endl;
-    sstream << "Tracks      : "   << mTracksNum  << endl;
-    sstream << "Sides       : "   << mSidesNum   << endl;
-    sstream << "Sectors     : "   << mSectorsNum << endl;
-    sstream << "Sector size : "   << mSectorSize << " bytes" << endl;
-    sstream << "Total size  : "   << diskSize << " bytes/" << diskSize / 1024 << " KB" << endl;
+    sstream << shortFileName.c_str() << std::endl << std::endl;
+    sstream << "Tracks      : "   << mTracksNum  << std::endl;
+    sstream << "Sides       : "   << mSidesNum   << std::endl;
+    sstream << "Sectors     : "   << mSectorsNum << std::endl;
+    sstream << "Sector size : "   << mSectorSize << " bytes" << std::endl;
+    sstream << "Total size  : "   << diskSize << " bytes/" << diskSize / 1024 << " KB" << std::endl;
     retVal = sstream.str();
 
     return retVal;

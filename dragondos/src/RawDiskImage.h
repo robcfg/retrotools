@@ -22,8 +22,8 @@ public:
     ~CRAWDiskImage(){ if(0 != mDataBlock) delete[] mDataBlock; }
 
     // IDiskImageInterface interface ///////////////////////
-    bool Load(const string& _filename);
-    bool Save(const string& _filename); // Save isn't const because it can update the lastError string.
+    bool Load(const std::string& _filename);
+    bool Save(const std::string& _filename); // Save isn't const because it can update the lastError string.
     //NewDisk(tracks,sides,optional sector size)
 
     int GetSidesNum()   const { return (int)mSidesNum;   }
@@ -31,8 +31,8 @@ public:
     int GetSectorsNum() const { return (int)mSectorsNum; }
     int GetSectorsNum(size_t _side, size_t _track) const { return (int)mSectorsNum; }
 
-    string GetFileSpec();
-    string GetDiskInfo(); 
+    std::string GetFileSpec();
+    std::string GetDiskInfo(); 
 
     STrackInfo  GetTrackInfo ( unsigned int _track, unsigned int _side ) const;
     SSectorInfo GetSectorInfo( unsigned int _track, unsigned int _side, unsigned int _sector ) const;
@@ -55,13 +55,13 @@ public:
     /////////////////////////////////////////////////
 
 private:
-    string mFileName;
-    size_t mSidesNum;
-    size_t mTracksNum;
-    size_t mSectorsNum;
-    size_t mSectorSize;
-    unsigned char* mDataBlock;
-    size_t mDataSize;
+    std::string     mFileName;
+    size_t          mSidesNum;
+    size_t          mTracksNum;
+    size_t          mSectorsNum;
+    size_t          mSectorSize;
+    unsigned char*  mDataBlock;
+    size_t          mDataSize;
 };
 
 #endif

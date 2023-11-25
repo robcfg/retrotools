@@ -4,13 +4,11 @@
 
 #include "DragonDOS_Commands.h"
 
-using namespace std;
-
-bool ProcessCommand( const vector<string> _args )
+bool ProcessCommand( const std::vector<std::string> _args )
 {
-    string command = _args[1];
+    std::string command = _args[1];
 
-    transform( command.begin(), command.end(), command.begin(), ::tolower );
+    std::transform( command.begin(), command.end(), command.begin(), ::tolower );
 
     if     ( 0 == command.compare("help")    ) return HelpCommand   ();
     else if( 0 == command.compare("list")    ) return ListCommand   ( _args );
@@ -34,7 +32,7 @@ int main( int argc, char** argv )
         return -1;
     }
 
-    vector<string> args;
+    std::vector<std::string> args;
     args.insert( args.begin(), argv, &argv[argc] );
 
     return (ProcessCommand( args ) ? 0 : -1);

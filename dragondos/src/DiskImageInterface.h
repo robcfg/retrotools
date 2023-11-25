@@ -18,8 +18,6 @@
 
 #include <string>
 
-using namespace std;
-
 #define DISK_IMAGE_INTERFACE_INVALID 0xFFFFFFFF
 
 struct STrackInfo
@@ -45,8 +43,8 @@ class IDiskImageInterface
 public:
 	virtual ~IDiskImageInterface() {};
 
-	virtual bool         Load(const string& _filename) = 0;
-	virtual bool         Save(const string& _filename) = 0;
+	virtual bool         Load(const std::string& _filename) = 0;
+	virtual bool         Save(const std::string& _filename) = 0;
     virtual unsigned int New ( unsigned char uTracks, unsigned char uSides, unsigned char uSecsPerTrack ) = 0;
 
 	virtual int GetSidesNum() const = 0;
@@ -62,8 +60,8 @@ public:
 	virtual unsigned int         GetSectorID  ( unsigned int uTrack, unsigned int uSide, unsigned int uSector ) const { return (unsigned char)(uSector & 0xFF); }
 	virtual const unsigned char* GetSectorByID( unsigned int uTrack, unsigned int uSide, unsigned int uSector ) const = 0;
 
-	virtual string GetFileSpec() = 0;
-	virtual string GetDiskInfo() = 0;
+	virtual std::string GetFileSpec() = 0;
+	virtual std::string GetDiskInfo() = 0;
 
     virtual bool NeedManualSetup() const = 0;
 

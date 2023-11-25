@@ -21,8 +21,6 @@
 
 #include "DragonDOS_BASIC.h"
 
-using namespace std;
-
 #ifndef _WIN32
 #define _stricmp strcasecmp
 #endif
@@ -47,7 +45,7 @@ namespace DragonDOS_BASIC
     static const char DDBD_KEYWORD_REM             = 2;
 
     // Token index is byte - 0x80
-    static const string reservedWords[] = 
+    static const std::string reservedWords[] = 
     {
         "FOR",
         "GO",
@@ -158,7 +156,7 @@ namespace DragonDOS_BASIC
 
     // Function tokens are also indexed as byte - 0x80, but
     // preceded by an 0xFF byte
-    static const string functionTokens[] = 
+    static const std::string functionTokens[] = 
     {
         "SGN",
         "INT",
@@ -203,13 +201,14 @@ namespace DragonDOS_BASIC
         "LOC",
         "FRE$"
     };
+
 //TODO: ELSE is not just 0x84, it's 0x3A84. Don't ask me why...
-    bool Decode( const vector<unsigned char>& _in, 
-                    stringstream& _out, 
-                    string& _fltkTextColor, 
-                    unsigned short int& _lineAddress,
-                    bool _bIgnoreLineHeader, 
-                    bool _bShowLineAddresses )
+    bool Decode( const  std::vector<unsigned char>& _in, 
+                        std::stringstream& _out, 
+                        std::string& _fltkTextColor, 
+                        unsigned short int& _lineAddress,
+                        bool _bIgnoreLineHeader, 
+                        bool _bShowLineAddresses )
     {
         int maxToken = DDBD_TOKEN_MAX_DDOS;
         int maxFunctionToken = DDBD_TOKEN_FUNCTION_MAX_DDOS;
@@ -226,7 +225,7 @@ namespace DragonDOS_BASIC
 
                 if( _bShowLineAddresses )
                 {
-                    _out << "[" << hex << uppercase << _lineAddress << "] " << nouppercase << dec;
+                    _out << "[" << std::hex << std::uppercase << _lineAddress << "] " << std::nouppercase << std::dec;
                 }
 
                 // Skip 1st word or detect end of file
@@ -242,7 +241,7 @@ namespace DragonDOS_BASIC
                 int lineNumber = (_in[pos++] * 256);
                 lineNumber += _in[pos++];
                 _out << lineNumber << " ";
-                string strLineNumber = to_string(lineNumber);
+                std::string strLineNumber = std::to_string(lineNumber);
                 _fltkTextColor.append( strLineNumber.length() + 1, DDBD_COLOR_LINE_NUMBER );
             }
 
@@ -299,7 +298,7 @@ namespace DragonDOS_BASIC
             while( token != DDBD_TOKEN_ENDOFLINE && (pos < _in.size()) );
 
             isString = false;
-            _out << endl;
+            _out << std::endl;
             _fltkTextColor += '\n';
         }
 
@@ -322,8 +321,8 @@ namespace DragonDOS_BASIC
         size_t newDataPos = 0;
         unsigned short int nextLineAddress = DRAGONDOS_BASIC_PROGRAM_START;
 
-        vector<unsigned char> lineData;
-        string tmpString;
+        std::vector<unsigned char> lineData;
+        std::string tmpString;
         bool isString = false;
         bool isRemark = false;
 

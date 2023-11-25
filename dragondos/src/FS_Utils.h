@@ -14,4 +14,4 @@ unsigned char      LSNTrack ( const IDiskImageInterface& _disk, unsigned short i
 unsigned char      LSNHead  ( const IDiskImageInterface& _disk, unsigned short int LSN );
 unsigned char      LSNSector( const IDiskImageInterface& _disk, unsigned short int LSN );
 
-const CDirectoryEntryWrapper* FindDirectoryEntry( const CDirectoryEntryWrapper* _parent, vector<string>& _tokens, size_t curToken );
+const CDirectoryEntryWrapper* FindDirectoryEntry( const CDirectoryEntryWrapper* _parent, std::vector<std::string>& _tokens, size_t curToken );

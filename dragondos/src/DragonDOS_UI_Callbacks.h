@@ -10,11 +10,9 @@
 
 #include "DragonDOS_ViewFileWindow.h"
 
-using namespace std;
-
 struct SDRAGONDOS_Context
 {
-    string                      diskFilename;
+    std::string                 diskFilename;
     IDiskImageInterface*        disk;
     IFilesystemInterface*       fs;
 
@@ -30,28 +28,28 @@ struct SDRAGONDOS_Context
     unsigned short int          execAddress     = 0;
 };
 
-void UpdateUI( const SDRAGONDOS_Context* _context );
-bool ChooseFilename( string& fileName, bool bSaveAsDialog, bool bDirectory );
+void UpdateUI                   ( const SDRAGONDOS_Context* _context );
+bool ChooseFilename             ( std::string& fileName, bool bSaveAsDialog, bool bDirectory );
 
 #ifndef __APPLE__
-void menuQuit_cb(Fl_Widget* pWidget,void* _context);
-void menuAbout_cb(Fl_Widget* pWidget,void* _context);
+void menuQuit_cb                (Fl_Widget* pWidget,void* _context);
+void menuAbout_cb               (Fl_Widget* pWidget,void* _context);
 #endif
-void newDisk_cb(Fl_Widget* pWidget,void* _context);
-void openDisk_cb(Fl_Widget* pWidget,void* _context);
-void saveDisk_cb(Fl_Widget* pWidget,void* _context);
-void insertBasic_cb(Fl_Widget* pWidget,void* _context);
-void insertBinary_cb(Fl_Widget* pWidget,void* _context);
-void insertData_cb(Fl_Widget* pWidget,void* _context);
-void extractFiles_cb(Fl_Widget* pWidget,void* _context);
-void removeFiles_cb(Fl_Widget* pWidget,void* _context);
-void viewFiles_cb(Fl_Widget* pWidget,void* _context);
+void newDisk_cb                 (Fl_Widget* pWidget,void* _context);
+void openDisk_cb                (Fl_Widget* pWidget,void* _context);
+void saveDisk_cb                (Fl_Widget* pWidget,void* _context);
+void insertBasic_cb             (Fl_Widget* pWidget,void* _context);
+void insertBinary_cb            (Fl_Widget* pWidget,void* _context);
+void insertData_cb              (Fl_Widget* pWidget,void* _context);
+void extractFiles_cb            (Fl_Widget* pWidget,void* _context);
+void removeFiles_cb             (Fl_Widget* pWidget,void* _context);
+void viewFiles_cb               (Fl_Widget* pWidget,void* _context);
 
 // View file window callbacks
-void viewFileAsHex_cb  ( Fl_Widget* pWidget, void* _viewFileWindow );
-void viewFileAsText_cb ( Fl_Widget* pWidget, void* _viewFileWindow );
-void viewFileAsBasic_cb( Fl_Widget* pWidget, void* _viewFileWindow );
-void viewFileAsImage_cb( Fl_Widget* pWidget, void* _viewFileWindow );
-void viewFileModeChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow );
-void viewFilePaletteChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow );
-void viewFileExportPNG_cb( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileAsHex_cb           ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileAsText_cb          ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileAsBasic_cb         ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileAsImage_cb         ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileModeChanged_cb     ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFilePaletteChanged_cb  ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileExportPNG_cb       ( Fl_Widget* pWidget, void* _viewFileWindow );

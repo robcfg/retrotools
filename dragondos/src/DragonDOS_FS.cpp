@@ -72,14 +72,14 @@ uint8_t count_ones (uint8_t byte)
 }
 
 // Get file data
-void CDGNDosFile::GetFileData( vector<unsigned char>& dst ) const
+void CDGNDosFile::GetFileData( std::vector<unsigned char>& dst ) const
 {
     dst.clear();
     dst.insert( dst.begin(), data.begin(), data.end() );
 }
 
 // Set file data
-void CDGNDosFile::SetFileData( const vector<unsigned char>& src )
+void CDGNDosFile::SetFileData( const std::vector<unsigned char>& src )
 {
     data.clear();
     data.insert( data.begin(), src.begin(), src.end() );
@@ -135,7 +135,7 @@ bool CDragonDOS_FS::SetDisk( IDiskImageInterface* _disk )
 }
 
 // Returns a file's index based on its name
-unsigned short int CDragonDOS_FS::GetFileIdx( string _fileName ) const
+unsigned short int CDragonDOS_FS::GetFileIdx( std::string _fileName ) const
 {
     unsigned short int retVal = DRAGONDOS_INVALID;
 
@@ -154,7 +154,7 @@ unsigned short int CDragonDOS_FS::GetFileIdx( string _fileName ) const
 }
 
 // Returns a file's first directory entry based on its name
-unsigned short int CDragonDOS_FS::GetFileEntry( string _fileName ) const
+unsigned short int CDragonDOS_FS::GetFileEntry( std::string _fileName ) const
 {
     unsigned short int retVal = DRAGONDOS_INVALID;
 
@@ -173,7 +173,7 @@ unsigned short int CDragonDOS_FS::GetFileEntry( string _fileName ) const
 }
 
 // Extracts file from the DragonDOS file system to a specified location
-bool CDragonDOS_FS::ExtractFile( string _fileName, vector<unsigned char>& dst ) const
+bool CDragonDOS_FS::ExtractFile( std::string _fileName, std::vector<unsigned char>& dst ) const
 {
     unsigned short int fileIdx = GetFileEntry( _fileName );
 
@@ -243,7 +243,7 @@ bool CDragonDOS_FS::ExtractFile( string _fileName, vector<unsigned char>& dst ) 
 }
 
 // Inserts a file into the DragonDOS file system
-bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _data )
+bool CDragonDOS_FS::InsertFile( std::string _fileName, const std::vector<unsigned char>& _data )
 {
     // TODO: Maybe should add the type to the parameters and add the header data here...
     if( nullptr == disk || _fileName.empty() || _data.size() > DRAGONDOS_MAX_FILE_SIZE )
@@ -286,10 +286,10 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
 
     // Set name and extension
     transform( _fileName.begin(), _fileName.end(), _fileName.begin(), ::toupper );
-    filesystem::path filePath( _fileName );
+    std::filesystem::path filePath( _fileName );
 
-    string name = filePath.stem();
-    string extension = filePath.extension();
+    std::string name = filePath.stem().string();
+    std::string extension = filePath.extension().string();
     if( name.length() > DRAGONDOS_MAX_FILE_NAME_LEN )
     {
         name = name.substr( 0, DRAGONDOS_MAX_FILE_NAME_LEN );
@@ -311,7 +311,7 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
     unsigned short int sectorsNeeded = _data.size()/DRAGONDOS_SECTOR_SIZE;
     sectorsNeeded += (_data.size()%DRAGONDOS_SECTOR_SIZE) ? 1 : 0;
     size_t bitmapSectorNum = (disk->GetTracksNum() > 40 && disk->GetSidesNum() > 1) ? 2 : 1;
-    vector<size_t> freeLSNs;
+    std::vector<size_t> freeLSNs;
 
     size_t bitmapBytesNeeded = (sectorsNeeded / 8) + ((sectorsNeeded % 8) != 0 ? 1 : 0);
     bool bFound = false;
@@ -359,7 +359,7 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
         dstSector = disk->GetSector( LSNTrack(*disk,startLSN),  LSNHead(*disk,startLSN), LSNSector(*disk,startLSN) );
         MarkBitmapLSNUsed( startLSN );
 
-        memcpy( dstSector, data, min( (size_t)DRAGONDOS_SECTOR_SIZE, dataSize) );
+        memcpy( dstSector, data, std::min( (size_t)DRAGONDOS_SECTOR_SIZE, dataSize) );
         data += DRAGONDOS_SECTOR_SIZE;
 
         if( dataSize >= DRAGONDOS_SECTOR_SIZE )
@@ -385,7 +385,7 @@ bool CDragonDOS_FS::InsertFile( string _fileName, const vector<unsigned char>& _
 }
 
 // Deletes a file from the DragonDOS file system
-bool CDragonDOS_FS::DeleteFile( string _fileName )
+bool CDragonDOS_FS::DeleteFile( std::string _fileName )
 {
     unsigned short int entry = GetFileEntry( _fileName );
 
@@ -451,7 +451,7 @@ bool CDragonDOS_FS::DeleteFile( string _fileName )
 }
 
 // Saves changes to the DragonDOS file system to the specified file
-bool CDragonDOS_FS::Save( string _fileName )
+bool CDragonDOS_FS::Save( std::string _fileName )
 {
     if( 0 == disk )
     {
@@ -671,13 +671,13 @@ bool CDragonDOS_FS::ParseFiles()
 {
     files.clear();
 
-    vector<SDGNDosDirectoryEntry>::const_iterator entryIter;
+    std::vector<SDGNDosDirectoryEntry>::const_iterator entryIter;
     for( entryIter = directory.begin(); entryIter != directory.end(); ++entryIter )
     {
         if( !entryIter->bDeleted && !entryIter->bContinuation )
         {
             CDGNDosFile file;
-            vector<unsigned char> fileData;
+            std::vector<unsigned char> fileData;
 
             ExtractFile( entryIter->fileBlock.fileName, fileData  );
 
@@ -701,7 +701,7 @@ bool CDragonDOS_FS::Load(IDiskImageInterface* _disk)
     return SetDisk( _disk );
 }
 
-bool CDragonDOS_FS::Save(const string& _filename)
+bool CDragonDOS_FS::Save(const std::string& _filename)
 {
     return disk->Save(_filename);
 }
@@ -711,7 +711,7 @@ size_t CDragonDOS_FS::GetFilesNum() const
     return GetNumberOfFiles();
 }
 
-string CDragonDOS_FS::GetFileName(size_t _fileIdx) const
+std::string CDragonDOS_FS::GetFileName(size_t _fileIdx) const
 {
     if( _fileIdx < GetNumberOfFiles() )
     {
@@ -755,17 +755,17 @@ size_t CDragonDOS_FS::GetFreeSize() const
     return retVal;
 }
 
-string CDragonDOS_FS::GetFSName() const
+std::string CDragonDOS_FS::GetFSName() const
 {
     return "DragonDOS";
 }
 
-string CDragonDOS_FS::GetFSVariant() const
+std::string CDragonDOS_FS::GetFSVariant() const
 {
     return "";
 }
 
-string CDragonDOS_FS::GetVolumeLabel() const
+std::string CDragonDOS_FS::GetVolumeLabel() const
 {
     return "DragonDOS Disk";
 }
@@ -997,9 +997,9 @@ void CDragonDOS_FS::MarkBitmapLSNUsed( size_t _LSN )
     sectorPtr[sectorOffset] &= ~(1 << bitOffset);
 }
 
-string CDragonDOS_FS::GetFileTypeString( unsigned short int fileIdx ) const
+std::string CDragonDOS_FS::GetFileTypeString( unsigned short int fileIdx ) const
 {
-    string retVal;
+    std::string retVal;
 
     if( fileIdx < files.size() )
     {

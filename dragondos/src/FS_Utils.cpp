@@ -39,7 +39,7 @@ unsigned char LSNSector( const IDiskImageInterface& _disk, unsigned short int LS
     return (unsigned char)(LSN % (_disk.GetSectorsNum() * _disk.GetSidesNum()) % _disk.GetSectorsNum());
 }
 
-const CDirectoryEntryWrapper* FindDirectoryEntry( const CDirectoryEntryWrapper* _parent, vector<string>& _tokens, size_t curToken )
+const CDirectoryEntryWrapper* FindDirectoryEntry( const CDirectoryEntryWrapper* _parent, std::vector<std::string>& _tokens, size_t curToken )
 {
     for( auto child : _parent->GetChildren() )
     {

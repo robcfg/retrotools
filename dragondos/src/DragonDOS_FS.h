@@ -19,8 +19,6 @@
 #include <vector>
 #include <string>
 
-using namespace std;
-
 #define DRAGONDOS_DIR_TRACK                 20   // Directory track
 #define DRAGONDOS_TEMP_DIR_TRACK            16   // Track to perform operations before copying it to track 20.
 #define DRAGONDOS_DIR_ENTRY_SIZE            25   // Directory entry size
@@ -62,8 +60,8 @@ struct SDGNDosFAB
 // Dragon DOS File/Continuation block
 struct SDGNDosFileBlock
 {
-    string              fileName;
-    vector<SDGNDosFAB>  FABs;
+    std::string              fileName;
+    std::vector<SDGNDosFAB>  FABs;
 };
 
 // Dragon DOS directory entry
@@ -110,10 +108,10 @@ public:
     CDGNDosFile() {}
     ~CDGNDosFile() {}
 
-    string             GetFileName      () const                                    { return fileName;      }
-    void               SetFileName      ( const string& _fileName )                 { fileName = _fileName; }
-    void               GetFileData      ( vector<unsigned char>& dst ) const;
-    void               SetFileData      ( const vector<unsigned char>& src );
+    std::string        GetFileName      () const                                    { return fileName;      }
+    void               SetFileName      ( const std::string& _fileName )            { fileName = _fileName; }
+    void               GetFileData      ( std::vector<unsigned char>& dst ) const;
+    void               SetFileData      ( const std::vector<unsigned char>& src );
     void               SetFileData      ( const unsigned char* src, size_t size );
     size_t             GetFileSize      () const                                    { return data.size(); }
     bool               GetFileProtected ()                                          { return bProtected; }
@@ -126,8 +124,8 @@ public:
     void               SetExecAddress   ( unsigned short int _execAddress )         { execAddress = _execAddress; }
 
 private:
-    string                fileName;
-    vector<unsigned char> data;
+    std::string                fileName;
+    std::vector<unsigned char> data;
     bool                  bProtected;
     unsigned char         fileType;
     unsigned short int    loadAddress;
@@ -144,41 +142,41 @@ public:
     bool                  SetDisk         ( IDiskImageInterface* _disk );
     IDiskImageInterface*  GetDisk         ()                              { return disk; }
     unsigned short int    GetNumberOfFiles() const                        { return (unsigned short int)files.size(); }
-    unsigned short int    GetFileIdx      ( string _fileName ) const;
-    unsigned short int    GetFileEntry    ( string _fileName ) const;
+    unsigned short int    GetFileIdx      ( std::string _fileName ) const;
+    unsigned short int    GetFileEntry    ( std::string _fileName ) const;
     const CDGNDosFile&    GetFile         ( unsigned short int fileIdx )  { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
-    bool                  InsertFile      ( string _fileName, const vector<unsigned char>& _data );
-    bool                  DeleteFile      ( string _fileName );
-    bool                  Save            ( string _fileName );
+    bool                  InsertFile      ( std::string _fileName, const std::vector<unsigned char>& _data );
+    bool                  DeleteFile      ( std::string _fileName );
+    bool                  Save            ( std::string _fileName );
 
-    string GetFileTypeString( unsigned short int fileIdx ) const;
+    std::string GetFileTypeString( unsigned short int fileIdx ) const;
 
-    const vector<SDGNDosDirectoryEntry>& GetDirectory() { return directory; }
+    const std::vector<SDGNDosDirectoryEntry>& GetDirectory() { return directory; }
 
     // IFilesystemInterface
     bool Load(IDiskImageInterface* _disk);
-    bool Save(const string& _filename);
+    bool Save(const std::string& _filename);
 
     const CDirectoryEntryWrapper& GetFSRoot() const;
 
-    size_t GetFilesNum() const;
-    string GetFileName(size_t _fileIdx) const;
-    size_t GetFileSize( size_t _fileIdx ) const;
-    size_t GetFreeSize() const;
+    size_t      GetFilesNum() const;
+    std::string GetFileName(size_t _fileIdx) const;
+    size_t      GetFileSize( size_t _fileIdx ) const;
+    size_t      GetFreeSize() const;
 
-    SFileInfo GetFileInfo(size_t _fileIdx);
-    bool      ExtractFile( string _fileName, vector<unsigned char>& dst ) const;
+    SFileInfo   GetFileInfo(size_t _fileIdx);
+    bool        ExtractFile( std::string _fileName, std::vector<unsigned char>& dst ) const;
 
-    string GetFSName() const;
-    string GetFSVariant() const;
-    string GetVolumeLabel() const;
+    std::string GetFSName() const;
+    std::string GetFSVariant() const;
+    std::string GetVolumeLabel() const;
 
     bool InitDisk( IDiskImageInterface* _disk );
 
 private:
     IDiskImageInterface*           disk;
-    vector<SDGNDosDirectoryEntry>  directory;
-    vector<CDGNDosFile>            files;
+    std::vector<SDGNDosDirectoryEntry>  directory;
+    std::vector<CDGNDosFile>            files;
 
     CDGNDosFile                    emptyFile;
 

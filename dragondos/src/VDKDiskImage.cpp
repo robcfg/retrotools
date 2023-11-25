@@ -21,7 +21,7 @@
 #include <sstream>
 
 // Load the contents of a image file.
-bool CVDKDiskImage::Load( const string& _filename )
+bool CVDKDiskImage::Load( const std::string& _filename )
 {
     // Open file
     FILE* pIn = fopen( _filename.c_str(), "rb" );
@@ -85,7 +85,7 @@ bool CVDKDiskImage::Load( const string& _filename )
 }
 
 // Saves current image to a file
-bool CVDKDiskImage::Save( const string& _filename )
+bool CVDKDiskImage::Save( const std::string& _filename )
 {
     FILE* pOut = fopen( _filename.c_str(), "wb" );
     if( 0 == pOut )
@@ -253,7 +253,7 @@ int CVDKDiskImage::GetSectorsNum(size_t _side, size_t _track) const
     return GetSectorsNum();
 }
 
-string CVDKDiskImage::GetFileSpec()
+std::string CVDKDiskImage::GetFileSpec()
 {
 //#if defined(__APPLE__) || defined(WIN32)
 	return "Dragon VDK files\t*.{vdk,dsk}\n"; // Native chooser format.
@@ -262,19 +262,19 @@ string CVDKDiskImage::GetFileSpec()
 //#endif
 }
 
-string CVDKDiskImage::GetDiskInfo()
+std::string CVDKDiskImage::GetDiskInfo()
 {
-    string retVal;
+    std::string retVal;
 
     if( fileName.empty() )
     {
         return retVal;
     }
-    stringstream sstream;
+    std::stringstream sstream;
 
     int diskSize = GetTracksNum() * GetSidesNum() * GetSectorsNum() * VDK_SECTORSIZE;
 
-    string shortFileName;
+    std::string shortFileName;
     size_t found = fileName.find_last_of("/\\");
     if( found )
     {
@@ -285,12 +285,12 @@ string CVDKDiskImage::GetDiskInfo()
         shortFileName = fileName;
     }
 
-    sstream << shortFileName.c_str() << endl << endl;
-    sstream << "Tracks      : " << GetTracksNum()  << endl;
-    sstream << "Sides       : " << GetSidesNum()   << endl;
-    sstream << "Sectors     : " << GetSectorsNum() << endl;
-    sstream << "Sector size : " << VDK_SECTORSIZE  << " bytes" << endl;
-    sstream << "Total size  : " << diskSize << " bytes/" << diskSize / 1024 << " KB" << endl;
+    sstream << shortFileName.c_str() << std::endl << std::endl;
+    sstream << "Tracks      : " << GetTracksNum()  << std::endl;
+    sstream << "Sides       : " << GetSidesNum()   << std::endl;
+    sstream << "Sectors     : " << GetSectorsNum() << std::endl;
+    sstream << "Sector size : " << VDK_SECTORSIZE  << " bytes" << std::endl;
+    sstream << "Total size  : " << diskSize << " bytes/" << diskSize / 1024 << " KB" << std::endl;
 
     retVal = sstream.str();
 

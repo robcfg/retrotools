@@ -6,14 +6,12 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
-bool HelpCommand();
-bool ListCommand( const vector<string>& _args );
-bool ExtractCommand( const vector<string>& _args );
-bool InfoCommand( const vector<string>& _args );
-bool NewCommand( const vector<string>& _args );
-bool DeleteCommand( const vector<string>& _args );
-bool InsertCommand( const vector<string>& _args );
+bool HelpCommand    ();
+bool ListCommand    ( const std::vector<std::string>& _args );
+bool ExtractCommand ( const std::vector<std::string>& _args );
+bool InfoCommand    ( const std::vector<std::string>& _args );
+bool NewCommand     ( const std::vector<std::string>& _args );
+bool DeleteCommand  ( const std::vector<std::string>& _args );
+bool InsertCommand  ( const std::vector<std::string>& _args );
 
 #endif

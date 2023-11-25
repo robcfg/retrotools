@@ -13,8 +13,6 @@
 #include "DragonDOS_ViewFileWindow.h"
 #include "VDKDiskImage.h"
 
-using namespace std;
-
 #define UI_MAX_FILE_NAME_LEN 8
 #define UI_MAX_FILE_EXT_LEN  3
 #define DRAGONDOSUI_BROWSER_LINE_OFFSET 3 // Skip two lines, 1-based
@@ -43,14 +41,14 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
     {
         SFileInfo fileInfo = _context->fs->GetFileInfo( fileIdx );
 
-        filesystem::path filePath( pFS->GetFileName( fileIdx ) );
+        std::filesystem::path filePath( pFS->GetFileName( fileIdx ) );
         
-        string tmpName = filePath.stem().string();
+        std::string tmpName = filePath.stem().string();
         if( tmpName.length() < UI_MAX_FILE_NAME_LEN )
         {
             tmpName.insert( tmpName.end(), UI_MAX_FILE_NAME_LEN - tmpName.length(), ' ' );
         }
-        string tmpExt = filePath.extension().string();
+        std::string tmpExt = filePath.extension().string();
         if( tmpExt.length() < UI_MAX_FILE_EXT_LEN )
         {
             tmpExt.insert( tmpExt.end(), UI_MAX_FILE_EXT_LEN - tmpExt.length(), ' ' );
@@ -60,7 +58,7 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
         fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize() != 0) ? 1 : 0;
 
         CDGNDosFile ddosFile = pFS->GetFile(fileIdx);
-        string fileType = pFS->GetFileTypeString(fileIdx);
+        std::string fileType = pFS->GetFileTypeString(fileIdx);
         fileType += ' '; // padding
 
         snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu %04X %04X\n", 
@@ -76,8 +74,8 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
     }
 
     snprintf( tmpBuf, tmpBufSize, "Disk info:\n%s side(s)\n%s tracks\n%zu total bytes\n%zu free bytes\n%zu free sectors",
-        to_string(pDisk->GetSidesNum()).c_str(),
-        to_string(pDisk->GetTracksNum()).c_str(),
+        std::to_string(pDisk->GetSidesNum()).c_str(),
+        std::to_string(pDisk->GetTracksNum()).c_str(),
         pDisk->GetSidesNum()*pDisk->GetTracksNum()*pDisk->GetSectorsNum()*pDisk->GetSectorSize(),
         pFS->GetFreeSize(),
         pFS->GetFreeSize()/pDisk->GetSectorSize()
@@ -85,7 +83,7 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
     _context->diskInfoLabel->copy_label( tmpBuf );
 }
 
-bool ChooseFilename( string& fileName, bool bSaveAsDialog, bool bDirectory )
+bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory )
 {
 	// Create native chooser
 	Fl_Native_File_Chooser native;
@@ -197,7 +195,7 @@ void newDisk_cb(Fl_Widget* pWidget,void* _context)
     // fl_choice_n was giving link errors on Linux and Windows, so back to fl_choice.
     int diskSize = fl_choice( "Please select disk size:", "180KB", "360KB", "720KB");
 
-    string fileName;
+    std::string fileName;
     if( !ChooseFilename( fileName, true, false ) )
     {
         return;
@@ -240,7 +238,7 @@ void newDisk_cb(Fl_Widget* pWidget,void* _context)
 
 void openDisk_cb(Fl_Widget* pWidget,void* _context)
 {
-    string fileName;
+    std::string fileName;
 
     if( !ChooseFilename( fileName, false, false ) )
     {
@@ -271,7 +269,7 @@ void saveDisk_cb(Fl_Widget* pWidget,void* _context)
 
     if( !fs->Save(pContext->diskFilename) )
     {
-        string error = "Couldn't save changes to ";
+        std::string error = "Couldn't save changes to ";
         error += pContext->diskFilename;
     }
 }
@@ -280,14 +278,14 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
-    vector<string> fileNames;
+    std::vector<std::string> fileNames;
 
     if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
     {
         return;
     }
 
-    string errorStr;
+    std::string errorStr;
 
     for( auto file : fileNames )
     {
@@ -322,17 +320,17 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
             errorStr += "Not enough room to insert ";
             errorStr += file;
             errorStr += ". Another ";
-            errorStr += to_string(insertFileSize - freeBytes);
+            errorStr += std::to_string(insertFileSize - freeBytes);
             errorStr += " are needed.\n";
             continue;
         }
 
-        vector<char> fileData;
+        std::vector<char> fileData;
         fileData.resize( insertFileSize );
         size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
         fclose( pIn );
 
-        vector<unsigned char> encodedData; 
+        std::vector<unsigned char> encodedData; 
         
         // Add file header /////////////////////////////////
         // For BASIC files, load address is usually always 
@@ -354,11 +352,8 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         encodedData[4] = (encodedData.size() / 256) & 0xFF;
         encodedData[5] = encodedData.size() & 0xFF;
 
-        //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
-        //fwrite( encodedData.data(), 1, encodedData.size(), phile );
-        //fclose( phile );
-        filesystem::path filePath( file );
-        fs->InsertFile( filePath.filename(), encodedData );
+        std::filesystem::path filePath( file );
+        fs->InsertFile( filePath.filename().string(), encodedData );
     }
 
     if( !errorStr.empty() )
@@ -374,7 +369,7 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
-    vector<string> fileNames;
+    std::vector<std::string> fileNames;
 
     if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
     {
@@ -409,7 +404,7 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
         pContext->execAddress = (unsigned short int)parsedExecAddress;
     }
 
-    string errorStr;
+    std::string errorStr;
 
     for( auto file : fileNames )
     {
@@ -444,12 +439,12 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
             errorStr += "Not enough room to insert ";
             errorStr += file;
             errorStr += ". Another ";
-            errorStr += to_string(insertFileSize - freeBytes);
+            errorStr += std::to_string(insertFileSize - freeBytes);
             errorStr += " are needed.\n";
             continue;
         }
 
-        vector<unsigned char> fileData;
+        std::vector<unsigned char> fileData;
         fileData.resize( insertFileSize + DRAGONDOS_FILEHEADER_SIZE );
         size_t bytesRead = fread( fileData.data()+DRAGONDOS_FILEHEADER_SIZE, 1, insertFileSize, pIn );
         fclose( pIn );
@@ -469,11 +464,8 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
         fileData[8] = DRAGONDOS_FILE_HEADER_END;            // Constant
         ////////////////////////////////////////////////////
 
-        //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
-        //fwrite( encodedData.data(), 1, encodedData.size(), phile );
-        //fclose( phile );
-        filesystem::path filePath( file );
-        fs->InsertFile( filePath.filename(), fileData );
+        std::filesystem::path filePath( file );
+        fs->InsertFile( filePath.filename().string(), fileData );
     }
 
     if( !errorStr.empty() )
@@ -489,14 +481,14 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
-    vector<string> fileNames;
+    std::vector<std::string> fileNames;
 
     if( !ChooseFilename( fileNames, "All files\t*.*\n", "*.*", false, false ) )
     {
         return;
     }
 
-    string errorStr;
+    std::string errorStr;
 
     for( auto file : fileNames )
     {
@@ -531,21 +523,18 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
             errorStr += "Not enough room to insert ";
             errorStr += file;
             errorStr += ". Another ";
-            errorStr += to_string(insertFileSize - freeBytes);
+            errorStr += std::to_string(insertFileSize - freeBytes);
             errorStr += " are needed.\n";
             continue;
         }
 
-        vector<unsigned char> fileData;
+        std::vector<unsigned char> fileData;
         fileData.resize( insertFileSize );
         size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
         fclose( pIn );
 
-        //FILE* phile = fopen("/Users/robcfg/Projects/encode.bin","wb");
-        //fwrite( encodedData.data(), 1, encodedData.size(), phile );
-        //fclose( phile );
-        filesystem::path filePath( file );
-        fs->InsertFile( filePath.filename(), fileData );
+        std::filesystem::path filePath( file );
+        fs->InsertFile( filePath.filename().string(), fileData );
     }
 
     if( !errorStr.empty() )
@@ -561,7 +550,7 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
-    string path;
+    std::string path;
 
     if( pContext->browser->size() < DRAGONDOSUI_BROWSER_LINE_OFFSET )
     {
@@ -573,15 +562,15 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
         return;
     }
 
-    string errors;
+    std::string errors;
 
     for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size(); ++line  )
     {
         if( pContext->browser->selected(line) )
         {
             SFileInfo fi = fs->GetFileInfo( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
-            vector<unsigned char> fileData;
-            string fileName = path;
+            std::vector<unsigned char> fileData;
+            std::string fileName = path;
             fileName += DRAGONDOSUI_PATH_SEPARATOR;
             fileName += fi.name;
 
@@ -613,8 +602,8 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
             SDGNDosDirectoryEntry entry = fs->GetDirectory()[fileIdx];
             if( entry.fileType == DRAGONDOS_FILETYPE_BASIC  )
             {
-                stringstream strStream;
-                stringstream clrStream;
+                std::stringstream strStream;
+                std::stringstream clrStream;
                 std::string textColors;
                 unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
 
@@ -633,9 +622,9 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
                     errors += "Error writing file ";
                     errors += fileName;
                     errors += " ";
-                    errors += to_string(bytesWritten);
+                    errors += std::to_string(bytesWritten);
                     errors += " of ";
-                    errors += to_string(fileData.size());
+                    errors += std::to_string(fileData.size());
                     errors += " bytes written.\n";
                     continue;
                 }
@@ -654,7 +643,7 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
 
-    vector<string> fileNames;
+    std::vector<std::string> fileNames;
 
     for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size(); ++line  )
     {
@@ -668,7 +657,7 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
     {
         if( !fs->DeleteFile( fileName) )
         {
-            string error = "Couldn't remove file ";
+            std::string error = "Couldn't remove file ";
             error += fileName;
             error += " , stopping operation.";
             fl_alert( "%s", error.c_str() );
@@ -686,9 +675,9 @@ void viewFiles_cb(Fl_Widget* pWidget,void* _context)
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
     IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
 
-    stringstream decodedFiles;
-    string fltkTextColors;
-    vector<int> selectedFiles;
+    std::stringstream decodedFiles;
+    std::string fltkTextColors;
+    std::vector<int> selectedFiles;
 
     // Line numbers are 1 based. First 2 lines are the header lines.
     for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size() ; ++line )
@@ -706,7 +695,7 @@ void viewFiles_cb(Fl_Widget* pWidget,void* _context)
     {
         if( pContext->browser->selected(line) )
         {
-            vector<unsigned char> file;
+            std::vector<unsigned char> file;
             fs->ExtractFile( fs->GetFileName(line - DRAGONDOSUI_BROWSER_LINE_OFFSET), file );
 
             unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;

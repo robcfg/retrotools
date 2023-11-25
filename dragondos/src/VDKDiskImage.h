@@ -94,8 +94,8 @@ public:
   ~CVDKDiskImage(){ if(0 != dataBlock) delete dataBlock; }
 
   // IDiskImageInterface interface ///////////////////////
-  bool          Load(const string& _filename);
-  bool          Save(const string& _filename); // Save isn't const because it can update the lastError string.
+  bool          Load(const std::string& _filename);
+  bool          Save(const std::string& _filename); // Save isn't const because it can update the lastError string.
   unsigned int  New ( unsigned char uTracks, unsigned char uSides, unsigned char uSecsPerTrack );
 
   int GetSidesNum()   const;
@@ -103,8 +103,8 @@ public:
   int GetSectorsNum() const;
   int GetSectorsNum(size_t _side, size_t _track) const;
   
-  string GetFileSpec();
-  string GetDiskInfo(); 
+  std::string GetFileSpec();
+  std::string GetDiskInfo(); 
 
   STrackInfo  GetTrackInfo ( unsigned int _track, unsigned int _side ) const;
   SSectorInfo GetSectorInfo( unsigned int _track, unsigned int _side, unsigned int _sector ) const;
@@ -136,7 +136,7 @@ private:
   unsigned char*       dataBlock;
   unsigned int         dataBlockSize;
   char                 name[VDK_MAXNAME + 1];
-  string               fileName;
+  std::string          fileName;
 };
 
 #endif

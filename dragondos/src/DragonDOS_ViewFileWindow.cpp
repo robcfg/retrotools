@@ -36,8 +36,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-using namespace std;
-
 // Style table
 Fl_Text_Display::Style_Table_Entry stable[] = {
     // FONT COLOR      FONT FACE   FONT SIZE
@@ -274,7 +272,7 @@ void CDragonDOSViewFileWindow::SetData( const IFilesystemInterface* _fs, const s
             fileHeader.append( DRAGONDOSVFW_FILE_HEADER_FILLER_NUM, '-' );
         }
 
-        vector<unsigned char> fileData;
+        std::vector<unsigned char> fileData;
         _fs->ExtractFile( fileName, fileData );
         AddHexViewData  ( fileHeader, fileData );
         AddTextViewData ( fileHeader, fileData );
@@ -327,10 +325,10 @@ void CDragonDOSViewFileWindow::ViewAsImage()
 
 void CDragonDOSViewFileWindow::AddHexViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
-    stringstream strStream;
+    std::stringstream strStream;
     if( !_fileHeader.empty() )
     {
-        strStream << _fileHeader << endl;
+        strStream << _fileHeader << std::endl;
     }
 
     size_t c = 0;
@@ -338,14 +336,14 @@ void CDragonDOSViewFileWindow::AddHexViewData( const std::string _fileHeader, co
 
     while( c < _fileData.size() )
     {
-        strStream << hex << std::uppercase << setfill('0') << setw(5);
+        strStream << std::hex << std::uppercase << std::setfill('0') << std::setw(5);
         strStream << c << ": ";
 
         for( int x = 0; x < 16; ++x )
         {
             if( c < filesize )
             {
-                strStream << setfill('0') << setw(2) << (size_t)_fileData[c] << " ";
+                strStream << std::setfill('0') << std::setw(2) << (size_t)_fileData[c] << " ";
             }
             else {
                 strStream << "   ";
@@ -367,10 +365,10 @@ void CDragonDOSViewFileWindow::AddHexViewData( const std::string _fileHeader, co
             ++c;
         }
 
-        strStream << endl;
+        strStream << std::endl;
     }
 
-    strStream << endl;
+    strStream << std::endl;
 
     mHexView += strStream.str();
 }
@@ -382,10 +380,10 @@ void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, 
         mTextView = "";
         return;
     }
-    stringstream strStream;
+    std::stringstream strStream;
     if( !_fileHeader.empty() )
     {
-        strStream << _fileHeader << endl;
+        strStream << _fileHeader << std::endl;
     }
 
     size_t c = 0;
@@ -401,23 +399,23 @@ void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, 
         }
         else if( _fileData[c] == '\n' )
         {
-            strStream << endl;
+            strStream << std::endl;
             charsPerLineCount = 0;
         }
         c++;
 
         if( charsPerLineCount && 0 == charsPerLineCount % 64 )
         {
-            strStream << endl;
+            strStream << std::endl;
         }
     }
 
     if( _fileData.back() != '\n' )
     {
-        strStream << endl;    
+        strStream << std::endl;
     }
 
-    strStream << endl;
+    strStream << std::endl;
 
     mTextView += strStream.str();
 }
@@ -431,13 +429,13 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
         return;
     }
 
-    stringstream strStream;
-    stringstream clrStream;
+    std::stringstream strStream;
+    std::stringstream clrStream;
     std::string textColors;
 
     if( !_fileHeader.empty() )
     {
-        strStream << _fileHeader << endl;
+        strStream << _fileHeader << std::endl;
         textColors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
         textColors += "\n";
     }
@@ -445,7 +443,7 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
     unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
     DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
 
-    strStream << endl;
+    strStream << std::endl;
     textColors += "\n";
 
     mBasicView += strStream.str();
@@ -806,7 +804,7 @@ void CDragonDOSViewFileWindow::DecodeImage()
 
 void CDragonDOSViewFileWindow::ExportImage()
 {
-    string fileName;
+    std::string fileName;
 
     if( !ChooseFilename( fileName, true, false ) )
     {
