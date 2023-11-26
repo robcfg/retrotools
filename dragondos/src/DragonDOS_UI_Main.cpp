@@ -286,7 +286,7 @@ int main( int argc, char** argv )
 #else
     Fl_Pixmap xpmIcon( DragonDOS_Logo );
     Fl_RGB_Image appIcon( &xpmIcon, Fl_Color(0) );
-    mMainWindow->icon( &appIcon );
+    mainWindow->icon( &appIcon );
 #endif
 #endif
 
