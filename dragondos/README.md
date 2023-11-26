@@ -47,27 +47,53 @@ The following commands are available:
       dragondos extract mydisk.vdk
       dragondos extract mydisk.vdk 2
 
-* **new \<filename\>**
+* **new \<filename\> \<image size\>**
 
-  Creates a new, formatted disk image.
+  Creates a new, formatted disk image.\
+  The size of the image in Kilobytes needs to be specified.\
+  Valid values for the image size are 180, 360 and 720.
 
-      dragondos new test.img
+      dragondos new mydisk.vdk 720
 
 * **delete \<filename\> \<index\>**
 
-  Deletes a file from the disk image.
+  Deletes a file from the disk image.\
   A backup copy of the disk image will be created.
 
-      dragondos delete test.img 4
+      dragondos delete mydisk.vdk 4
 
-* **insert \<image filename\> \<filename to insert\> \<ascii|binary\>**
+* **insertbasic \<image filename\> \<filename to insert\>**
 
-  Inserts a file into the requested disk image.\
+  Inserts an ASCII Basic file into the requested disk image and tokenize it.\
   The name and extension of the file to be inserted will be truncated to\
-  fit the 6:3 size limitation, and converted to uppercase.\
+  fit the 8:3 size limitation, and converted to uppercase.\
   Addtionally, the type of the file, ascii or binary, needs to be specified.
 
-      dragondos insert test.img FILE.TXT ascii
+      dragondos insertbasic mydisk.vdk PROGRAM.BAS
+
+  A backup copy of the disk image will be created.
+
+* **insertbinary \<image filename\> \<filename to insert\>  \<load_address\> \<exec_address\>**
+
+  Inserts a binary file into the requested disk image.\
+  The name and extension of the file to be inserted will be truncated to\
+  fit the 8:3 size limitation, and converted to uppercase.\
+  Addtionally, the load and exec addresses need to be specified.\
+  They can be supplied as decimal or hexadecimal numbers (starting with 0x).
+
+      dragondos insertbinary mydisk.vdk file.bin 3072 0xC00
+
+  A backup copy of the disk image will be created.
+
+* **insertdata \<image filename\> \<filename to insert\>**
+
+  Inserts a data file into the requested disk image.\
+  The name and extension of the file to be inserted will be truncated to\
+  fit the 8:3 size limitation, and converted to uppercase.
+
+      dragondos insertdata mydisk.vdk file.dat
+
+  A backup copy of the disk image will be created.
 
 ## How to build it
 
