@@ -290,7 +290,7 @@ bool CDragonDOS_FS::InsertFile( std::string _fileName, const std::vector<unsigne
 
     std::string name = filePath.stem().string();
     std::string extension = filePath.extension().string();
-    if( name.length() > DRAGONDOS_MAX_FILE_NAME_LEN )
+    if( name.length() > DRAGONDOS_MAX_FILE_NAME_LEN ) // TODO:Create a sanitize name and ext functions and add padding
     {
         name = name.substr( 0, DRAGONDOS_MAX_FILE_NAME_LEN );
     }
@@ -303,8 +303,10 @@ bool CDragonDOS_FS::InsertFile( std::string _fileName, const std::vector<unsigne
         extension = extension.substr( 0, DRAGONDOS_MAX_FILE_EXT_LEN );
     }
 
-    memcpy( entryPtr + 1, name.c_str()     , name.length()      );
-    memcpy( entryPtr + 9, extension.c_str(), extension.length() );
+    memset( entryPtr + 1, 0                , DRAGONDOS_MAX_FILE_NAME_LEN );
+    memcpy( entryPtr + 1, name.c_str()     , name.length()               );
+    memset( entryPtr + 9, 0                , DRAGONDOS_MAX_FILE_EXT_LEN  );
+    memcpy( entryPtr + 9, extension.c_str(), extension.length()          );
 
     // Allocate sectors;
     size_t maxSectorNumPerSide = disk->GetTracksNum() * DRAGONDOS_SECTORSPERTRACK;

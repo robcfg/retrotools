@@ -10,13 +10,15 @@ bool ProcessCommand( const std::vector<std::string> _args )
 
     std::transform( command.begin(), command.end(), command.begin(), ::tolower );
 
-    if     ( 0 == command.compare("help")    ) return HelpCommand   ();
-    else if( 0 == command.compare("list")    ) return ListCommand   ( _args );
-    else if( 0 == command.compare("extract") ) return ExtractCommand( _args );
-    else if( 0 == command.compare("info")    ) return InfoCommand   ( _args );
-    else if( 0 == command.compare("new")     ) return NewCommand    ( _args );
-    else if( 0 == command.compare("delete")  ) return DeleteCommand ( _args );
-    else if( 0 == command.compare("insert")  ) return InsertCommand ( _args );
+    if     ( 0 == command.compare("help")        ) return HelpCommand        ();
+    else if( 0 == command.compare("list")        ) return ListCommand        ( _args );
+    else if( 0 == command.compare("extract")     ) return ExtractCommand     ( _args );
+    else if( 0 == command.compare("info")        ) return InfoCommand        ( _args );
+    else if( 0 == command.compare("new")         ) return NewCommand         ( _args );
+    else if( 0 == command.compare("delete")      ) return DeleteCommand      ( _args );
+    else if( 0 == command.compare("insertbasic") ) return InsertBasicCommand ( _args );
+    else if( 0 == command.compare("insertbinary")) return InsertBinaryCommand( _args );
+    else if( 0 == command.compare("insertdata")  ) return InsertDataCommand  ( _args );
 
     HelpCommand();
 
