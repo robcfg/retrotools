@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 
 # Set project name
 project(DRAGONDOS)
@@ -27,17 +27,24 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
 	)
 
-add_executable(
-    dragondosui ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Callbacks.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_FS.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
+if( WIN32 )
+    add_executable( dragondosui WIN32 )
+    target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/resource.rc)
+else()
+    add_executable( dragondosui )
+endif()
+
+target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Main.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Callbacks.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_FS.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
     )
-    
+
+
 # Set debug postfix
 set(CMAKE_DEBUG_POSTFIX _d)
 set_target_properties(dragondos PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
