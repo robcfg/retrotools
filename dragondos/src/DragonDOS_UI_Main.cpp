@@ -279,18 +279,16 @@ int main( int argc, char** argv )
 #endif
 
     mainWindow->end();
-/*
+
 #ifndef __APPLE__
 #ifdef WIN32
-	mMainWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
+	mainWindow->icon((char*)LoadIcon(fl_display, MAKEINTRESOURCE(101)));
 #else
-    Fl_Pixmap xpmIcon( mmbexplorer_64x64 );
+    Fl_Pixmap xpmIcon( DragonDOS_Logo );
     Fl_RGB_Image appIcon( &xpmIcon, Fl_Color(0) );
     mMainWindow->icon( &appIcon );
 #endif
 #endif
-
-    mainWindow->resizable( mTable );*/
 
     UpdateUI( (const SDRAGONDOS_Context*)&context );
     context.fileLabel->copy_label("(No disk)");
