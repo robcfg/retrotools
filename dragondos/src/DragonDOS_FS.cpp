@@ -697,7 +697,7 @@ bool CDragonDOS_FS::ParseFiles()
     return true;
 }
 
-// FSWrapper implementation
+// IFilesystemInterface implementation
 bool CDragonDOS_FS::Load(IDiskImageInterface* _disk)
 {
     return SetDisk( _disk );

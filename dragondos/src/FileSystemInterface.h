@@ -1,17 +1,15 @@
 /////////////////////////////////////////////////////////////
 //
-// FIDO, the Floppy Image DOctor.
-// A graphical utility to edit floppy disk image files.
+// IFilesystemInterface.cpp - Header file for the 
+//                            IFilesystemInterface interface 
+//                            class.
 //
-// FIDO_FSWrapper.cpp - Header file for the FSWrapper
-//                      interface class.
-//
-//                      It allows read and write operations
-//                      on disk filesystems.
+//                              It allows read and write
+//                              operations on disk filesystems.
 //
 // Created 14/02/2017 by Roberto Carlos Fernández Gerhardt.
 //
-// Last update on 14/02/2017.
+// Last update on 28/11/2023.
 //
 // Notes:
 //
