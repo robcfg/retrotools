@@ -8,8 +8,8 @@
 #include <fstream>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
-#include <Fl/Fl_Value_Slider.H>
-#include <Fl/Fl_Return_Button.H> 
+#include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Return_Button.H> 
 #include <FL/Fl_Text_Display.H>
 #include <FL/fl_ask.H>
 #include <FL/Fl_Choice.H>
