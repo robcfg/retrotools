@@ -97,8 +97,10 @@ bool ListCommand( const std::vector<std::string>& _args )
     // Display file list
     for( size_t fileIdx = 0; fileIdx < fs.GetFilesNum(); ++fileIdx )
     {
+        CDGNDosFile ddosFile = fs.GetFile((unsigned short int)fileIdx);
         SFileInfo fi = fs.GetFileInfo( fileIdx );
-        std::cout << fileIdx << "\t" << PadFilename(fi.name) << "\t" <<  fs.GetFileSize(fileIdx) << std::endl;
+        std::cout << fileIdx << "\t" << PadFilename(fi.name) << "\t" <<  fs.GetFileSize(fileIdx) << std::hex;
+        std::cout << "\tLoad: 0x" << ddosFile.GetLoadAddress() << "\tExec: 0x" << ddosFile.GetExecAddress() << std::dec << std::endl;
     }
     
     return true;
@@ -525,11 +527,11 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
     fileData[0] = DRAGONDOS_FILE_HEADER_BEGIN;      // Constant
     fileData[1] = DRAGONDOS_FILETYPE_BINARY;        // File type
     fileData[2] = (loadAddress / 256) & 0xFF;       // Load address high byte
-    fileData[3] = loadAddress & 0x0F;               // Load address low byte
+    fileData[3] = loadAddress & 0xFF;               // Load address low byte
     fileData[4] = (fileData.size() / 256) & 0xFF;   // File size high byte
     fileData[5] = fileData.size() & 0xFF;           // File size low byte
     fileData[6] = (execAddress / 256) & 0xFF;       // Exec address high byte
-    fileData[7] = execAddress & 0x0F;               // Exec address low byte
+    fileData[7] = execAddress & 0xFF;               // Exec address low byte
     fileData[8] = DRAGONDOS_FILE_HEADER_END;        // Constant
     ////////////////////////////////////////////////////
 
