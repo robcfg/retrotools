@@ -456,11 +456,11 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
         fileData[0] = DRAGONDOS_FILE_HEADER_BEGIN;          // Constant
         fileData[1] = DRAGONDOS_FILETYPE_BINARY;            // File type
         fileData[2] = (pContext->loadAddress / 256) & 0xFF; // Load address high byte
-        fileData[3] = pContext->loadAddress & 0x0F;         // Load address low byte
+        fileData[3] = pContext->loadAddress & 0xFF;         // Load address low byte
         fileData[4] = (fileData.size() / 256) & 0xFF;       // File size high byte
         fileData[5] = fileData.size() & 0xFF;               // File size low byte
         fileData[6] = (pContext->execAddress / 256) & 0xFF; // Exec address high byte
-        fileData[7] = pContext->execAddress & 0x0F;         // Exec address low byte
+        fileData[7] = pContext->execAddress & 0xFF;         // Exec address low byte
         fileData[8] = DRAGONDOS_FILE_HEADER_END;            // Constant
         ////////////////////////////////////////////////////
 

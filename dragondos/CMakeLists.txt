@@ -52,13 +52,13 @@ set_target_properties( dragondosui
     PROPERTIES MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/src/MacOSXBundleInfo.plist.in 
     MACOSX_BUNDLE_BUNDLE_NAME "DragonDOS"
-    MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
+    MACOSX_BUNDLE_BUNDLE_VERSION "1.0.1"
     MACOSX_BUNDLE_COPYRIGHT "2023 by Roberto Carlos Fernández Gerhardt"
     MACOSX_BUNDLE_GUI_IDENTIFIER "org.rcfg.ddos"
     MACOSX_BUNDLE_ICON_FILE "DragonDOS_Logo.icns"
     MACOSX_BUNDLE_INFO_STRING "DragonDOS by Robcfg"
-    MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.0, 2023 by Roberto Carlos Fernández Gerhardt"
-    MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.0"
+    MACOSX_BUNDLE_LONG_VERSION_STRING "1.0.1, 2023 by Roberto Carlos Fernández Gerhardt"
+    MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.1"
     )
 set_source_files_properties( ./logo/DragonDOS_Logo.icns
     PROPERTIES MACOSX_PACKAGE_LOCATION "Resources"
