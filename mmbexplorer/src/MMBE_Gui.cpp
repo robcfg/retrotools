@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <cstdint>
 #include <FL/Fl.H>
 #include <FL/Fl_Sys_Menu_Bar.H>
 #include <FL/Fl_Value_Slider.H>
