@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Select_Browser.H>
 #include <FL/Fl_Menu_Button.H>
