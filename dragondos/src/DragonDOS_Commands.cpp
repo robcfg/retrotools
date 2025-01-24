@@ -528,8 +528,8 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
     fileData[1] = DRAGONDOS_FILETYPE_BINARY;        // File type
     fileData[2] = (loadAddress / 256) & 0xFF;       // Load address high byte
     fileData[3] = loadAddress & 0xFF;               // Load address low byte
-    fileData[4] = (fileData.size() / 256) & 0xFF;   // File size high byte
-    fileData[5] = fileData.size() & 0xFF;           // File size low byte
+    fileData[4] = (insertFileSize / 256) & 0xFF;   // File size high byte
+    fileData[5] = insertFileSize & 0xFF;           // File size low byte
     fileData[6] = (execAddress / 256) & 0xFF;       // Exec address high byte
     fileData[7] = execAddress & 0xFF;               // Exec address low byte
     fileData[8] = DRAGONDOS_FILE_HEADER_END;        // Constant
