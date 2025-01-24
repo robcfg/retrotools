@@ -210,7 +210,7 @@ void CreateAboutDialog( SDRAGONDOS_Context* _context )
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.0.1";
+    std::string versionStr = "Version 1.0.2";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
     aboutText2->align( FL_ALIGN_CENTER );
     aboutText2->labelcolor( FL_BLACK );
@@ -230,7 +230,7 @@ void CreateAboutDialog( SDRAGONDOS_Context* _context )
     aboutText3->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    Fl_Box* aboutText4 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight * 2, "Copyright 2023 by Roberto Carlos\nFernández Gerhardt" );
+    Fl_Box* aboutText4 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight * 2, "Copyright 2025 by Roberto Carlos\nFernández Gerhardt" );
     aboutText4->align( FL_ALIGN_CENTER );
     aboutText4->labelcolor( FL_BLACK );
     aboutText4->labelsize( 12 );
