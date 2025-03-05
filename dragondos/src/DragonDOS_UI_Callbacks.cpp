@@ -167,6 +167,65 @@ bool ChooseFilename( std::vector<std::string>& fileNames, const std::string& fil
 	return true;
 }
 
+// Returns true and sets loadAddress and execAddress if the file contains the DragonDOS header, false otherwise.
+bool GetHeaderParams( FILE* file, size_t fileSize, unsigned short int& loadAddress, unsigned short int& execAddress )
+{
+    unsigned char header[9] = {0,0,0,0,0,0,0,0,0};
+    
+    fseek( file, 0, SEEK_SET );
+    
+    // Read header size bytes from the file, fail if we read less than that.
+    if( DRAGONDOS_FILEHEADER_SIZE != fread( header, 1, DRAGONDOS_FILEHEADER_SIZE, file ) )
+        return false;
+
+    // Check header start, end and file type.
+    if( header[0] != DRAGONDOS_FILE_HEADER_BEGIN || header[1] != DRAGONDOS_FILETYPE_BINARY || header[8] != DRAGONDOS_FILE_HEADER_END )
+        return false;
+
+    // Check file size
+    size_t headerFileSize = ((header[4] << 8) | header[5]) + DRAGONDOS_FILEHEADER_SIZE;
+    if( headerFileSize != fileSize )
+        return false;
+    
+    // All checks passed, so the file already has the header in it. Set the load and exec addresses.
+    loadAddress = (header[2] << 8) | header[3];
+    execAddress = (header[6] << 8) | header[7];
+
+    return true;
+}
+
+void AskLoadAndExecAddresses( unsigned short int& loadAddress, unsigned short int& execAddress )
+{
+    loadAddress = 0;
+    execAddress = 0;
+
+    // Ask load address
+    const char* strLoadAddress = fl_input( "Enter load address as dec (3072) or hex (0xC00), for example.","0" );
+    if( nullptr != strLoadAddress )
+    {
+        unsigned long int parsedLoadAddress = strtoul( strLoadAddress, nullptr, 0 );
+        if( parsedLoadAddress > 0xFFFF )
+        {
+            fl_alert( "Out of range address %zu\nValid range is 0 to 65535 (0xFFFF)", parsedLoadAddress );
+            return;
+        }
+        loadAddress = (unsigned short int)parsedLoadAddress;
+    }
+
+    // Ask exec address
+    const char* strExecAddress = fl_input( "Enter exec address as dec (3072) or hex (0xC00), for example.","0" );
+    if( nullptr != strExecAddress )
+    {
+        unsigned long int parsedExecAddress = strtoul( strExecAddress, nullptr, 0 );
+        if( parsedExecAddress > 0xFFFF )
+        {
+            fl_alert( "Out of range address %zu\nValid range is 0 to 65535 (0xFFFF)", parsedExecAddress );
+            return;
+        } 
+        execAddress = (unsigned short int)parsedExecAddress;
+    }
+}
+
 #ifndef __APPLE__
 void menuQuit_cb(Fl_Widget* pWidget,void* _context)
 {
@@ -376,34 +435,6 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
         return;
     }
 
-    // Ask load address
-    pContext->loadAddress = 0;
-    const char* strLoadAddress = fl_input( "Enter load address as dec (3072) or hex (0xC00), for example.","0" );
-    if( nullptr != strLoadAddress )
-    {
-        unsigned long int parsedLoadAddress = strtoul( strLoadAddress, nullptr, 0 );
-        if( parsedLoadAddress > 0xFFFF )
-        {
-            fl_alert( "Out of range address %zu\nValid range is 0 to 65535 (0xFFFF)", parsedLoadAddress );
-            return;
-        }
-        pContext->loadAddress = (unsigned short int)parsedLoadAddress;
-    }
-
-    // Ask exec address
-    pContext->execAddress = 0;
-    const char* strExecAddress = fl_input( "Enter exec address as dec (3072) or hex (0xC00), for example.","0" );
-    if( nullptr != strExecAddress )
-    {
-        unsigned long int parsedExecAddress = strtoul( strExecAddress, nullptr, 0 );
-        if( parsedExecAddress > 0xFFFF )
-        {
-            fl_alert( "Out of range address %zu\nValid range is 0 to 65535 (0xFFFF)", parsedExecAddress );
-            return;
-        } 
-        pContext->execAddress = (unsigned short int)parsedExecAddress;
-    }
-
     std::string errorStr;
 
     for( auto file : fileNames )
@@ -444,25 +475,35 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
             continue;
         }
 
+        bool hasHeader = GetHeaderParams( pIn, insertFileSize, pContext->loadAddress, pContext->execAddress );
+
+        size_t dataSize = hasHeader ? insertFileSize : insertFileSize+DRAGONDOS_FILEHEADER_SIZE;
+        size_t dataStart = hasHeader ? 0 : DRAGONDOS_FILEHEADER_SIZE;
         std::vector<unsigned char> fileData;
-        fileData.resize( insertFileSize + DRAGONDOS_FILEHEADER_SIZE );
-        size_t bytesRead = fread( fileData.data()+DRAGONDOS_FILEHEADER_SIZE, 1, insertFileSize, pIn );
+        fileData.resize( dataSize );
+        fseek( pIn, 0, SEEK_SET );
+        size_t bytesRead = fread( fileData.data()+dataStart, 1, insertFileSize, pIn );
         fclose( pIn );
-        
-        // Add file header /////////////////////////////////
-        // For BASIC files, load address is usually always 
-        // 0x2401 and the exec address 0x8B8D
-        ////////////////////////////////////////////////////
-        fileData[0] = DRAGONDOS_FILE_HEADER_BEGIN;          // Constant
-        fileData[1] = DRAGONDOS_FILETYPE_BINARY;            // File type
-        fileData[2] = (pContext->loadAddress / 256) & 0xFF; // Load address high byte
-        fileData[3] = pContext->loadAddress & 0xFF;         // Load address low byte
-        fileData[4] = (insertFileSize / 256) & 0xFF;       // File size high byte
-        fileData[5] = insertFileSize & 0xFF;               // File size low byte
-        fileData[6] = (pContext->execAddress / 256) & 0xFF; // Exec address high byte
-        fileData[7] = pContext->execAddress & 0xFF;         // Exec address low byte
-        fileData[8] = DRAGONDOS_FILE_HEADER_END;            // Constant
-        ////////////////////////////////////////////////////
+
+        if( !hasHeader )
+        {
+            AskLoadAndExecAddresses( pContext->loadAddress, pContext->execAddress );
+
+            // Add file header /////////////////////////////////
+            // For BASIC files, load address is usually always 
+            // 0x2401 and the exec address 0x8B8D
+            ////////////////////////////////////////////////////
+            fileData[0] = DRAGONDOS_FILE_HEADER_BEGIN;          // Constant
+            fileData[1] = DRAGONDOS_FILETYPE_BINARY;            // File type
+            fileData[2] = (pContext->loadAddress / 256) & 0xFF; // Load address high byte
+            fileData[3] = pContext->loadAddress & 0xFF;         // Load address low byte
+            fileData[4] = (insertFileSize / 256) & 0xFF;        // File size high byte
+            fileData[5] = insertFileSize & 0xFF;                // File size low byte
+            fileData[6] = (pContext->execAddress / 256) & 0xFF; // Exec address high byte
+            fileData[7] = pContext->execAddress & 0xFF;         // Exec address low byte
+            fileData[8] = DRAGONDOS_FILE_HEADER_END;            // Constant
+            ////////////////////////////////////////////////////
+        }
 
         std::filesystem::path filePath( file );
         fs->InsertFile( filePath.filename().string(), fileData );
