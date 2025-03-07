@@ -5,8 +5,9 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "DragonDOS_Commands.h"
 #include "DragonDOS_BASIC.h"
+#include "DragonDOS_Commands.h"
+#include "DragonDOS_Common.h"
 #include "DragonDOS_FS.h"
 #include "DiskImageInterface.h"
 #include "FileSystemInterface.h"
@@ -63,7 +64,7 @@ bool HelpCommand()
     std::cout << "\t  A backup copy of the disk image will be created." << std::endl << std::endl;
     std::cout << "\tinsertBasic <image filename> <filename to insert>" << std::endl;
     std::cout << "\t  Inserts and tokenizes a BASIC file into the requested disk image." << std::endl << std::endl;
-    std::cout << "\tinsertBinary <image filename> <filename to insert> <load_address> <exec_address>" << std::endl;
+    std::cout << "\tinsertBinary <image filename> <filename to insert> [load_address] [exec_address]" << std::endl;
     std::cout << "\t  Inserts a binary file into the requested disk image." << std::endl << std::endl;
     std::cout << "\tinsertData <image filename> <filename to insert>" << std::endl;
     std::cout << "\t  Inserts a data file into the requested disk image." << std::endl << std::endl;
@@ -438,11 +439,14 @@ bool InsertBasicCommand( const std::vector<std::string>& _args )
 bool InsertBinaryCommand( const std::vector<std::string>& _args )
 {
     // Check arguments
-    if( _args.size() < 6 )
+    if( _args.size() < 4 )
     {
-        std::cout << "The InsertBinary command requires a disk image filename, the filename of the file to insert" << std::endl;
-        std::cout << "plus the Load and Exec addresses (decimal or hex)." << std::endl << std::endl;
+        std::cout << "The InsertBinary command requires a disk image filename, the filename of the file to insert." << std::endl;
+        std::cout << "If the file has the DragonDOS header, it will automatically get the Load and Exec addresses from it."  << std::endl;
+        std::cout << "In case the file doesn't contain the DragonDOS header, or you want to override them, the Load and"  << std::endl;
+        std::cout << "Exec addresses can be added at the end of the arguments list in decimal or hex." << std::endl << std::endl;
         std::cout << "Examples:" << std::endl;
+        std::cout << "\tdragondos insertbinary mydisk.vdk file_with_header.bin" << std::endl;
         std::cout << "\tdragondos insertbinary mydisk.vdk file.bin 3072 0xC00" << std::endl << std::endl;
 
         HelpCommand();
@@ -493,8 +497,15 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
         return false;
     }
 
-    fileData.resize( insertFileSize + DRAGONDOS_FILEHEADER_SIZE );
-    size_t bytesRead = fread( fileData.data()+DRAGONDOS_FILEHEADER_SIZE, 1, insertFileSize, pIn );
+    unsigned short int loadAddress = 0;
+    unsigned short int execAddress = 0;
+    bool hasHeader = GetBinaryFileHeaderParams( pIn, insertFileSize, loadAddress, execAddress );
+
+    size_t dataSize = hasHeader ? insertFileSize : insertFileSize+DRAGONDOS_FILEHEADER_SIZE;
+    size_t dataStart = hasHeader ? 0 : DRAGONDOS_FILEHEADER_SIZE;
+    fileData.resize( dataSize );
+    fseek( pIn, 0, SEEK_SET );
+    size_t bytesRead = fread( fileData.data()+dataStart, 1, insertFileSize, pIn );
     fclose( pIn );
 
     if( bytesRead < insertFileSize )
@@ -504,23 +515,31 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
         return false;
     }
 
-    unsigned long int parsedLoadAddress = strtoul( _args[4].c_str(), nullptr, 0 );
-    if( parsedLoadAddress > 0xFFFF )
+    // Get or override Load address
+    if( _args.size() > 4 )
     {
-        std::cout << "Out of range load address " << parsedLoadAddress << std::endl << "Valid range is 0 to 65535 (0xFFFF)" << std::endl;
-        return false;
+        unsigned long int parsedLoadAddress = strtoul( _args[4].c_str(), nullptr, 0 );
+        if( parsedLoadAddress > 0xFFFF )
+        {
+            std::cout << "Out of range load address " << parsedLoadAddress << std::endl << "Valid range is 0 to 65535 (0xFFFF)" << std::endl;
+            return false;
+        }
+        loadAddress = (unsigned short int)parsedLoadAddress;
     }
-    unsigned short int loadAddress = (unsigned short int)parsedLoadAddress;
 
-    unsigned long int parsedExecAddress = strtoul( _args[5].c_str(), nullptr, 0 );
-    if( parsedExecAddress > 0xFFFF )
+    // Get or override Load address
+    if( _args.size() > 5 )
     {
-        std::cout << "Out of range exec address " << parsedExecAddress << std::endl << "Valid range is 0 to 65535 (0xFFFF)" << std::endl;
-        return false;
-    } 
-    unsigned short int execAddress = (unsigned short int)parsedExecAddress;
+        unsigned long int parsedExecAddress = strtoul( _args[5].c_str(), nullptr, 0 );
+        if( parsedExecAddress > 0xFFFF )
+        {
+            std::cout << "Out of range exec address " << parsedExecAddress << std::endl << "Valid range is 0 to 65535 (0xFFFF)" << std::endl;
+            return false;
+        } 
+        execAddress = (unsigned short int)parsedExecAddress;
+    }
 
-    // Add file header /////////////////////////////////
+    // Add or update file header ///////////////////////
     // For BASIC files, load address is usually always 
     // 0x2401 and the exec address 0x8B8D
     ////////////////////////////////////////////////////
@@ -528,8 +547,8 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
     fileData[1] = DRAGONDOS_FILETYPE_BINARY;        // File type
     fileData[2] = (loadAddress / 256) & 0xFF;       // Load address high byte
     fileData[3] = loadAddress & 0xFF;               // Load address low byte
-    fileData[4] = (insertFileSize / 256) & 0xFF;   // File size high byte
-    fileData[5] = insertFileSize & 0xFF;           // File size low byte
+    fileData[4] = (insertFileSize / 256) & 0xFF;    // File size high byte
+    fileData[5] = insertFileSize & 0xFF;            // File size low byte
     fileData[6] = (execAddress / 256) & 0xFF;       // Exec address high byte
     fileData[7] = execAddress & 0xFF;               // Exec address low byte
     fileData[8] = DRAGONDOS_FILE_HEADER_END;        // Constant

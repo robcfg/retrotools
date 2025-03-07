@@ -8,6 +8,7 @@
 
 #include "FileSystemInterface.h"
 #include "DragonDOS_BASIC.h"
+#include "DragonDOS_Common.h"
 #include "DragonDOS_FS.h"
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
@@ -165,33 +166,6 @@ bool ChooseFilename( std::vector<std::string>& fileNames, const std::string& fil
 	}
 
 	return true;
-}
-
-// Returns true and sets loadAddress and execAddress if the file contains the DragonDOS header, false otherwise.
-bool GetHeaderParams( FILE* file, size_t fileSize, unsigned short int& loadAddress, unsigned short int& execAddress )
-{
-    unsigned char header[9] = {0,0,0,0,0,0,0,0,0};
-    
-    fseek( file, 0, SEEK_SET );
-    
-    // Read header size bytes from the file, fail if we read less than that.
-    if( DRAGONDOS_FILEHEADER_SIZE != fread( header, 1, DRAGONDOS_FILEHEADER_SIZE, file ) )
-        return false;
-
-    // Check header start, end and file type.
-    if( header[0] != DRAGONDOS_FILE_HEADER_BEGIN || header[1] != DRAGONDOS_FILETYPE_BINARY || header[8] != DRAGONDOS_FILE_HEADER_END )
-        return false;
-
-    // Check file size
-    size_t headerFileSize = ((header[4] << 8) | header[5]) + DRAGONDOS_FILEHEADER_SIZE;
-    if( headerFileSize != fileSize )
-        return false;
-    
-    // All checks passed, so the file already has the header in it. Set the load and exec addresses.
-    loadAddress = (header[2] << 8) | header[3];
-    execAddress = (header[6] << 8) | header[7];
-
-    return true;
 }
 
 void AskLoadAndExecAddresses( unsigned short int& loadAddress, unsigned short int& execAddress )
@@ -475,7 +449,7 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
             continue;
         }
 
-        bool hasHeader = GetHeaderParams( pIn, insertFileSize, pContext->loadAddress, pContext->execAddress );
+        bool hasHeader = GetBinaryFileHeaderParams( pIn, insertFileSize, pContext->loadAddress, pContext->execAddress );
 
         size_t dataSize = hasHeader ? insertFileSize : insertFileSize+DRAGONDOS_FILEHEADER_SIZE;
         size_t dataStart = hasHeader ? 0 : DRAGONDOS_FILEHEADER_SIZE;

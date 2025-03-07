@@ -20,6 +20,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(
 	dragondos ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Commands.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_FS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
@@ -39,6 +40,7 @@ endif()
 
 target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Main.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Callbacks.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_FS.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
