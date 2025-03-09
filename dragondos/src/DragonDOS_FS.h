@@ -13,6 +13,7 @@
 // Last update: 12/11/2023
 //
 ////////////////////////////////////////////////////////////////////
+#pragma once
 
 #include "DiskImageInterface.h"
 #include "FileSystemInterface.h"
@@ -165,7 +166,7 @@ public:
     size_t      GetFreeSize() const;
 
     SFileInfo   GetFileInfo(size_t _fileIdx);
-    bool        ExtractFile( std::string _fileName, std::vector<unsigned char>& dst ) const;
+    bool        ExtractFile( std::string _fileName, std::vector<unsigned char>& _dst, bool _withBinaryHeader ) const;
 
     std::string GetFSName() const;
     std::string GetFSVariant() const;

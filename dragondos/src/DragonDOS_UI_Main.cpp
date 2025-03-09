@@ -10,6 +10,7 @@
 #include <FL/Fl_Table.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
 
 #include "DragonDOS_FS.h"
 #include "../logo/DragonDOS_Logo.xpm"
@@ -24,7 +25,7 @@
 #endif
 
 const int DRAGONDOS_UI_VIEWFILE_WIDTH     = 620;  // Width of the View File window
-const int DRAGONDOS_UI_VIEWFILE_HEIGHT    = 540;  // Height of the View File window
+const int DRAGONDOS_UI_VIEWFILE_HEIGHT    = 575;  // Height of the View File window
 
 class CAppWindow : public Fl_Double_Window
 {
@@ -119,7 +120,7 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     _context->fileLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
     y += 40;
 
-	_context->browser = new Fl_Multi_Browser( x, y, 380, 540 );
+	_context->browser = new Fl_Multi_Browser( x, y, 380, 565 );
     x += 390;
 
     Fl_Button* newDiskButton = new Fl_Button( x, y, 170, 30, "New disk");
@@ -156,6 +157,10 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     
     Fl_Button* viewFilesButton = new Fl_Button( x, y, 170, 30, "View selected file(s)");
     viewFilesButton->callback( viewFiles_cb, (void*)_context );
+    y += 35;
+    
+    _context->extractBinaryHeadersButton = new Fl_Check_Button( x, y, 170, 30, "Extract binary headers");
+    _context->extractBinaryHeadersButton->value(1);
     y += 35;
 
     _context->diskInfoLabel = new Fl_Box( FL_NO_BOX, x, y, 170, 140, "Disk info:\n- side(s)\n- tracks\n- total bytes\n- free bytes\n- free sectors" );
@@ -254,7 +259,7 @@ int main( int argc, char** argv )
 
     SDRAGONDOS_Context context;
 
-    CAppWindow* mainWindow = new CAppWindow( &context, 585, 600 + menuBarOffset, "DragonDOS by Robcfg" );
+    CAppWindow* mainWindow = new CAppWindow( &context, 585, 615 + menuBarOffset, "DragonDOS by Robcfg" );
 
     mainWindow->begin();
 

@@ -173,7 +173,7 @@ unsigned short int CDragonDOS_FS::GetFileEntry( std::string _fileName ) const
 }
 
 // Extracts file from the DragonDOS file system to a specified location
-bool CDragonDOS_FS::ExtractFile( std::string _fileName, std::vector<unsigned char>& dst ) const
+bool CDragonDOS_FS::ExtractFile( std::string _fileName, std::vector<unsigned char>& _dst, bool _withBinaryHeader ) const
 {
     unsigned short int fileIdx = GetFileEntry( _fileName );
 
@@ -186,9 +186,11 @@ bool CDragonDOS_FS::ExtractFile( std::string _fileName, std::vector<unsigned cha
 
     // Skip file types BIN and BAS' header.
     bool skipHeader = false;
-    if( entry.fileType == DRAGONDOS_FILETYPE_BASIC || entry.fileType == DRAGONDOS_FILETYPE_BINARY )
+    switch( entry.fileType )
     {
-        skipHeader = true;
+        case DRAGONDOS_FILETYPE_BASIC :skipHeader = true; break;
+        case DRAGONDOS_FILETYPE_BINARY:skipHeader = !_withBinaryHeader; break;
+        default:skipHeader = false; break;
     }
 
     bool finished = false;
@@ -210,21 +212,21 @@ bool CDragonDOS_FS::ExtractFile( std::string _fileName, std::vector<unsigned cha
                 {
                     if( sectorsNum == 1 )
                     {
-                        dst.insert( dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + entry.lastSectorSize );
+                        _dst.insert( _dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + entry.lastSectorSize );
                     }
                     else
                     {
-                        dst.insert( dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + DRAGONDOS_SECTOR_SIZE );
+                        _dst.insert( _dst.end(), data + DRAGONDOS_FILEHEADER_SIZE, data + DRAGONDOS_SECTOR_SIZE );
                     }
                     skipHeader = false; // Only need to skip header once.
                 }
                 else if( !entry.bContinued && fab == fabNum - 1 && sector == sectorsNum - 1) // extract the right number of bytes from last sector
                 {
-                    dst.insert( dst.end(), data, data + entry.lastSectorSize );
+                    _dst.insert( _dst.end(), data, data + entry.lastSectorSize );
                 }
                 else
                 {
-                    dst.insert( dst.end(), data, data + DRAGONDOS_SECTOR_SIZE );
+                    _dst.insert( _dst.end(), data, data + DRAGONDOS_SECTOR_SIZE );
                 }
             }      
         }
@@ -681,7 +683,7 @@ bool CDragonDOS_FS::ParseFiles()
             CDGNDosFile file;
             std::vector<unsigned char> fileData;
 
-            ExtractFile( entryIter->fileBlock.fileName, fileData  );
+            ExtractFile( entryIter->fileBlock.fileName, fileData, true );
 
             file.SetFileName      ( entryIter->fileBlock.fileName );
             file.SetFileData      ( fileData                      );

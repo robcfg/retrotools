@@ -16,7 +16,7 @@
 #include <FL/Fl_Radio_Light_Button.H>
 #include <FL/Fl_Window.H>
 
-#include "FileSystemInterface.h"
+#include "DragonDOS_FS.h"
 
 enum EDRAGONDOSVFW_ViewMode
 {
@@ -40,7 +40,7 @@ public:
 	virtual int handle(int _event);
     virtual void show();
 
-    void SetData( const IFilesystemInterface* _fs, const std::vector<int>& _selectedFiles );
+    void SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles );
 
     void ViewAsHex();
     void ViewAsText();

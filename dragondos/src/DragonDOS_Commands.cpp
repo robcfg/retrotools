@@ -146,7 +146,7 @@ bool ExtractCommand( const std::vector<std::string>& _args )
         std::vector<unsigned char> fileData;
         SFileInfo fi = fs.GetFileInfo( fileIdx );
 
-        if( !fs.ExtractFile( fi.name, fileData ) )
+        if( !fs.ExtractFile( fi.name, fileData, true ) )
         {
             std::cout << "The requested file couldn't be found. The disk image may be damaged or corrupted." << std::endl;
             return false;

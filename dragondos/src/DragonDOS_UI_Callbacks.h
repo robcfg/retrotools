@@ -2,6 +2,7 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Multi_Browser.H>
 #include <string>
 
@@ -23,6 +24,8 @@ struct SDRAGONDOS_Context
     Fl_Window*                  mainWindow      = nullptr;
     Fl_Window*                  aboutWindow     = nullptr;
     CDragonDOSViewFileWindow*   viewFileWindow  = nullptr;
+
+    Fl_Check_Button*            extractBinaryHeadersButton = nullptr;
 
     unsigned short int          loadAddress     = 0;
     unsigned short int          execAddress     = 0;

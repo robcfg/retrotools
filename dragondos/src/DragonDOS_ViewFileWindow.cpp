@@ -245,7 +245,7 @@ void CDragonDOSViewFileWindow::CreateControls()
     end();
 }
 
-void CDragonDOSViewFileWindow::SetData( const IFilesystemInterface* _fs, const std::vector<int>& _selectedFiles )
+void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles )
 {
     mHexView.clear();
     mHexViewColors.clear();
@@ -273,7 +273,7 @@ void CDragonDOSViewFileWindow::SetData( const IFilesystemInterface* _fs, const s
         }
 
         std::vector<unsigned char> fileData;
-        _fs->ExtractFile( fileName, fileData );
+        _fs->ExtractFile( fileName, fileData, false );
         AddHexViewData  ( fileHeader, fileData );
         AddTextViewData ( fileHeader, fileData );
         AddBasicViewData( fileHeader, fileData );
@@ -287,7 +287,7 @@ void CDragonDOSViewFileWindow::SetData( const IFilesystemInterface* _fs, const s
     {
         std::string fileName = _fs->GetFileName( _selectedFiles[0] );
         mImageFileData.clear();
-        _fs->ExtractFile( fileName, mImageFileData );
+        _fs->ExtractFile( fileName, mImageFileData, false );
 
         DecodeImage();
     }

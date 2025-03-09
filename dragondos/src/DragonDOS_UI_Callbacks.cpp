@@ -589,7 +589,8 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
             fileName += DRAGONDOSUI_PATH_SEPARATOR;
             fileName += fi.name;
 
-            if( !fs->ExtractFile(fi.name, fileData) )
+            bool extractBinaryHeaders = (pContext->extractBinaryHeadersButton != NULL) && (0 != pContext->extractBinaryHeadersButton->value());
+            if( !fs->ExtractFile(fi.name, fileData, extractBinaryHeaders ) )
             {
                 errors += "Couldn't extract file ";
                 errors += fi.name;
@@ -688,7 +689,7 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
 void viewFiles_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-    IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
+    CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
 
     std::stringstream decodedFiles;
     std::string fltkTextColors;
@@ -711,7 +712,7 @@ void viewFiles_cb(Fl_Widget* pWidget,void* _context)
         if( pContext->browser->selected(line) )
         {
             std::vector<unsigned char> file;
-            fs->ExtractFile( fs->GetFileName(line - DRAGONDOSUI_BROWSER_LINE_OFFSET), file );
+            fs->ExtractFile( fs->GetFileName(line - DRAGONDOSUI_BROWSER_LINE_OFFSET), file, false );
 
             unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
             DragonDOS_BASIC::Decode( file, decodedFiles, fltkTextColors, programStart, false, false );
