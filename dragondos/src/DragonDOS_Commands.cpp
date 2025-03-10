@@ -51,10 +51,12 @@ bool HelpCommand()
     std::cout << "\tlist <filename>" << std::endl;
     std::cout << "\t  Displays a list of the files on a disk image and the following data:" << std::endl;
     std::cout << "\t  Index, file name, size in sectors and size in bytes." << std::endl << std::endl;
-    std::cout << "\textract <filename> [<index>]" << std::endl;
+    std::cout << "\textract <filename> [<index>] [-strip_binary_header]" << std::endl;
     std::cout << "\t  Extracts all files from within the disk image to the current directory." << std::endl;
     std::cout << "\t  If an optional file index is specified, only that file will be extracted to" << std::endl;
     std::cout << "\t  current directory." << std::endl << std::endl;
+    std::cout << "\t  If the optional flag -strip_binary_header is specified, binary type files" << std::endl;
+    std::cout << "\t  will be extracted without the DragonDOS header." << std::endl;
     std::cout << "\tnew <filename> <size>" << std::endl;
     std::cout << "\t  Creates a new, formatted disk image." << std::endl;
     std::cout << "\t  Size is the size of the new disk image in kilobytes." << std::endl;
@@ -112,10 +114,16 @@ bool ExtractCommand( const std::vector<std::string>& _args )
     // Check arguments
     if( _args.size() < 3 )
     {
-        std::cout << "The Extract command requires a filename and an optional index." << std::endl << std::endl;
+        std::cout << "The Extract command requires a disk image file name." << std::endl;
+        std::cout << "Optionally, a file index (as shown by the list command) and/or" << std::endl;
+        std::cout << "the -strip_binary_header flag (to extract the raw binary file data" << std::endl;
+        std::cout << "without the DragonDOS header) can be specified." << std::endl << std::endl;
         std::cout << "Examples:" << std::endl;
-        std::cout << "\tdragondos extract mydisk.vdk   (extracts all files)" << std::endl;
-        std::cout << "\tdragondos extract mydisk.vdk 7 (extracts file 7 from the file list)" << std::endl << std::endl;
+        std::cout << "\tdragondos extract mydisk.vdk                        (extracts all files)" << std::endl;
+        std::cout << "\tdragondos extract mydisk.vdk 7                      (extracts file 7 from the file list)" << std::endl << std::endl;
+        std::cout << "\tdragondos extract mydisk.vdk 7 -strip_binary_header (extracts file 7 from the file list" << std::endl;
+        std::cout << "\t                                                     without the DragonDOS header if" << std::endl;
+        std::cout << "\t                                                     it's a binary file)" << std::endl << std::endl;
 
         HelpCommand();
 
@@ -131,8 +139,28 @@ bool ExtractCommand( const std::vector<std::string>& _args )
         return false;
     } 
 
-    size_t start = ((_args.size() > 3) ? atoi(_args[3].c_str()) : 0);
-    size_t end   = ((_args.size() > 3) ? (start + 1)   : fs.GetFilesNum());
+    size_t start = 0;
+    size_t end = fs.GetFilesNum();
+    bool withBinaryHeader = true;
+
+    // Parse extra arguments
+    if( _args.size() > 3 )
+    {
+        for( size_t extraArg = 3; extraArg < _args.size(); ++extraArg )
+        {
+            std::string arg = _args[extraArg];
+            std::transform( arg.begin(), arg.end(), arg.begin(), ::tolower );
+            if( 0 == arg.compare("-strip_binary_header") )
+            {
+                withBinaryHeader = false;
+            }
+            else
+            {
+                start = atoi(arg.c_str());
+                end = start + 1;
+            }
+        }
+    }
 
     if( start >= fs.GetFilesNum() || end > fs.GetFilesNum() )
     {
@@ -146,7 +174,7 @@ bool ExtractCommand( const std::vector<std::string>& _args )
         std::vector<unsigned char> fileData;
         SFileInfo fi = fs.GetFileInfo( fileIdx );
 
-        if( !fs.ExtractFile( fi.name, fileData, true ) )
+        if( !fs.ExtractFile( fi.name, fileData, withBinaryHeader ) )
         {
             std::cout << "The requested file couldn't be found. The disk image may be damaged or corrupted." << std::endl;
             return false;
