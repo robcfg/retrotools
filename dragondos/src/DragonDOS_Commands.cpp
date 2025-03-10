@@ -54,9 +54,9 @@ bool HelpCommand()
     std::cout << "\textract <filename> [<index>] [-strip_binary_header]" << std::endl;
     std::cout << "\t  Extracts all files from within the disk image to the current directory." << std::endl;
     std::cout << "\t  If an optional file index is specified, only that file will be extracted to" << std::endl;
-    std::cout << "\t  current directory." << std::endl << std::endl;
+    std::cout << "\t  current directory." << std::endl;
     std::cout << "\t  If the optional flag -strip_binary_header is specified, binary type files" << std::endl;
-    std::cout << "\t  will be extracted without the DragonDOS header." << std::endl;
+    std::cout << "\t  will be extracted without the DragonDOS header." << std::endl << std::endl;
     std::cout << "\tnew <filename> <size>" << std::endl;
     std::cout << "\t  Creates a new, formatted disk image." << std::endl;
     std::cout << "\t  Size is the size of the new disk image in kilobytes." << std::endl;
