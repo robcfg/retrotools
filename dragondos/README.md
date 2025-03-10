@@ -42,10 +42,13 @@ The following commands are available:
 
   Extracts all files from within the disk image to the current directory.\
   If an optional file index is specified, only that file will be extracted to\
-  current directory.
+  current directory.\
+  Binary files are extracted with the 9-byte DragonDOS header by default. To\
+  extract them without the header, use the **-strip_binary_header** flag.
 
       dragondos extract mydisk.vdk
       dragondos extract mydisk.vdk 2
+      dragondos extract mydisk.vdk 2 -strip_binary_header
 
 * **new \<filename\> \<image size\>**
 
