@@ -15,7 +15,7 @@
 #include "VDKDiskImage.h"
 
 #define UI_MAX_FILE_NAME_LEN 8
-#define UI_MAX_FILE_EXT_LEN  3
+#define UI_MAX_FILE_EXT_LEN  4            // Dot plus three characters
 #define DRAGONDOSUI_BROWSER_LINE_OFFSET 3 // Skip two lines, 1-based
 #ifdef WIN32
 #define DRAGONDOSUI_PATH_SEPARATOR '\\';
