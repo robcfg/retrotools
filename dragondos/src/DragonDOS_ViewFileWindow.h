@@ -14,6 +14,7 @@
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Radio_Light_Button.H>
+#include <FL/Fl_RGB_Image.H>
 #include <FL/Fl_Window.H>
 
 #include "DragonDOS_FS.h"
@@ -61,6 +62,7 @@ private:
     void Decode_PMODE2_Image( const std::vector<unsigned char>& _src );
     void Decode_PMODE3_Image( const std::vector<unsigned char>& _src );
     void Decode_PMODE4_Image( const std::vector<unsigned char>& _src );
+    void Decode_SEMIGR_Image( const std::vector<unsigned char>& _src );
     void ClearImage();
 
     void ShowImageControls( bool _status );

@@ -31,7 +31,7 @@
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
 
-#include "../logo/DragonDOS_Logo.xpm"
+#include "../graphics/DragonSemigraphicCharacters.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -54,7 +54,8 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_RADIO_BUTTON_WIDTH      80
 #define DRAGONDOSVFW_RADIO_BUTTON_HEIGHT     25
 #define DRAGONDOSVFW_RADIO_BUTTON_GAP        5
-#define DRAGONDOSVFW_COMBO_WIDTH             98  // To fit 4 under the 512pc wide image, with 3 margins of separation.
+#define DRAGONDOSVFW_MODE_COMBO_WIDTH        148
+#define DRAGONDOSVFW_PALETTE_COMBO_WIDTH     98
 #define DRAGONDOSVFW_COLOR_TEXT              'A'
 #define DRAGONDOSVFW_COLOR_ERROR             'B'
 #define DRAGONDOSVFW_COLOR_BASIC_TOKEN       'C'
@@ -74,17 +75,18 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_PMODE2                  2
 #define DRAGONDOSVFW_PMODE3                  3
 #define DRAGONDOSVFW_PMODE4                  4
+#define DRAGONDOSVFW_SEMIGR                  5
+#define DRAGONDOSVFW_TEXT_COLUMNS            32
+#define DRAGONDOSVFW_TEXT_ROWS               16
 
 // Palettes
-const unsigned char TwoColorPalettes[2][2][3] = { 0x4C, 0x56, 0x3C, 0xBE, 0xC8, 0xAC,
-                                                  0x28, 0x58, 0x10, 0x2F, 0xD2, 0x00 };
-//const unsigned char TwoColorPalettes[2][2][3] = { 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF,
-//                                                  0x00, 0x00, 0x00, 0x00, 0xFF, 0x00 };
+const unsigned char TwoColorPalettes[2][2][3] = {   0x4C, 0x56, 0x3C, 0xBE, 0xC8, 0xAC,
+                                                    0x28, 0x58, 0x10, 0x2F, 0xD2, 0x00 };
 
-const unsigned char FourColorPalettes[2][4][3] = { 0xBE, 0xC8, 0xAC, 0x40, 0xAF, 0x71,
-                                                   0xC7, 0x4E, 0xF0, 0xD4, 0x7F, 0x00,
-                                                   0x2F, 0xD2, 0x00, 0xC0, 0xE5, 0x01,
-                                                   0x4C, 0x3A, 0xC4, 0x9A, 0x31, 0x36 };
+const unsigned char FourColorPalettes[2][4][3] = {  0xBE, 0xC8, 0xAC, 0x40, 0xAF, 0x71,
+                                                    0xC7, 0x4E, 0xF0, 0xD4, 0x7F, 0x00,
+                                                    0x2F, 0xD2, 0x00, 0xC0, 0xE5, 0x01,
+                                                    0x4C, 0x3A, 0xC4, 0x9A, 0x31, 0x36 };
 
 CDragonDOSViewFileWindow::CDragonDOSViewFileWindow( int _w, int _h, const char* _label ) : 
     Fl_Window( _w, _h, _label ) 
@@ -217,26 +219,27 @@ void CDragonDOSViewFileWindow::CreateControls()
     mImage->hide();
     y += DRAGONDOSVFW_IMAGE_VIEW_HEIGHT + 25;
 
-    mVideoMode = new Fl_Choice( x, y, DRAGONDOSVFW_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
+    mVideoMode = new Fl_Choice( x, y, DRAGONDOSVFW_MODE_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
     mVideoMode->add("PMODE 0");
     mVideoMode->add("PMODE 1");
     mVideoMode->add("PMODE 2");
     mVideoMode->add("PMODE 3");
     mVideoMode->add("PMODE 4");
+    mVideoMode->add("SEMIGRAPHICS");
     mVideoMode->value(4);
     mVideoMode->align( FL_ALIGN_TOP_LEFT );
     mVideoMode->copy_label("Video mode");
     mVideoMode->callback( viewFileModeChanged_cb, (void*)this );
-    x += DRAGONDOSVFW_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
+    x += DRAGONDOSVFW_MODE_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
 
-    mVideoPalette = new Fl_Choice( x, y, DRAGONDOSVFW_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
+    mVideoPalette = new Fl_Choice( x, y, DRAGONDOSVFW_PALETTE_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
     mVideoPalette->add("White");
     mVideoPalette->add("Green");
     mVideoPalette->value(1);
     mVideoPalette->align( FL_ALIGN_TOP_LEFT );
     mVideoPalette->copy_label("Palette");
     mVideoPalette->callback( viewFilePaletteChanged_cb, (void*)this );
-    x += DRAGONDOSVFW_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
+    x += DRAGONDOSVFW_PALETTE_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
 
     mExportAsPNG = new Fl_Button( x, y, 100, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Export as PNG" );
     mExportAsPNG->callback( viewFileExportPNG_cb, (void*)this );
@@ -778,6 +781,43 @@ void CDragonDOSViewFileWindow::Decode_PMODE4_Image( const std::vector<unsigned c
     }
 }
 
+void CDragonDOSViewFileWindow::Decode_SEMIGR_Image( const std::vector<unsigned char>& _src )
+{
+    size_t x = 0;
+    size_t y = 0;
+    size_t srcOffset = 0;
+    size_t dstOffset = 0;
+
+    for( unsigned char c : _src )
+    {
+        srcOffset = c * DragonSemigraphicsCharacters_Width * DragonSemigraphicsCharacters_Depth;
+        dstOffset = (y * DragonSemigraphicsCharacters_Height * DRAGONDOSVFW_IMAGE_VIEW_STRIDE) + (x * DragonSemigraphicsCharacters_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
+
+        for( size_t line = 0; line < DragonSemigraphicsCharacters_Height; ++line )
+        {
+            for( size_t charPixel = 0; charPixel < DragonSemigraphicsCharacters_Width; ++charPixel )
+            {
+                mImageData[dstOffset++] = (unsigned char)DragonSemigraphicsCharacters[srcOffset++];
+                mImageData[dstOffset++] = (unsigned char)DragonSemigraphicsCharacters[srcOffset++];
+                mImageData[dstOffset++] = (unsigned char)DragonSemigraphicsCharacters[srcOffset++];
+            }
+            dstOffset += DRAGONDOSVFW_IMAGE_VIEW_STRIDE - (DragonSemigraphicsCharacters_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
+            srcOffset += DragonSemigraphicsCharacters_Stride - (DragonSemigraphicsCharacters_Width * DragonSemigraphicsCharacters_Depth);
+        }
+
+        ++x;
+        if( x >= DRAGONDOSVFW_TEXT_COLUMNS )
+        {
+            x = 0;
+            ++y;
+        }
+        if( y >= DRAGONDOSVFW_TEXT_ROWS )
+        {
+            return;
+        }
+    }
+}
+
 void CDragonDOSViewFileWindow::ClearImage()
 {
     memset( mImageData, 0, DRAGONDOSVFW_IMAGE_VIEW_SIZE );
@@ -794,6 +834,7 @@ void CDragonDOSViewFileWindow::DecodeImage()
             case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
             case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
             case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
+            case DRAGONDOSVFW_SEMIGR: Decode_SEMIGR_Image(mImageFileData); break;
             default:                  Decode_PMODE4_Image(mImageFileData); break;
         }
     }
