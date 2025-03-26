@@ -62,7 +62,7 @@ private:
     void Decode_PMODE2_Image( const std::vector<unsigned char>& _src );
     void Decode_PMODE3_Image( const std::vector<unsigned char>& _src );
     void Decode_PMODE4_Image( const std::vector<unsigned char>& _src );
-    void Decode_SEMIGR_Image( const std::vector<unsigned char>& _src );
+    void Decode_TEXT_Image  ( const std::vector<unsigned char>& _src );
     void ClearImage();
 
     void ShowImageControls( bool _status );

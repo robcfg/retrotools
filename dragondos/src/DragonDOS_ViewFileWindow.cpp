@@ -31,7 +31,7 @@
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
 
-#include "../graphics/DragonSemigraphicCharacters.h"
+#include "../graphics/DragonTextFont.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -75,7 +75,7 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_PMODE2                  2
 #define DRAGONDOSVFW_PMODE3                  3
 #define DRAGONDOSVFW_PMODE4                  4
-#define DRAGONDOSVFW_SEMIGR                  5
+#define DRAGONDOSVFW_TEXT                    5
 #define DRAGONDOSVFW_TEXT_COLUMNS            32
 #define DRAGONDOSVFW_TEXT_ROWS               16
 
@@ -225,7 +225,7 @@ void CDragonDOSViewFileWindow::CreateControls()
     mVideoMode->add("PMODE 2");
     mVideoMode->add("PMODE 3");
     mVideoMode->add("PMODE 4");
-    mVideoMode->add("SEMIGRAPHICS");
+    mVideoMode->add("TEXT");
     mVideoMode->value(4);
     mVideoMode->align( FL_ALIGN_TOP_LEFT );
     mVideoMode->copy_label("Video mode");
@@ -781,7 +781,7 @@ void CDragonDOSViewFileWindow::Decode_PMODE4_Image( const std::vector<unsigned c
     }
 }
 
-void CDragonDOSViewFileWindow::Decode_SEMIGR_Image( const std::vector<unsigned char>& _src )
+void CDragonDOSViewFileWindow::Decode_TEXT_Image( const std::vector<unsigned char>& _src )
 {
     size_t x = 0;
     size_t y = 0;
@@ -790,19 +790,19 @@ void CDragonDOSViewFileWindow::Decode_SEMIGR_Image( const std::vector<unsigned c
 
     for( unsigned char c : _src )
     {
-        srcOffset = c * DragonSemigraphicsCharacters_Width * DragonSemigraphicsCharacters_Depth;
-        dstOffset = (y * DragonSemigraphicsCharacters_Height * DRAGONDOSVFW_IMAGE_VIEW_STRIDE) + (x * DragonSemigraphicsCharacters_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
+        srcOffset = c * DragonTextFont_Width * DragonTextFont_Depth;
+        dstOffset = (y * DragonTextFont_Height * DRAGONDOSVFW_IMAGE_VIEW_STRIDE) + (x * DragonTextFont_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
 
-        for( size_t line = 0; line < DragonSemigraphicsCharacters_Height; ++line )
+        for( size_t line = 0; line < DragonTextFont_Height; ++line )
         {
-            for( size_t charPixel = 0; charPixel < DragonSemigraphicsCharacters_Width; ++charPixel )
+            for( size_t charPixel = 0; charPixel < DragonTextFont_Width; ++charPixel )
             {
-                mImageData[dstOffset++] = (unsigned char)DragonSemigraphicsCharacters[srcOffset++];
-                mImageData[dstOffset++] = (unsigned char)DragonSemigraphicsCharacters[srcOffset++];
-                mImageData[dstOffset++] = (unsigned char)DragonSemigraphicsCharacters[srcOffset++];
+                mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
+                mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
+                mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
             }
-            dstOffset += DRAGONDOSVFW_IMAGE_VIEW_STRIDE - (DragonSemigraphicsCharacters_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
-            srcOffset += DragonSemigraphicsCharacters_Stride - (DragonSemigraphicsCharacters_Width * DragonSemigraphicsCharacters_Depth);
+            dstOffset += DRAGONDOSVFW_IMAGE_VIEW_STRIDE - (DragonTextFont_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
+            srcOffset += DragonTextFont_Stride - (DragonTextFont_Width * DragonTextFont_Depth);
         }
 
         ++x;
@@ -834,7 +834,7 @@ void CDragonDOSViewFileWindow::DecodeImage()
             case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
             case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
             case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
-            case DRAGONDOSVFW_SEMIGR: Decode_SEMIGR_Image(mImageFileData); break;
+            case DRAGONDOSVFW_TEXT:   Decode_TEXT_Image  (mImageFileData); break;
             default:                  Decode_PMODE4_Image(mImageFileData); break;
         }
     }

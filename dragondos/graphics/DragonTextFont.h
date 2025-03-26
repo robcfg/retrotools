@@ -1,16 +1,16 @@
 #pragma once
 
-#ifndef __DRAGONSEMIGRAPHICSCHARACTERS_H__
-#define __DRAGONSEMIGRAPHICSCHARACTERS_H__
+#ifndef __DRAGONTEXTFONT_H__
+#define __DRAGONTEXTFONT_H__
 
-static const int DragonSemigraphicsCharacters_ImageWidth    = 4096;
-static const int DragonSemigraphicsCharacters_Width         = 16;
-static const int DragonSemigraphicsCharacters_Height        = 24;
-static const int DragonSemigraphicsCharacters_Depth         = 3;
-static const int DragonSemigraphicsCharacters_Stride        = DragonSemigraphicsCharacters_ImageWidth * DragonSemigraphicsCharacters_Depth;
-static const int DragonSemigraphicsCharacters_LineSize      = DragonSemigraphicsCharacters_Stride * DragonSemigraphicsCharacters_Height;
+static const int DragonTextFont_ImageWidth    = 4096;
+static const int DragonTextFont_Width         = 16;
+static const int DragonTextFont_Height        = 24;
+static const int DragonTextFont_Depth         = 3;
+static const int DragonTextFont_Stride        = DragonTextFont_ImageWidth * DragonTextFont_Depth;
+static const int DragonTextFont_LineSize      = DragonTextFont_Stride * DragonTextFont_Height;
 
-static const char DragonSemigraphicsCharacters[] = {
+static const char DragonTextFont[] = {
     "\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066"
     "y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030"
     "\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066y\030\066"
