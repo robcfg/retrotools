@@ -53,6 +53,7 @@ void viewFileAsHex_cb           ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileAsText_cb          ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileAsBasic_cb         ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileAsImage_cb         ( Fl_Widget* pWidget, void* _viewFileWindow );
+void viewFileAsDisassembly_cb   ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileModeChanged_cb     ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFilePaletteChanged_cb  ( Fl_Widget* pWidget, void* _viewFileWindow );
 void viewFileExportPNG_cb       ( Fl_Widget* pWidget, void* _viewFileWindow );

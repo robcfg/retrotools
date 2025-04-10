@@ -18,6 +18,7 @@
 #include <FL/Fl_Window.H>
 
 #include "DragonDOS_FS.h"
+#include "6x09_Disassembler.h"
 
 enum EDRAGONDOSVFW_ViewMode
 {
@@ -25,6 +26,7 @@ enum EDRAGONDOSVFW_ViewMode
     VM_TEXT,
     VM_BASIC,
     VM_IMAGE,
+    VM_DISASSEMBLY,
     VM_NUM
 };
 
@@ -47,32 +49,36 @@ public:
     void ViewAsText();
     void ViewAsBasic();
     void ViewAsImage();
+    void ViewAsDisassembly();
 
     void DecodeImage();
     void ExportImage();
 
 private:
-    void CreateControls  ();
-    void AddHexViewData  ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-    void AddTextViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-    void AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+    void CreateControls         ();
+    void AddHexViewData         ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+    void AddTextViewData        ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+    void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+    void AddDisassemblyViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo );
 
-    void Decode_PMODE0_Image( const std::vector<unsigned char>& _src );
-    void Decode_PMODE1_Image( const std::vector<unsigned char>& _src );
-    void Decode_PMODE2_Image( const std::vector<unsigned char>& _src );
-    void Decode_PMODE3_Image( const std::vector<unsigned char>& _src );
-    void Decode_PMODE4_Image( const std::vector<unsigned char>& _src );
-    void Decode_TEXT_Image  ( const std::vector<unsigned char>& _src );
-    void ClearImage();
+    void Decode_PMODE0_Image    ( const std::vector<unsigned char>& _src );
+    void Decode_PMODE1_Image    ( const std::vector<unsigned char>& _src );
+    void Decode_PMODE2_Image    ( const std::vector<unsigned char>& _src );
+    void Decode_PMODE3_Image    ( const std::vector<unsigned char>& _src );
+    void Decode_PMODE4_Image    ( const std::vector<unsigned char>& _src );
+    void Decode_TEXT_Image      ( const std::vector<unsigned char>& _src );
+    void ClearImage             ();
 
     void ShowImageControls( bool _status );
 
     std::string mHexView;
     std::string mTextView;
     std::string mBasicView;
+    std::string mDisassemblyView;
     std::string mHexViewColors;
     std::string mTextViewColors;
     std::string mBasicViewColors;
+    std::string mDisassemblyViewColors;
 
     Fl_Text_Display* mTextDisplay = nullptr;
     Fl_Text_Buffer*  mTextBuffer = nullptr;
@@ -82,6 +88,7 @@ private:
     Fl_Radio_Light_Button* mViewAsTextButton = nullptr;
     Fl_Radio_Light_Button* mViewAsBasicButton = nullptr;
     Fl_Radio_Light_Button* mViewAsImageButton = nullptr;
+    Fl_Radio_Light_Button* mViewAsDisassemblyButton = nullptr;
 
     Fl_Box* mViewAsLabel = nullptr;
 
@@ -94,4 +101,6 @@ private:
     Fl_Button* mExportAsPNG = nullptr;
 
     EDRAGONDOSVFW_ViewMode mViewMode = VM_HEX;
+
+    Disassembler_6x09 mDisassembler;
 };

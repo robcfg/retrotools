@@ -752,6 +752,14 @@ void viewFileAsImage_cb( Fl_Widget* pWidget, void* _viewFileWindow )
     }
 }
 
+void viewFileAsDisassembly_cb( Fl_Widget* pWidget, void* _viewFileWindow )
+{
+    if( _viewFileWindow )
+    {
+        ((CDragonDOSViewFileWindow*)_viewFileWindow)->ViewAsDisassembly();
+    }
+}
+
 void viewFileModeChanged_cb( Fl_Widget* pWidget, void* _viewFileWindow )
 {
     if( _viewFileWindow )

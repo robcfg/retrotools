@@ -26,6 +26,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler.cpp
 	)
 
 if( WIN32 )
@@ -47,6 +48,7 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler.cpp
     )
 
 if( APPLE )

@@ -51,7 +51,7 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_MAX_FILENAME_LENGTH     12  // Name (8), dot separator (1), extension (3)
 #define DRAGONDOSVFW_FILE_HEADER_FILLER_NUM  42  // Number of '-' to append at the end of the file separator header.
 #define DRAGONDOSVFW_WINDOW_MARGIN           10
-#define DRAGONDOSVFW_RADIO_BUTTON_WIDTH      80
+#define DRAGONDOSVFW_RADIO_BUTTON_WIDTH      95
 #define DRAGONDOSVFW_RADIO_BUTTON_HEIGHT     25
 #define DRAGONDOSVFW_RADIO_BUTTON_GAP        5
 #define DRAGONDOSVFW_MODE_COMBO_WIDTH        148
@@ -62,6 +62,7 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_COLOR_STRING            'D'
 #define DRAGONDOSVFW_COLOR_LINE_NUMBER       'E'
 #define DRAGONDOSVFW_KEY_B                   98
+#define DRAGONDOSVFW_KEY_D                   100
 #define DRAGONDOSVFW_KEY_H                   104
 #define DRAGONDOSVFW_KEY_I                   105
 #define DRAGONDOSVFW_KEY_T                   116
@@ -122,6 +123,7 @@ int CDragonDOSViewFileWindow::handle(int _event)
             mViewAsTextButton->value(0);
             mViewAsBasicButton->value(0);
             mViewAsImageButton->value(0);
+            mViewAsDisassemblyButton->value(0);
             return 1;
         }
         else if( key == DRAGONDOSVFW_KEY_T )
@@ -131,6 +133,7 @@ int CDragonDOSViewFileWindow::handle(int _event)
             mViewAsTextButton->value(1);
             mViewAsBasicButton->value(0);
             mViewAsImageButton->value(0);
+            mViewAsDisassemblyButton->value(0);
             return 1;
         }
         else if( key == DRAGONDOSVFW_KEY_B )
@@ -140,6 +143,7 @@ int CDragonDOSViewFileWindow::handle(int _event)
             mViewAsTextButton->value(0);
             mViewAsBasicButton->value(1);
             mViewAsImageButton->value(0);
+            mViewAsDisassemblyButton->value(0);
             return 1;
         }
         else if( key == DRAGONDOSVFW_KEY_I )
@@ -149,6 +153,17 @@ int CDragonDOSViewFileWindow::handle(int _event)
             mViewAsTextButton->value(0);
             mViewAsBasicButton->value(0);
             mViewAsImageButton->value(1);
+            mViewAsDisassemblyButton->value(0);
+            return 1;
+        }
+        else if( key == DRAGONDOSVFW_KEY_D )
+        {
+            ViewAsDisassembly();
+            mViewAsHexButton->value(0);
+            mViewAsTextButton->value(0);
+            mViewAsBasicButton->value(0);
+            mViewAsImageButton->value(0);
+            mViewAsDisassemblyButton->value(1);
             return 1;
         }
     }
@@ -162,11 +177,12 @@ void CDragonDOSViewFileWindow::show()
 {
     switch( mViewMode )
     {
-        case VM_HEX  :ViewAsHex();   break;
-        case VM_TEXT :ViewAsText();  break;
-        case VM_BASIC:ViewAsBasic(); break;
-        case VM_IMAGE:ViewAsImage(); break;
-        default:      ViewAsHex();   break;
+        case VM_HEX  :      ViewAsHex();         break;
+        case VM_TEXT :      ViewAsText();        break;
+        case VM_BASIC:      ViewAsBasic();       break;
+        case VM_IMAGE:      ViewAsImage();       break;
+        case VM_DISASSEMBLY:ViewAsDisassembly(); break;
+        default:            ViewAsHex();         break;
     }
 
     Fl_Window::show();
@@ -203,6 +219,10 @@ void CDragonDOSViewFileWindow::CreateControls()
     
     mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Image (I)");
     mViewAsImageButton->callback( viewFileAsImage_cb, (void*)this );
+    x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
+    
+    mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Disasm. (D)");
+    mViewAsImageButton->callback( viewFileAsDisassembly_cb, (void*)this );
     x = DRAGONDOSVFW_WINDOW_MARGIN;
     y += 35;
 
@@ -256,6 +276,8 @@ void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vec
     mTextViewColors.clear();
     mBasicView.clear();
     mBasicViewColors.clear();
+    mDisassemblyView.clear();
+    mDisassemblyViewColors.clear();
 
     for( auto file : _selectedFiles )
     {
@@ -275,11 +297,14 @@ void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vec
             fileHeader.append( DRAGONDOSVFW_FILE_HEADER_FILLER_NUM, '-' );
         }
 
+        const CDGNDosFile ddosFile = _fs->GetFile((unsigned short int)file);
+
         std::vector<unsigned char> fileData;
-        _fs->ExtractFile( fileName, fileData, false );
-        AddHexViewData  ( fileHeader, fileData );
-        AddTextViewData ( fileHeader, fileData );
-        AddBasicViewData( fileHeader, fileData );
+        _fs->ExtractFile        ( fileName, fileData, false );
+        AddHexViewData          ( fileHeader, fileData );
+        AddTextViewData         ( fileHeader, fileData );
+        AddBasicViewData        ( fileHeader, fileData );
+        AddDisassemblyViewData  ( fileHeader, fileData, ddosFile );
     }
 
     mHexViewColors.append ( mHexView.length() , DRAGONDOSVFW_COLOR_TEXT );
@@ -324,6 +349,14 @@ void CDragonDOSViewFileWindow::ViewAsImage()
 {
     mViewMode = VM_IMAGE;
     ShowImageControls( true );
+}
+
+void CDragonDOSViewFileWindow::ViewAsDisassembly()
+{
+    mViewMode = VM_DISASSEMBLY;
+    ShowImageControls( false );
+    mTextBuffer->text( mDisassemblyView.c_str() );
+    mTextColor->text( mDisassemblyViewColors.c_str() );
 }
 
 void CDragonDOSViewFileWindow::AddHexViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
@@ -451,6 +484,38 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
 
     mBasicView += strStream.str();
     mBasicViewColors += textColors;
+}
+
+void CDragonDOSViewFileWindow::AddDisassemblyViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo )
+{
+    if( _fileData.empty() )
+    {
+        mDisassemblyView = "";
+        mDisassemblyViewColors = "";
+        return;
+    }
+
+    std::string text;
+    std::string textColors;
+
+    if( !_fileHeader.empty() )
+    {
+        text += _fileHeader;
+        text += "\n";
+        textColors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
+        textColors += "\n";
+    }
+
+    if( _fileInfo.GetFileType() == DRAGONDOS_FILETYPE_BINARY )
+    {
+        mDisassembler.Disassemble( _fileData, _fileInfo.GetLoadAddress(), _fileInfo.GetExecAddress(), text, textColors );
+    }
+
+    text += "\n";
+    textColors += "\n";
+
+    mDisassemblyView += text;
+    mDisassemblyViewColors += textColors;
 }
 
 void CDragonDOSViewFileWindow::ShowImageControls( bool _status )
