@@ -223,19 +223,19 @@ Disassembler_6x09::Disassembler_6x09()
         //opcode_map.emplace(0xE6, Opcode_6x09{ "LDB"    , { {1} }   , INDEXED   });
         opcode_map.emplace(0xF6, Opcode_6x09{ "LDB"     , { {2} }   , EXTENDED  });
         // LDD __________________________________________________________________________
-        opcode_map.emplace(0xCC, Opcode_6x09{ "LDD"     , { {1} }   , IMMEDIATE });
+        opcode_map.emplace(0xCC, Opcode_6x09{ "LDD"     , { {2} }   , IMMEDIATE });
         opcode_map.emplace(0xDC, Opcode_6x09{ "LDD"     , { {1} }   , DIRECT    });
         //opcode_map.emplace(0xEC, Opcode_6x09{ "LDD"    , { {1} }   , INDEXED   });
         opcode_map.emplace(0xFC, Opcode_6x09{ "LDD"     , { {2} }   , EXTENDED  });
         // LDQ (6309)____________________________________________________________________
         opcode_map.emplace(0xCD, Opcode_6x09{ "LDQ"     , { {4} }   , IMMEDIATE });
         // LDU __________________________________________________________________________
-        opcode_map.emplace(0xCE, Opcode_6x09{ "LDU"     , { {1} }   , IMMEDIATE });
+        opcode_map.emplace(0xCE, Opcode_6x09{ "LDU"     , { {2} }   , IMMEDIATE });
         opcode_map.emplace(0xDE, Opcode_6x09{ "LDU"     , { {1} }   , DIRECT    });
         //opcode_map.emplace(0xEE, Opcode_6x09{ "LDU"    , { {1} }   , INDEXED   });
         opcode_map.emplace(0xFE, Opcode_6x09{ "LDU"     , { {2} }   , EXTENDED  });
         // LDX __________________________________________________________________________
-        opcode_map.emplace(0x8E, Opcode_6x09{ "LDX"     , { {1} }   , IMMEDIATE });
+        opcode_map.emplace(0x8E, Opcode_6x09{ "LDX"     , { {2} }   , IMMEDIATE });
         opcode_map.emplace(0x9E, Opcode_6x09{ "LDX"     , { {1} }   , DIRECT    });
         //opcode_map.emplace(0xAE, Opcode_6x09{ "LDX"    , { {1} }   , INDEXED   });
         opcode_map.emplace(0xBE, Opcode_6x09{ "LDX"     , { {2} }   , EXTENDED  });
@@ -495,11 +495,21 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map2.emplace(0x28, Opcode_6x09{ "LBVC"    , { {2} }   , RELATIVE });
         // LBVS _________________________________________________________________________
         opcode_map2.emplace(0x29, Opcode_6x09{ "LBVS"    , { {2} }   , RELATIVE });
+        // LDS __________________________________________________________________________
+        opcode_map2.emplace(0xCE, Opcode_6x09{ "LDS"     , { {2} }   , IMMEDIATE });
+        opcode_map2.emplace(0xDE, Opcode_6x09{ "LDS"     , { {1} }   , DIRECT    });
+        //opcode_map2.emplace(0xEE, Opcode_6x09{ "LDS"    , { {1} }   , INDEXED   });
+        opcode_map2.emplace(0xFF, Opcode_6x09{ "LDS"     , { {2} }   , EXTENDED  });
         // LDW (6309)____________________________________________________________________
-        opcode_map2.emplace(0x86, Opcode_6x09{ "LDW"     , { {1} }   , IMMEDIATE });
+        opcode_map2.emplace(0x86, Opcode_6x09{ "LDW"     , { {2} }   , IMMEDIATE });
         opcode_map2.emplace(0x96, Opcode_6x09{ "LDW"     , { {1} }   , DIRECT    });
         //opcode_map2.emplace(0xA6, Opcode_6x09{ "LDW"    , { {1} }   , INDEXED   });
         opcode_map2.emplace(0xB6, Opcode_6x09{ "LDW"     , { {2} }   , EXTENDED  });
+        // LDY __________________________________________________________________________
+        opcode_map2.emplace(0x8E, Opcode_6x09{ "LDY"     , { {2} }   , IMMEDIATE });
+        opcode_map2.emplace(0x9E, Opcode_6x09{ "LDY"     , { {1} }   , DIRECT    });
+        //opcode_map2.emplace(0xAE, Opcode_6x09{ "LDY"    , { {1} }   , INDEXED   });
+        opcode_map2.emplace(0xBE, Opcode_6x09{ "LDY"     , { {2} }   , EXTENDED  });
         // LDQ (6309)____________________________________________________________________
         opcode_map2.emplace(0xDC, Opcode_6x09{ "LDW"     , { {1} }   , DIRECT    });
         //opcode_map2.emplace(0xEC, Opcode_6x09{ "LDW"    , { {1} }   , INDEXED   });
@@ -737,7 +747,7 @@ int main() {
  ss << std::dec << std::setfill(' ') << std::setw(0);
 */
 
-void Disassembler_6x09::FormatParameter( unsigned char _opcode, size_t _param, unsigned char _paramSize, Opcode_6x09_Addressing _addressingMode, std::string& _dst, std::string& _dstColors )
+void Disassembler_6x09::FormatParameter( size_t _pc, unsigned char _opcode, size_t _param, unsigned char _paramSize, Opcode_6x09_Addressing _addressingMode, std::string& _dst, std::string& _dstColors )
 {
     std::stringstream ss;
     _dstColors.clear();
@@ -813,9 +823,27 @@ void Disassembler_6x09::FormatParameter( unsigned char _opcode, size_t _param, u
             break;
             case RELATIVE:
             {
-                std::string strVal = std::to_string(static_cast<int>(static_cast<int16_t>(_param)));
-                ss << strVal;
-                _dstColors.append( strVal.length(), COLOR_NUMBER );
+                size_t newPC = _pc;
+                if( _paramSize == 1 )
+                {
+                    newPC += static_cast<int>(static_cast<int8_t>(_param));
+                    ss << "$" << std::uppercase << std::setw(4) << std::setfill('0') << std::hex << newPC;
+                    _dstColors.append( 1, COLOR_TEXT );
+                    _dstColors.append( 4, COLOR_NUMBER );
+                }
+                else if( _paramSize == 2 )
+                {
+                    newPC += static_cast<int>(static_cast<int16_t>(_param));
+                    ss << "$" << std::uppercase << std::setw(4) << std::setfill('0') << std::hex << newPC;
+                    _dstColors.append( 1, COLOR_TEXT );
+                    _dstColors.append( 4, COLOR_NUMBER );
+                }
+                else
+                {
+                    std::string badParamSize = "Unsupported parameter size!";
+                    ss << badParamSize;
+                    _dstColors.append( badParamSize.length(), COLOR_ERROR );
+                }
             }
             break;
             default: ss << "?>" << std::setw(_paramSize*2) << std::setfill('0') << std::hex << _param; break; 
@@ -877,10 +905,10 @@ void Disassembler_6x09::Disassemble( const std::vector<unsigned char> _data, uin
             for( auto param : opcode->second.params )
             {
                 paramValue = ReadParameter( _data, pos, param.size );
-                FormatParameter( opcode->first, paramValue, param.size, opcode->second.addressing, paramBuffer, paramColorBuffer );
+                pos += param.size;
+                FormatParameter( pos + _execAddress, opcode->first, paramValue, param.size, opcode->second.addressing, paramBuffer, paramColorBuffer );
                 ss << paramBuffer;
                 _dstColors.append( paramColorBuffer );
-                pos += param.size;
             }
 
             ss << std::endl;

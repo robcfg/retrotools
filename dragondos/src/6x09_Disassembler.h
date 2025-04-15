@@ -34,6 +34,6 @@ public:
     void Disassemble( const std::vector<unsigned char> _data, uint16_t _loadAddress, uint16_t _execAddress, std::string& _dst, std::string& _dstColors );
 
 private:
-    void   FormatParameter( unsigned char _opcode, size_t _param, unsigned char _paramSize, Opcode_6x09_Addressing _addressingMode, std::string& _dst, std::string& _dstColors );
+    void   FormatParameter( size_t _pc, unsigned char _opcode, size_t _param, unsigned char _paramSize, Opcode_6x09_Addressing _addressingMode, std::string& _dst, std::string& _dstColors );
     size_t ReadParameter( const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize );
 };
