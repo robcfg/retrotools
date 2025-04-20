@@ -20,6 +20,7 @@ static const uint8_t POSTBYTE_MODE_DIRECT = 0;
 
 static const uint8_t POSTBYTE_OP_MASK = 7 << 2;
 static const uint8_t POSTBYTE_OP_AUTOINCDECFROMREG = 0;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMPC =  3 << 3;
 
 #define POSTBYTE_REGISTER_X = 0x00
 #define POSTBYTE_REGISTER_Y = 0x01
@@ -889,6 +890,12 @@ void Disassembler_6x09::FormatParameter(size_t _pc, unsigned char _opcode, size_
 
                     }
                     break;
+                    case POSTBYTE_OP_CONSTOFFSETFROMPC:
+                    {
+                        // fetch next byte/word
+                        //ss << 
+                    }
+                    break;
                     default:
                     break;
                 }
@@ -928,7 +935,168 @@ size_t Disassembler_6x09::ReadParameter(const std::vector<unsigned char> _data, 
     return retVal;
 }
 
-void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint16_t _loadAddress, uint16_t _execAddress, std::string &_dst, std::string &_dstColors)
+void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _pc, std::stringstream& _ss, std::string& _dstColors)
+{
+    if( _opcode.params.empty() )
+    {
+        ++_pos;
+        return;
+    }
+
+    uint8_t opcodeID = _data[_pos++];
+
+    // Read first param and depnding on the opcode read more if needed.
+    size_t paramIdx = 0;
+    size_t paramSize =  _opcode.params[paramIdx].size;
+    size_t param = ReadParameter(_data, _pos, paramSize);
+    _pos += paramSize;
+
+    bool isSpecialCase = false;
+    // Special cases
+    switch( opcodeID )
+    {
+        case 0x1E: // EXG. IMMEDIATE, has only one parameter.
+        {
+            isSpecialCase = true;
+            unsigned char reg1 = param & 0x0F;
+            unsigned char reg2 = (param & 0xF0) >> 4;
+            _ss << EXG_TFR_Registers[reg1] << "," << EXG_TFR_Registers[reg2];
+            _dstColors.append(EXG_TFR_Registers[reg1].length(), COLOR_REGISTER);
+            _dstColors.append(1, COLOR_TEXT);
+            _dstColors.append(EXG_TFR_Registers[reg2].length(), COLOR_REGISTER);
+        }
+        break;
+        case 0x34: // PSHS, PSHU, PULS, PULU. IMMEDIATE, only one parameter.
+        case 0x35:
+        case 0x36:
+        case 0x37:
+        {
+            isSpecialCase = true;
+            uint8_t mask = 0x01;
+            for (uint8_t reg = 0; reg < 8; ++reg)
+            {
+                if (0 != (param & (mask << reg)))
+                {
+                    _ss << (opcodeID == 0x34 || opcodeID == 0x35 ? PSHS_Registers[reg] : PSHU_Registers[reg]) << ",";
+                    _dstColors.append(PSHS_Registers[reg].length(), COLOR_REGISTER);
+                    _dstColors.append(1, COLOR_TEXT);
+                }
+            }
+
+            // Clear last comma
+            std::string tmpStr = _ss.str();
+            if (!tmpStr.empty())
+            {
+                tmpStr.pop_back();
+                _dstColors.pop_back();
+                _ss.str("");
+                _ss.clear();
+                _ss << tmpStr;
+            }
+        }
+        break;
+    }
+
+    if (!isSpecialCase)
+    {
+        switch (_opcode.addressing)
+        {
+        case IMMEDIATE:
+        {
+            _ss << "#$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
+            _dstColors.append(2, COLOR_TEXT);
+            _dstColors.append(paramSize * 2, COLOR_NUMBER);
+        }
+        break;
+        case DIRECT:
+        {
+            _ss << "$(DP)" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
+            _dstColors.append(2, COLOR_TEXT);
+            _dstColors.append(2, COLOR_REGISTER);
+            _dstColors.append(1, COLOR_TEXT);
+            _dstColors.append(paramSize * 2, COLOR_NUMBER);
+        }
+        break;
+        case EXTENDED:
+        {
+            _ss << "$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
+            _dstColors.append(1, COLOR_TEXT);
+            _dstColors.append(paramSize * 2, COLOR_NUMBER);
+        }
+        break;
+        case RELATIVE:
+        {
+            size_t newPC = _pc;
+            if (paramSize == 1)
+            {
+                newPC += static_cast<int>(static_cast<int8_t>(param));
+                _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                _dstColors.append(1, COLOR_TEXT);
+                _dstColors.append(4, COLOR_NUMBER);
+            }
+            else if (paramSize == 2)
+            {
+                newPC += static_cast<int>(static_cast<int16_t>(param));
+                _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                _dstColors.append(1, COLOR_TEXT);
+                _dstColors.append(4, COLOR_NUMBER);
+            }
+            else
+            {
+                std::string badParamSize = "Unsupported parameter size!";
+                _ss << badParamSize;
+                _dstColors.append(badParamSize.length(), COLOR_ERROR);
+            }
+        }
+        break;
+        case INDEXED:
+        {
+            // Lets assume they have only one param for now...
+            uint8_t postByte = param & 0xFF;
+            uint8_t pbRegister = (postByte & POSTBYTE_REGISTER_MASK) >> 5;
+            uint8_t pbOperation = (postByte & POSTBYTE_OP_MASK);
+
+            if( POSTBYTE_MODE_DIRECT == (postByte & POSTBYTE_MODE_MASK) )
+            {
+                switch( pbOperation )
+                {
+                    case POSTBYTE_OP_AUTOINCDECFROMREG:
+                    {
+                        _ss << "," << Postbyte_Registers[pbRegister];
+                        _dstColors.append(1, COLOR_TEXT);
+                        _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        _ss << Postbyte_AutoIncDecFromReg[postByte & 0x03];
+                        _dstColors.append(Postbyte_AutoIncDecFromReg[postByte & 0x03].length(), COLOR_TEXT);
+
+                    }
+                    break;
+                    case POSTBYTE_OP_CONSTOFFSETFROMPC:
+                    {
+                        // fetch next byte/word
+                        //ss << 
+                    }
+                    break;
+                    default:
+                    break;
+                }
+            }
+            else
+            {
+                _ss << "[," << Postbyte_Registers[pbRegister] << "]";
+                _dstColors.append(2, COLOR_TEXT);
+                _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                _dstColors.append(1, COLOR_TEXT);
+            }
+    }
+        break;
+        default:
+            _ss << "?>" << std::setw(paramSize * 2) << std::setfill('0') << std::hex << param;
+            break;
+        }
+    }
+}
+
+void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint16_t _loadAddress, uint16_t _execAddress, std::string& _dst, std::string& _dstColors)
 {
     if (_execAddress < _loadAddress)
     {
@@ -939,10 +1107,11 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
     std::string paramBuffer;
     std::string paramColorBuffer;
     size_t paramValue;
-    size_t pos = _execAddress - _loadAddress;
+    uint16_t pos = _execAddress - _loadAddress;
 
     while (pos < _data.size())
     {
+        size_t startLen = ss.str().length();
         ss << std::uppercase << std::right << std::setw(4) << std::setfill('0') << std::hex << _loadAddress + pos << ' ';
         _dstColors.append(5, COLOR_NUMBER);
 
@@ -962,11 +1131,19 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
 
         if (opcode != opcode_map.end() && opcode != opcode_map2.end() && opcode != opcode_map3.end())
         {
-            ++pos;
             ss << std::left << std::setw(MAX_OPCODE_STR_WIDTH) << std::setfill(' ') << opcode->second.name << std::setw(0);
             _dstColors.append(MAX_OPCODE_STR_WIDTH, COLOR_OPCODE);
 
+            FormatParameters(opcode->second, _data, pos, pos + _execAddress, ss, _dstColors);
+/*if( ss.str().length() < startLen )
+{
+    printf("Peeeeeenk!");
+}*/
             // TODO: make the for loop happen inside formatParameters function and rename it FormatOpcode.
+/*            ++pos;
+            ss << std::left << std::setw(MAX_OPCODE_STR_WIDTH) << std::setfill(' ') << opcode->second.name << std::setw(0);
+            _dstColors.append(MAX_OPCODE_STR_WIDTH, COLOR_OPCODE);
+
             for (auto param : opcode->second.params)
             {
                 paramValue = ReadParameter(_data, pos, param.size);
@@ -974,7 +1151,7 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
                 FormatParameter(pos + _execAddress, opcode->first, paramValue, param.size, opcode->second.addressing, paramBuffer, paramColorBuffer);
                 ss << paramBuffer;
                 _dstColors.append(paramColorBuffer);
-            }
+            }*/
 
             ss << std::endl;
         }
@@ -983,6 +1160,7 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
             ss << std::uppercase << std::setw(2) << std::setfill('0') << std::hex << (unsigned int)_data[pos] << " ?" << std::endl;
             _dstColors.append(2, COLOR_NUMBER);
             _dstColors.append(2, COLOR_ERROR);
+            //_dstColors.append("\n");
             ++pos;
         }
         _dstColors.append("\n");
