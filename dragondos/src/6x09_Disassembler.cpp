@@ -4,7 +4,7 @@
 #include <map>
 #include <sstream>
 
-#define MAX_OPCODE_STR_WIDTH 6
+#define MAX_OPCODE_STR_WIDTH 10
 
 #define COLOR_TEXT 'A'
 #define COLOR_ERROR 'B'
@@ -13,14 +13,27 @@
 #define COLOR_NUMBER 'E'
 
 #define OPCODE_PAGE_2 0x10
-#define OPCODE_PAGE_3 0x13
+#define OPCODE_PAGE_3 0x11
 
-static const uint8_t POSTBYTE_MODE_MASK = 1 << 4;
-static const uint8_t POSTBYTE_MODE_DIRECT = 0;
+static const uint8_t POSTBYTE_MODE_MASK         = 1 << 4;
+static const uint8_t POSTBYTE_MODE_NONINDIRECT  = 0;
+static const uint8_t POSTBYTE_MODE_INDIRECT     = 1;
 
-static const uint8_t POSTBYTE_OP_MASK = 7 << 2;
-static const uint8_t POSTBYTE_OP_AUTOINCDECFROMREG = 0;
-static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMPC =  3 << 3;
+static const uint8_t POSTBYTE_OP_MASK                           = 0x0F;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMREG_NOOFFSET    = 0x04;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT        = 0x80;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMREG_8BIT        = 0x08;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMREG_16BIT       = 0x09;
+static const uint8_t POSTBYTE_OP_ACCOFFSETFROMREG_A             = 0x06;
+static const uint8_t POSTBYTE_OP_ACCOFFSETFROMREG_B             = 0x05;
+static const uint8_t POSTBYTE_OP_ACCOFFSETFROMREG_D             = 0x0B;
+static const uint8_t POSTBYTE_OP_AUTOINCDECFROMREG_INC1         = 0x00;
+static const uint8_t POSTBYTE_OP_AUTOINCDECFROMREG_INC2         = 0x01;
+static const uint8_t POSTBYTE_OP_AUTOINCDECFROMREG_DEC1         = 0x02;
+static const uint8_t POSTBYTE_OP_AUTOINCDECFROMREG_DEC2         = 0x03;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT         = 0x0C;
+static const uint8_t POSTBYTE_OP_CONSTOFFSETFROMPC_16BIT        = 0x0D;
+static const uint8_t POSTBYTE_OP_EXTENDEDINDIRECT               = 0x0F;
 
 #define POSTBYTE_REGISTER_X = 0x00
 #define POSTBYTE_REGISTER_Y = 0x01
@@ -37,6 +50,7 @@ static const uint8_t POSTBYTE_REGISTER_MASK = 0x60;
 static std::map<unsigned char, Opcode_6x09> opcode_map;
 static std::map<unsigned char, Opcode_6x09> opcode_map2;
 static std::map<unsigned char, Opcode_6x09> opcode_map3;
+static std::map<unsigned char, Opcode_6x09> opcode_map_undocumented;
 
 static std::string EXG_TFR_Registers[] = {"D", "X", "Y", "U", "S", "PC", "W", "V", "A", "B", "CC", "DP", "0", "0", "E", "F"};
 static std::string PSHS_Registers[] = {"CC", "A", "B", "DP", "X", "Y", "U", "PC"};
@@ -48,6 +62,53 @@ static std::string Postbyte_AutoIncDecFromReg[] = {"+", "++", "-", "--"};
 
 Disassembler_6x09::Disassembler_6x09()
 {
+    /////////////////////////////////////////////////////////////////////////////////
+    // Undefined Opcodes
+    // 
+    // Invalid Opcodes that produce some effect on 6809 processors but are
+    // trapped on 6309 ones.
+    //
+    // They'll be shown starting with a lowercase 'u' followed by a mnemonic
+    // if possible, or the Opcode itself otherwise.
+    /////////////////////////////////////////////////////////////////////////////////
+    if( opcode_map_undocumented.empty() )
+    {
+        opcode_map_undocumented.emplace(0x01, Opcode_6x09{"uNEG"        , { {1} }, DIRECT     });
+        opcode_map_undocumented.emplace(0x02, Opcode_6x09{"uNEG/COM"    , { {1} }, DIRECT     });
+        opcode_map_undocumented.emplace(0x05, Opcode_6x09{"uLSR"        , { {1} }, DIRECT     });
+        opcode_map_undocumented.emplace(0x0B, Opcode_6x09{"uDEC"        , { {1} }, DIRECT     });
+        opcode_map_undocumented.emplace(0x14, Opcode_6x09{"uHCF"        , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x15, Opcode_6x09{"uHCF"        , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x18, Opcode_6x09{"u$18"        , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x1B, Opcode_6x09{"uNOP"        , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x20, Opcode_6x09{"uLBRA"       , { {2} }, RELATIVE   });
+        opcode_map_undocumented.emplace(0x38, Opcode_6x09{"uANDCC"      , { {1} }, IMMEDIATE  });
+        opcode_map_undocumented.emplace(0x3E, Opcode_6x09{"uRESET"      , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x41, Opcode_6x09{"uNEGA"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x42, Opcode_6x09{"uNEGA/COMA"  , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x45, Opcode_6x09{"uLSRA"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x4B, Opcode_6x09{"uDECA"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x4E, Opcode_6x09{"uCLRA"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x51, Opcode_6x09{"uNEGB"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x52, Opcode_6x09{"uNEGB/COMB"  , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x55, Opcode_6x09{"uLSRB"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x5B, Opcode_6x09{"uDECB"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x5E, Opcode_6x09{"uCLRB"       , {     }, INHERENT   });
+        opcode_map_undocumented.emplace(0x61, Opcode_6x09{"uNEG"        , { {1} }, INDEXED    });
+        opcode_map_undocumented.emplace(0x62, Opcode_6x09{"uNEG/COM"    , { {1} }, INDEXED    });
+        opcode_map_undocumented.emplace(0x65, Opcode_6x09{"uLSR"        , { {1} }, INDEXED    });
+        opcode_map_undocumented.emplace(0x6B, Opcode_6x09{"uDEC"        , { {1} }, INDEXED    });
+        opcode_map_undocumented.emplace(0x71, Opcode_6x09{"uNEG"        , { {2} }, EXTENDED   });
+        opcode_map_undocumented.emplace(0x72, Opcode_6x09{"uNEG/COM"    , { {2} }, EXTENDED   });
+        opcode_map_undocumented.emplace(0x75, Opcode_6x09{"uLSR"        , { {2} }, EXTENDED   });
+        opcode_map_undocumented.emplace(0x7B, Opcode_6x09{"uDEC"        , { {2} }, EXTENDED   });
+        opcode_map_undocumented.emplace(0x87, Opcode_6x09{"u$87"        , { {1} }, IMMEDIATE  });
+        opcode_map_undocumented.emplace(0x8F, Opcode_6x09{"uSTX"        , { {2} }, IMMEDIATE  });
+        opcode_map_undocumented.emplace(0xC7, Opcode_6x09{"u$C7"        , { {1} }, IMMEDIATE  });
+        opcode_map_undocumented.emplace(0xCF, Opcode_6x09{"uSTU"        , { {2} }, IMMEDIATE  });
+        opcode_map_undocumented.emplace(0xCD, Opcode_6x09{"uHCF"        , {     }, INHERENT   });
+    }
+
     // 1-byte opcodes
     if (opcode_map.empty())
     {
@@ -230,9 +291,9 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map.emplace(0xAD, Opcode_6x09{"JSR",  { {1} }, INDEXED   });
         opcode_map.emplace(0xBD, Opcode_6x09{"JSR",  { {2} }, EXTENDED  });
         // LBRA _________________________________________________________________________
-        opcode_map.emplace(0x16, Opcode_6x09{"LBRA", { {1} }, RELATIVE  });
+        opcode_map.emplace(0x16, Opcode_6x09{"LBRA", { {2} }, RELATIVE  });
         // LBSR _________________________________________________________________________
-        opcode_map.emplace(0x17, Opcode_6x09{"LBSR", { {1} }, RELATIVE  });
+        opcode_map.emplace(0x17, Opcode_6x09{"LBSR", { {2} }, RELATIVE  });
         // LDA __________________________________________________________________________
         opcode_map.emplace(0x86, Opcode_6x09{"LDA",  { {1} }, IMMEDIATE });
         opcode_map.emplace(0x96, Opcode_6x09{"LDA",  { {1} }, DIRECT    });
@@ -261,13 +322,13 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map.emplace(0xAE, Opcode_6x09{"LDX",  { {1} }, INDEXED   });
         opcode_map.emplace(0xBE, Opcode_6x09{"LDX",  { {2} }, EXTENDED  });
         // LEAS _________________________________________________________________________
-        opcode_map.emplace(0x32, Opcode_6x09{"LEAS", { {2} }, INDEXED   });
+        opcode_map.emplace(0x32, Opcode_6x09{"LEAS", { {1} }, INDEXED   });
         // LEAU _________________________________________________________________________
-        opcode_map.emplace(0x33, Opcode_6x09{"LEAU", { {2} }, INDEXED   });
+        opcode_map.emplace(0x33, Opcode_6x09{"LEAU", { {1} }, INDEXED   });
         // LEAX _________________________________________________________________________
-        opcode_map.emplace(0x30, Opcode_6x09{"LEAX", { {2} }, INDEXED   });
+        opcode_map.emplace(0x30, Opcode_6x09{"LEAX", { {1} }, INDEXED   });
         // LEAY _________________________________________________________________________
-        opcode_map.emplace(0x31, Opcode_6x09{"LEAY", { {2} }, INDEXED   });
+        opcode_map.emplace(0x31, Opcode_6x09{"LEAY", { {1} }, INDEXED   });
         // LSLA _________________________________________________________________________
         opcode_map.emplace(0x48, Opcode_6x09{"LSLA", {     }, INHERENT  });
         // LSLB _________________________________________________________________________
@@ -277,13 +338,13 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map.emplace(0x68, Opcode_6x09{"LSL",  { {1} }, INDEXED   });
         opcode_map.emplace(0x78, Opcode_6x09{"LSL",  { {2} }, EXTENDED  });
         // LSRA _________________________________________________________________________
-        opcode_map.emplace(0x48, Opcode_6x09{"LSRA", {     }, INHERENT  });
+        opcode_map.emplace(0x44, Opcode_6x09{"LSRA", {     }, INHERENT  });
         // LSRB _________________________________________________________________________
-        opcode_map.emplace(0x58, Opcode_6x09{"LSRB", {     }, INHERENT  });
+        opcode_map.emplace(0x54, Opcode_6x09{"LSRB", {     }, INHERENT  });
         // LSR __________________________________________________________________________
-        opcode_map.emplace(0x08, Opcode_6x09{"LSR",  { {1} }, DIRECT    });
-        opcode_map.emplace(0x68, Opcode_6x09{"LSR",  { {1} }, INDEXED   });
-        opcode_map.emplace(0x78, Opcode_6x09{"LSR",  { {2} }, EXTENDED  });
+        opcode_map.emplace(0x04, Opcode_6x09{"LSR",  { {1} }, DIRECT    });
+        opcode_map.emplace(0x64, Opcode_6x09{"LSR",  { {1} }, INDEXED   });
+        opcode_map.emplace(0x74, Opcode_6x09{"LSR",  { {2} }, EXTENDED  });
         // MUL __________________________________________________________________________
         opcode_map.emplace(0x3D, Opcode_6x09{"MUL",  {     }, INHERENT  });
         // NEGA _________________________________________________________________________
@@ -404,9 +465,11 @@ Disassembler_6x09::Disassembler_6x09()
         // TSTB _________________________________________________________________________
         opcode_map.emplace(0x5D, Opcode_6x09{"TSTB", {     }, INHERENT  });
         // TST __________________________________________________________________________
-        opcode_map.emplace(0x9F, Opcode_6x09{"TST",  { {1} }, DIRECT    });
-        opcode_map.emplace(0xAF, Opcode_6x09{"TST",  { {1} }, INDEXED   });
-        opcode_map.emplace(0xBF, Opcode_6x09{"TST",  { {2} }, EXTENDED  });
+        opcode_map.emplace(0x0D, Opcode_6x09{"TST",  { {1} }, DIRECT    });
+        opcode_map.emplace(0x6D, Opcode_6x09{"TST",  { {1} }, INDEXED   });
+        opcode_map.emplace(0x7D, Opcode_6x09{"TST",  { {2} }, EXTENDED  });
+
+        opcode_map.merge( opcode_map_undocumented );
     }
 
     // Page 2 opcodes (0x10??)
@@ -586,10 +649,14 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map2.emplace(0x90, Opcode_6x09{"SUBW", { {1} }, DIRECT    });
         opcode_map2.emplace(0xA0, Opcode_6x09{"SUBW", { {1} }, INDEXED   });
         opcode_map2.emplace(0xB0, Opcode_6x09{"SUBW", { {2} }, EXTENDED  });
+        // SWI2 _________________________________________________________________________
+        opcode_map2.emplace(0x3F, Opcode_6x09{"SWI2", {     }, INHERENT  });
         // TSTD (6309)___________________________________________________________________
         opcode_map2.emplace(0x4D, Opcode_6x09{"TSTD", {     }, INHERENT  });
         // TSTW (6309)___________________________________________________________________
         opcode_map2.emplace(0x5D, Opcode_6x09{"TSTW", {     }, INHERENT  });
+
+        opcode_map2.merge( opcode_map_undocumented );
     }
 
     // Page 3 opcodes (0x11??)
@@ -714,6 +781,8 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map3.emplace(0xF0, Opcode_6x09{"SUBF", { {2} }, EXTENDED  });
         // SUBR (6309)___________________________________________________________________
         opcode_map3.emplace(0x32, Opcode_6x09{"SUBR", { {1} }, IMMEDIATE });
+        // SWI3 _________________________________________________________________________
+        opcode_map3.emplace(0x3F, Opcode_6x09{"SWI3", {     }, INHERENT  });
         // TSTE (6309)___________________________________________________________________
         opcode_map3.emplace(0x4D, Opcode_6x09{"TSTE", {     }, INHERENT  });
         // TSTF (6309)___________________________________________________________________
@@ -726,196 +795,11 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map3.emplace(0x3A, Opcode_6x09{"TFM",  { {1} }, IMMEDIATE });
         // *TFM (6309)____________________________________________________________________
         opcode_map3.emplace(0x3B, Opcode_6x09{"TFM",  { {1} }, IMMEDIATE });
+
+        opcode_map3.merge( opcode_map_undocumented );
     }
 
     // * means need for special parameter formatting
-    // Add page 2 and 3 opcodes. They are the two-byte opcodes starting with 10 and 11.
-    // CMPD,CMPS,CMPU,CMPW(6309),CMPY
-}
-
-/*
-int main() {
-    int hexValue = 0x1A3; // Example hex number
-
-    ss << std::uppercase << std::setw(4) << std::setfill('0') << std::hex << hexValue;
-
-    std::cout << "Formatted hex: " << ss.str() << std::endl;
-
-    return 0;
-}
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <vector>
-
-
-int main() {
-    std::vector<std::string> words = {"Apple", "Banana", "Cherry", "Date"};
-    int maxWidth = 10;
-
-    std::stringstream ss;
-    for (const auto& word : words) {
-        ss << std::left << std::setw(maxWidth) << std::setfill(' ') << word << "\n";
-    }
-
-    std::string formattedOutput = ss.str();
-    std::cout << "Buffered Output:\n" << formattedOutput;
-
-    return 0;
-}
-
- // Reset manipulators by switching back to default mode
- ss << std::dec << std::setfill(' ') << std::setw(0);
-*/
-
-void Disassembler_6x09::FormatParameter(size_t _pc, unsigned char _opcode, size_t _param, unsigned char _paramSize, Opcode_6x09_Addressing _addressingMode, std::string &_dst, std::string &_dstColors)
-{
-    std::stringstream ss;
-    _dstColors.clear();
-    bool isSpecialCase = false;
-    // Special cases
-    switch (_opcode)
-    {
-    case 0x1E: // EXG. IMMEDIATE, has only one parameter.
-    {
-        isSpecialCase = true;
-        unsigned char reg1 = _param & 0x0F;
-        unsigned char reg2 = (_param & 0xF0) >> 4;
-        ss << EXG_TFR_Registers[reg1] << "," << EXG_TFR_Registers[reg2];
-        _dstColors.append(EXG_TFR_Registers[reg1].length(), COLOR_REGISTER);
-        _dstColors.append(1, COLOR_TEXT);
-        _dstColors.append(EXG_TFR_Registers[reg2].length(), COLOR_REGISTER);
-    }
-    break;
-    case 0x34: // PSHS, PSHU, PULS, PULU. IMMEDIATE, only one parameter.
-    case 0x35:
-    case 0x36:
-    case 0x37:
-    {
-        isSpecialCase = true;
-        uint8_t mask = 0x01;
-        for (uint8_t reg = 0; reg < 8; ++reg)
-        {
-            if (0 != (_param & (mask << reg)))
-            {
-                ss << (_opcode == 0x34 || _opcode == 0x35 ? PSHS_Registers[reg] : PSHU_Registers[reg]) << ",";
-                _dstColors.append(PSHS_Registers[reg].length(), COLOR_REGISTER);
-                _dstColors.append(1, COLOR_TEXT);
-            }
-        }
-
-        // Clear last comma
-        std::string tmpStr = ss.str();
-        if (!tmpStr.empty())
-        {
-            tmpStr.pop_back();
-            _dstColors.pop_back();
-            ss.str(tmpStr);
-            ss.clear();
-        }
-    }
-    break;
-    }
-
-    if (!isSpecialCase)
-    {
-        switch (_addressingMode)
-        {
-        case IMMEDIATE:
-        {
-            ss << "#$" << std::uppercase << std::setw(_paramSize * 2) << std::setfill('0') << std::hex << _param;
-            _dstColors.append(2, COLOR_TEXT);
-            _dstColors.append(_paramSize * 2, COLOR_NUMBER);
-        }
-        break;
-        case DIRECT:
-        {
-            ss << "$(DP)" << std::uppercase << std::setw(_paramSize * 2) << std::setfill('0') << std::hex << _param;
-            _dstColors.append(2, COLOR_TEXT);
-            _dstColors.append(2, COLOR_REGISTER);
-            _dstColors.append(1, COLOR_TEXT);
-            _dstColors.append(_paramSize * 2, COLOR_NUMBER);
-        }
-        break;
-        case EXTENDED:
-        {
-            ss << "$" << std::uppercase << std::setw(_paramSize * 2) << std::setfill('0') << std::hex << _param;
-            _dstColors.append(1, COLOR_TEXT);
-            _dstColors.append(_paramSize * 2, COLOR_NUMBER);
-        }
-        break;
-        case RELATIVE:
-        {
-            size_t newPC = _pc;
-            if (_paramSize == 1)
-            {
-                newPC += static_cast<int>(static_cast<int8_t>(_param));
-                ss << "$" << std::uppercase << std::setw(4) << std::setfill('0') << std::hex << newPC;
-                _dstColors.append(1, COLOR_TEXT);
-                _dstColors.append(4, COLOR_NUMBER);
-            }
-            else if (_paramSize == 2)
-            {
-                newPC += static_cast<int>(static_cast<int16_t>(_param));
-                ss << "$" << std::uppercase << std::setw(4) << std::setfill('0') << std::hex << newPC;
-                _dstColors.append(1, COLOR_TEXT);
-                _dstColors.append(4, COLOR_NUMBER);
-            }
-            else
-            {
-                std::string badParamSize = "Unsupported parameter size!";
-                ss << badParamSize;
-                _dstColors.append(badParamSize.length(), COLOR_ERROR);
-            }
-        }
-        break;
-        case INDEXED:
-        {
-            // Lets assume they have only one param for now...
-            uint8_t postByte = _param & 0xFF;
-            uint8_t pbRegister = (postByte & POSTBYTE_REGISTER_MASK) >> 5;
-            uint8_t pbOperation = (postByte & POSTBYTE_OP_MASK);
-
-            if( POSTBYTE_MODE_DIRECT == (postByte & POSTBYTE_MODE_MASK) )
-            {
-                switch( pbOperation )
-                {
-                    case POSTBYTE_OP_AUTOINCDECFROMREG:
-                    {
-                        ss << "," << Postbyte_Registers[pbRegister];
-                        _dstColors.append(1, COLOR_TEXT);
-                        _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        ss << Postbyte_AutoIncDecFromReg[postByte & 0x03];
-                        _dstColors.append(Postbyte_AutoIncDecFromReg[postByte & 0x03].length(), COLOR_TEXT);
-
-                    }
-                    break;
-                    case POSTBYTE_OP_CONSTOFFSETFROMPC:
-                    {
-                        // fetch next byte/word
-                        //ss << 
-                    }
-                    break;
-                    default:
-                    break;
-                }
-            }
-            else
-            {
-                ss << "[," << Postbyte_Registers[pbRegister] << "]";
-                _dstColors.append(2, COLOR_TEXT);
-                _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                _dstColors.append(1, COLOR_TEXT);
-            }
-    }
-        break;
-        default:
-            ss << "?>" << std::setw(_paramSize * 2) << std::setfill('0') << std::hex << _param;
-            break;
-        }
-    }
-
-    _dst = ss.str();
 }
 
 size_t Disassembler_6x09::ReadParameter(const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize)
@@ -935,7 +819,7 @@ size_t Disassembler_6x09::ReadParameter(const std::vector<unsigned char> _data, 
     return retVal;
 }
 
-void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _pc, std::stringstream& _ss, std::string& _dstColors)
+void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _execAddress, std::stringstream& _ss, std::string& _dstColors)
 {
     if( _opcode.params.empty() )
     {
@@ -989,6 +873,9 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
             {
                 tmpStr.pop_back();
                 _dstColors.pop_back();
+                // Note: Assigning tmpStr directly to _ss.str assigns the string back but causes the new data
+                //       added to the stringstream to overwrite it from the beginning instead of appending it.
+                //       The workaround is to assign the empty string and then inserting the contents back.
                 _ss.str("");
                 _ss.clear();
                 _ss << tmpStr;
@@ -1001,96 +888,400 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
     {
         switch (_opcode.addressing)
         {
-        case IMMEDIATE:
-        {
-            _ss << "#$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
-            _dstColors.append(2, COLOR_TEXT);
-            _dstColors.append(paramSize * 2, COLOR_NUMBER);
-        }
-        break;
-        case DIRECT:
-        {
-            _ss << "$(DP)" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
-            _dstColors.append(2, COLOR_TEXT);
-            _dstColors.append(2, COLOR_REGISTER);
-            _dstColors.append(1, COLOR_TEXT);
-            _dstColors.append(paramSize * 2, COLOR_NUMBER);
-        }
-        break;
-        case EXTENDED:
-        {
-            _ss << "$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
-            _dstColors.append(1, COLOR_TEXT);
-            _dstColors.append(paramSize * 2, COLOR_NUMBER);
-        }
-        break;
-        case RELATIVE:
-        {
-            size_t newPC = _pc;
-            if (paramSize == 1)
+            case INHERENT:break;
+            case IMMEDIATE:
             {
-                newPC += static_cast<int>(static_cast<int8_t>(param));
-                _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                _ss << "#$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
+                _dstColors.append(2, COLOR_TEXT);
+                _dstColors.append(paramSize * 2, COLOR_NUMBER);
+            }
+            break;
+            case DIRECT:
+            {
+                _ss << "$(DP)" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
+                _dstColors.append(2, COLOR_TEXT);
+                _dstColors.append(2, COLOR_REGISTER);
                 _dstColors.append(1, COLOR_TEXT);
-                _dstColors.append(4, COLOR_NUMBER);
+                _dstColors.append(paramSize * 2, COLOR_NUMBER);
             }
-            else if (paramSize == 2)
+            break;
+            case EXTENDED:
             {
-                newPC += static_cast<int>(static_cast<int16_t>(param));
-                _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                _ss << "$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
                 _dstColors.append(1, COLOR_TEXT);
-                _dstColors.append(4, COLOR_NUMBER);
+                _dstColors.append(paramSize * 2, COLOR_NUMBER);
             }
-            else
+            break;
+            case RELATIVE:
             {
-                std::string badParamSize = "Unsupported parameter size!";
-                _ss << badParamSize;
-                _dstColors.append(badParamSize.length(), COLOR_ERROR);
-            }
-        }
-        break;
-        case INDEXED:
-        {
-            // Lets assume they have only one param for now...
-            uint8_t postByte = param & 0xFF;
-            uint8_t pbRegister = (postByte & POSTBYTE_REGISTER_MASK) >> 5;
-            uint8_t pbOperation = (postByte & POSTBYTE_OP_MASK);
-
-            if( POSTBYTE_MODE_DIRECT == (postByte & POSTBYTE_MODE_MASK) )
-            {
-                switch( pbOperation )
+                size_t newPC = _pos + _execAddress;
+                if (paramSize == 1)
                 {
-                    case POSTBYTE_OP_AUTOINCDECFROMREG:
-                    {
-                        _ss << "," << Postbyte_Registers[pbRegister];
-                        _dstColors.append(1, COLOR_TEXT);
-                        _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        _ss << Postbyte_AutoIncDecFromReg[postByte & 0x03];
-                        _dstColors.append(Postbyte_AutoIncDecFromReg[postByte & 0x03].length(), COLOR_TEXT);
-
-                    }
-                    break;
-                    case POSTBYTE_OP_CONSTOFFSETFROMPC:
-                    {
-                        // fetch next byte/word
-                        //ss << 
-                    }
-                    break;
-                    default:
-                    break;
+                    newPC += static_cast<int>(static_cast<int8_t>(param));
+                    _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                    _dstColors.append(1, COLOR_TEXT);
+                    _dstColors.append(4, COLOR_NUMBER);
+                }
+                else if (paramSize == 2)
+                {
+                    newPC += static_cast<int>(static_cast<int16_t>(param));
+                    _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                    _dstColors.append(1, COLOR_TEXT);
+                    _dstColors.append(4, COLOR_NUMBER);
+                }
+                else
+                {
+                    std::string badParamSize = "Unsupported parameter size!";
+                    _ss << badParamSize;
+                    _dstColors.append(badParamSize.length(), COLOR_ERROR);
                 }
             }
-            else
+            break;
+            case INDEXED:
             {
-                _ss << "[," << Postbyte_Registers[pbRegister] << "]";
-                _dstColors.append(2, COLOR_TEXT);
-                _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                _dstColors.append(1, COLOR_TEXT);
+                // Get the postbyte
+                uint8_t postByte = param & 0xFF;
+                uint8_t pbRegister = (postByte & POSTBYTE_REGISTER_MASK) >> 5;
+                uint8_t pbOperation = (postByte & POSTBYTE_OP_MASK);
+
+                // Special case: Constant Offset from Register
+                if( 0 == (postByte & POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT) )
+                {
+                    // TODO: Get the proper twos complement of the 5 bit offset
+                    _ss << "$" << std::setw(2) << std::setfill('0') << std::right << std::hex << (unsigned int)(postByte & 0x1F) << "," << Postbyte_Registers[pbRegister];
+                    _dstColors.append(1, COLOR_TEXT);
+                    _dstColors.append(2, COLOR_NUMBER);
+                    _dstColors.append(1, COLOR_TEXT);
+                    _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                    break;
+                }
+
+                // Following the table at https://www.maddes.net/m6809pm/appendix_f.htm#tabF-2
+                bool isNonIndirect = (POSTBYTE_MODE_NONINDIRECT == (postByte & POSTBYTE_MODE_MASK));
+
+                // Non Indirect
+                if( isNonIndirect )
+                {
+                    switch( pbOperation )
+                    {
+                        ////////////////////////////////
+                        // Constant Offset from Register
+                        ////////////////////////////////
+                        // 1) No offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_NOOFFSET:
+                        {
+                            _ss << "," << Postbyte_Registers[pbRegister];
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        // 2) 5-bit offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT:
+                        break;
+                        // 3) 8-bit offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_8BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos, 1);
+                            ++_pos;
+
+                            std::string offsetStr = std::to_string( TwosComplement( offset, 1) );
+                            _ss << offsetStr << "," << Postbyte_Registers[pbRegister];
+                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        // 4) 16-bit offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_16BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos, 2);
+                            ++_pos;
+
+                            std::string offsetStr = std::to_string( TwosComplement( offset, 2) );
+                            _ss << offsetStr << "," << Postbyte_Registers[pbRegister];
+                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        ///////////////////////////////////
+                        // Accumulator Offset from Register
+                        ///////////////////////////////////
+                        // 1) A - Register Offset
+                        case POSTBYTE_OP_ACCOFFSETFROMREG_A:
+                        {
+                            _ss << "A," << Postbyte_Registers[pbRegister];
+                            _dstColors.append(1, COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        // 2) B - Register Offset
+                        case POSTBYTE_OP_ACCOFFSETFROMREG_B:
+                        {
+                            _ss << "B," << Postbyte_Registers[pbRegister];
+                            _dstColors.append(1, COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        // 3) D - Register Offset
+                        case POSTBYTE_OP_ACCOFFSETFROMREG_D:
+                        {
+                            _ss << "D," << Postbyte_Registers[pbRegister];
+                            _dstColors.append(1, COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        ////////////////////////////////////
+                        // Auto Increment/Decrement Register
+                        ////////////////////////////////////
+                        // 1) Increment by 1
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC1:
+                        {
+                            _ss << "," << Postbyte_Registers[pbRegister] << "+";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        // 2) Increment by 2
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC2:
+                        {
+                            _ss << "," << Postbyte_Registers[pbRegister] << "++";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(2, COLOR_TEXT);
+                        }
+                        break;
+                        // 3) Decrement by 1
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC1:
+                        {
+                            _ss << ",-" << Postbyte_Registers[pbRegister];
+                            _dstColors.append(2, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        // 4) Decrement by 2
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC2:
+                        {
+                            _ss << ",--" << Postbyte_Registers[pbRegister];
+                            _dstColors.append(3, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                        }
+                        break;
+                        //////////////////////////
+                        // Constant Offset From PC
+                        //////////////////////////
+                        case POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos++, 1);
+                            size_t newPC  = _pos + _execAddress + TwosComplement( offset, 1);
+
+                            _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(4, COLOR_NUMBER);
+                        }
+                        break;
+                        case POSTBYTE_OP_CONSTOFFSETFROMPC_16BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos, 2);
+                            _pos += 2;
+                            size_t newPC  = (_pos + _execAddress + TwosComplement( offset, 2)) & 0xFFFF;
+
+                            _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(4, COLOR_NUMBER);
+                        }
+                        break;
+                        ////////////////////
+                        // Invalid operation
+                        ////////////////////
+                        default:
+                        {
+                            std::string invalidOP = "Invalid Operation";
+                            _ss << invalidOP;
+                            _dstColors.append( invalidOP.length(), COLOR_ERROR );
+                        }
+                        break;
+                    }
+                }
+                else // Indirect
+                {
+                    switch( pbOperation )
+                    {
+                        ////////////////////////////////
+                        // Constant Offset from Register
+                        ////////////////////////////////
+                        // 1) No offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_NOOFFSET:
+                        {
+                            _ss << "[," << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(2, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        // 2) 5-bit offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT:
+                        break;
+                        // 3) 8-bit offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_8BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos, 1);
+                            ++_pos;
+
+                            std::string offsetStr = std::to_string( TwosComplement( offset, 1) );
+                            _ss << "[" << offsetStr << "," << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        // 4) 16-bit offset
+                        case POSTBYTE_OP_CONSTOFFSETFROMREG_16BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos, 2);
+                            ++_pos;
+
+                            std::string offsetStr = std::to_string( TwosComplement( offset, 2) );
+                            _ss << "[" << offsetStr << "," << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        ///////////////////////////////////
+                        // Accumulator Offset from Register
+                        ///////////////////////////////////
+                        // 1) A - Register Offset
+                        case POSTBYTE_OP_ACCOFFSETFROMREG_A:
+                        {
+                            _ss << "[A," << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(1, COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        // 2) B - Register Offset
+                        case POSTBYTE_OP_ACCOFFSETFROMREG_B:
+                        {
+                            _ss << "[B," << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(1, COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        // 3) D - Register Offset
+                        case POSTBYTE_OP_ACCOFFSETFROMREG_D:
+                        {
+                            _ss << "[D," << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(1, COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        ////////////////////////////////////
+                        // Auto Increment/Decrement Register
+                        ////////////////////////////////////
+                        // 1) Increment by 1
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC1:
+                        {
+                            std::string notAllowed = "[,R+] Operation not allowed";
+                            _ss << notAllowed;
+                            _dstColors.append(notAllowed.length(), COLOR_ERROR);
+                        }
+                        break;
+                        // 2) Increment by 2
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC2:
+                        {
+                            _ss << "[," << Postbyte_Registers[pbRegister] << "++]";
+                            _dstColors.append(2, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(3, COLOR_TEXT);
+                        }
+                        break;
+                        // 3) Decrement by 1
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC1:
+                        {
+                            std::string notAllowed = "[,-R] Operation not allowed";
+                            _ss << notAllowed;
+                            _dstColors.append(notAllowed.length(), COLOR_ERROR);
+                        }
+                        break;
+                        // 4) Decrement by 2
+                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC2:
+                        {
+                            _ss << "[,--" << Postbyte_Registers[pbRegister] << "]";
+                            _dstColors.append(4, COLOR_TEXT);
+                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        //////////////////////////
+                        // Constant Offset From PC
+                        //////////////////////////
+                        case POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos++, 1);
+                            size_t newPC  = _pos + _execAddress + TwosComplement( offset, 1);
+
+                            _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
+                            _dstColors.append(2, COLOR_TEXT);
+                            _dstColors.append(4, COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        case POSTBYTE_OP_CONSTOFFSETFROMPC_16BIT:
+                        {
+                            size_t offset = ReadParameter(_data, _pos, 2);
+                            _pos += 2;
+                            size_t newPC = (_pos + _execAddress + TwosComplement( offset, 2)) & 0xFFFF;
+
+                            _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
+                            _dstColors.append(2, COLOR_TEXT);
+                            _dstColors.append(4, COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        ////////////////////
+                        // Extended Indirect
+                        ////////////////////
+                        case POSTBYTE_OP_EXTENDEDINDIRECT:
+                        {
+                            size_t newPC = ReadParameter(_data, _pos, 2);
+                            _pos += 2;
+
+                            _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
+                            _dstColors.append(2, COLOR_TEXT);
+                            _dstColors.append(4, COLOR_NUMBER);
+                            _dstColors.append(1, COLOR_TEXT);
+                        }
+                        break;
+                        ////////////////////
+                        // Invalid operation
+                        ////////////////////
+                        default:
+                        {
+                            std::string invalidOP = "Invalid Operation";
+                            _ss << invalidOP;
+                            _dstColors.append( invalidOP.length(), COLOR_ERROR );
+                        }
+                        break;
+                    }
+                }
             }
-    }
-        break;
-        default:
-            _ss << "?>" << std::setw(paramSize * 2) << std::setfill('0') << std::hex << param;
             break;
         }
     }
@@ -1134,24 +1325,7 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
             ss << std::left << std::setw(MAX_OPCODE_STR_WIDTH) << std::setfill(' ') << opcode->second.name << std::setw(0);
             _dstColors.append(MAX_OPCODE_STR_WIDTH, COLOR_OPCODE);
 
-            FormatParameters(opcode->second, _data, pos, pos + _execAddress, ss, _dstColors);
-/*if( ss.str().length() < startLen )
-{
-    printf("Peeeeeenk!");
-}*/
-            // TODO: make the for loop happen inside formatParameters function and rename it FormatOpcode.
-/*            ++pos;
-            ss << std::left << std::setw(MAX_OPCODE_STR_WIDTH) << std::setfill(' ') << opcode->second.name << std::setw(0);
-            _dstColors.append(MAX_OPCODE_STR_WIDTH, COLOR_OPCODE);
-
-            for (auto param : opcode->second.params)
-            {
-                paramValue = ReadParameter(_data, pos, param.size);
-                pos += param.size;
-                FormatParameter(pos + _execAddress, opcode->first, paramValue, param.size, opcode->second.addressing, paramBuffer, paramColorBuffer);
-                ss << paramBuffer;
-                _dstColors.append(paramColorBuffer);
-            }*/
+            FormatParameters(opcode->second, _data, pos, _execAddress, ss, _dstColors);
 
             ss << std::endl;
         }
@@ -1160,11 +1334,20 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
             ss << std::uppercase << std::setw(2) << std::setfill('0') << std::hex << (unsigned int)_data[pos] << " ?" << std::endl;
             _dstColors.append(2, COLOR_NUMBER);
             _dstColors.append(2, COLOR_ERROR);
-            //_dstColors.append("\n");
             ++pos;
         }
         _dstColors.append("\n");
     }
 
     _dst = ss.str();
+}
+
+int Disassembler_6x09::TwosComplement( size_t _param, uint8_t _paramSize )
+{
+    switch( _paramSize )
+    {
+        case 1: return static_cast<int>(static_cast<int8_t>(_param)); break;
+        case 2: return static_cast<int>(static_cast<int16_t>(_param)); break;
+        default: return 0;
+    }
 }

@@ -34,7 +34,7 @@ public:
     void Disassemble( const std::vector<unsigned char> _data, uint16_t _loadAddress, uint16_t _execAddress, std::string& _dst, std::string& _dstColors );
 
 private:
-    void   FormatParameter( size_t _pc, unsigned char _opcode, size_t _param, unsigned char _paramSize, Opcode_6x09_Addressing _addressingMode, std::string& _dst, std::string& _dstColors );
-    void   FormatParameters(const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _pc, std::stringstream &_dst, std::string &_dstColors);
+    void   FormatParameters(const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _execAddress, std::stringstream &_dst, std::string &_dstColors);
     size_t ReadParameter( const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize );
+    int    TwosComplement( size_t _param, uint8_t _paramSize );
 };
