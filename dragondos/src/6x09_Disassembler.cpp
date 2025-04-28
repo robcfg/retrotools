@@ -595,9 +595,9 @@ Disassembler_6x09::Disassembler_6x09()
         opcode_map2.emplace(0xAE, Opcode_6x09{"LDY",  { {1} }, INDEXED   });
         opcode_map2.emplace(0xBE, Opcode_6x09{"LDY",  { {2} }, EXTENDED  });
         // LDQ (6309)____________________________________________________________________
-        opcode_map2.emplace(0xDC, Opcode_6x09{"LDW",  { {1} }, DIRECT    });
-        opcode_map2.emplace(0xEC, Opcode_6x09{"LDW",  { {1} }, INDEXED   });
-        opcode_map2.emplace(0xFC, Opcode_6x09{"LDW",  { {2} }, EXTENDED  });
+        opcode_map2.emplace(0xDC, Opcode_6x09{"LDQ",  { {1} }, DIRECT    });
+        opcode_map2.emplace(0xEC, Opcode_6x09{"LDQ",  { {1} }, INDEXED   });
+        opcode_map2.emplace(0xFC, Opcode_6x09{"LDQ",  { {2} }, EXTENDED  });
         // LSLD (6309)___________________________________________________________________
         opcode_map2.emplace(0x48, Opcode_6x09{"LSLD", {     }, INHERENT  });
         // LSRD (6309)___________________________________________________________________
@@ -810,10 +810,12 @@ size_t Disassembler_6x09::ReadParameter(const std::vector<unsigned char> _data, 
     }
 
     size_t retVal = 0;
+    size_t mask = 0;
 
     for (int bytePos = _paramSize - 1; bytePos >= 0; --bytePos)
     {
         retVal |= _data[_pos++] << (bytePos * 8);
+        mask |= 0xFF << (bytePos * 8);
     }
 
     return retVal;
@@ -918,6 +920,7 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
                 if (paramSize == 1)
                 {
                     newPC += static_cast<int>(static_cast<int8_t>(param));
+                    newPC = newPC & 0xFFFF;
                     _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
                     _dstColors.append(1, COLOR_TEXT);
                     _dstColors.append(4, COLOR_NUMBER);
@@ -925,6 +928,7 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
                 else if (paramSize == 2)
                 {
                     newPC += static_cast<int>(static_cast<int16_t>(param));
+                    newPC = newPC & 0xFFFF;
                     _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
                     _dstColors.append(1, COLOR_TEXT);
                     _dstColors.append(4, COLOR_NUMBER);
@@ -948,7 +952,10 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
                 if( 0 == (postByte & POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT) )
                 {
                     // TODO: Get the proper twos complement of the 5 bit offset
-                    _ss << "$" << std::setw(2) << std::setfill('0') << std::right << std::hex << (unsigned int)(postByte & 0x1F) << "," << Postbyte_Registers[pbRegister];
+                    int num = postByte & 0x1F;
+                    num = -num & 0x1F;
+
+                    _ss << "$" << std::setw(2) << std::setfill('0') << std::right << std::hex << num/*(unsigned int)(postByte & 0x1F)*/ << "," << Postbyte_Registers[pbRegister];
                     _dstColors.append(1, COLOR_TEXT);
                     _dstColors.append(2, COLOR_NUMBER);
                     _dstColors.append(1, COLOR_TEXT);
@@ -1077,7 +1084,7 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
                         case POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT:
                         {
                             size_t offset = ReadParameter(_data, _pos++, 1);
-                            size_t newPC  = _pos + _execAddress + TwosComplement( offset, 1);
+                            size_t newPC  = (_pos + _execAddress + TwosComplement( offset, 1)) & 0xFFFF;
 
                             _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
                             _dstColors.append(1, COLOR_TEXT);
@@ -1235,7 +1242,7 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
                         case POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT:
                         {
                             size_t offset = ReadParameter(_data, _pos++, 1);
-                            size_t newPC  = _pos + _execAddress + TwosComplement( offset, 1);
+                            size_t newPC  = (_pos + _execAddress + TwosComplement( offset, 1)) & 0xFFFF;
 
                             _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
                             _dstColors.append(2, COLOR_TEXT);
