@@ -10,7 +10,8 @@ enum Opcode_6x09_Addressing
     INDEXED,
     EXTENDED,
     INHERENT,
-    RELATIVE
+    RELATIVE,
+    POSTBYTE
 };
 
 struct Opcode_6x09_Param
