@@ -27,6 +27,11 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page1_Opcodes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page2_Opcodes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page3_Opcodes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Undefined_Opcodes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Postbyte_Opcodes.cpp
 	)
 
 if( WIN32 )
@@ -49,6 +54,11 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page1_Opcodes.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page2_Opcodes.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page3_Opcodes.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Undefined_Opcodes.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Postbyte_Opcodes.cpp
     )
 
 if( APPLE )

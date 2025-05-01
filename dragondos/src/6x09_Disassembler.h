@@ -50,6 +50,6 @@ private:
     void Init_Page1_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
     void Init_Page2_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
     void Init_Page3_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
-    void Init_Undocumented_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
+    void Init_Undefined_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
     void Init_Postbyte_Opcode_Map( std::map<unsigned char, PostByte_6x09>& _map );
 };
