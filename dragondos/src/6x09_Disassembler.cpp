@@ -1,7 +1,6 @@
 #include "6x09_Disassembler.h"
 
 #include <iomanip>
-#include <map>
 #include <sstream>
 
 #define MAX_OPCODE_STR_WIDTH 10
@@ -47,11 +46,11 @@ static const uint8_t POSTBYTE_REGISTER_MASK = 0x60;
 #define POSTBYTE_REGISTER_U = 0x10
 #define POSTBYTE_REGISTER_S = 0x11
 
-static std::map<unsigned char, Opcode_6x09> opcode_map;
-static std::map<unsigned char, Opcode_6x09> opcode_map2;
-static std::map<unsigned char, Opcode_6x09> opcode_map3;
-static std::map<unsigned char, Opcode_6x09> opcode_map_undocumented;
-static std::map<unsigned char, Opcode_6x09> postbyte_map;
+static std::map<unsigned char, Opcode_6x09>     opcode_map;
+static std::map<unsigned char, Opcode_6x09>     opcode_map2;
+static std::map<unsigned char, Opcode_6x09>     opcode_map3;
+static std::map<unsigned char, Opcode_6x09>     opcode_map_undocumented;
+static std::map<unsigned char, PostByte_6x09>   postbyte_map;
 
 static std::string EXG_TFR_Registers[] = {"D", "X", "Y", "U", "S", "PC", "W", "V", "A", "B", "CC", "DP", "0", "0", "E", "F"};
 static std::string PSHS_Registers[] = {"CC", "A", "B", "DP", "X", "Y", "U", "PC"};
@@ -802,263 +801,263 @@ Disassembler_6x09::Disassembler_6x09()
 
     if (postbyte_map.empty())
     {
-        postbyte_map.emplace(0x00, Opcode_6x09{"0,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x01, Opcode_6x09{"1,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x02, Opcode_6x09{"2,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x03, Opcode_6x09{"3,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x04, Opcode_6x09{"4,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x05, Opcode_6x09{"5,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x06, Opcode_6x09{"6,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x07, Opcode_6x09{"7,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x08, Opcode_6x09{"8,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x09, Opcode_6x09{"9,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x0A, Opcode_6x09{"10,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x0B, Opcode_6x09{"11,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x0C, Opcode_6x09{"12,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x0D, Opcode_6x09{"13,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x0E, Opcode_6x09{"14,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x0F, Opcode_6x09{"15,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x10, Opcode_6x09{"-16,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x11, Opcode_6x09{"-15,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x12, Opcode_6x09{"-14,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x13, Opcode_6x09{"-13,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x14, Opcode_6x09{"-12,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x15, Opcode_6x09{"-11,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x16, Opcode_6x09{"-10,X"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x17, Opcode_6x09{"-9,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x18, Opcode_6x09{"-8,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x19, Opcode_6x09{"-7,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x1A, Opcode_6x09{"-6,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x1B, Opcode_6x09{"-5,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x1C, Opcode_6x09{"-4,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x1D, Opcode_6x09{"-3,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x1E, Opcode_6x09{"-2,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x1F, Opcode_6x09{"-1,X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x20, Opcode_6x09{"0,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x21, Opcode_6x09{"1,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x22, Opcode_6x09{"2,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x23, Opcode_6x09{"3,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x24, Opcode_6x09{"4,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x25, Opcode_6x09{"5,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x26, Opcode_6x09{"6,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x27, Opcode_6x09{"7,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x28, Opcode_6x09{"8,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x29, Opcode_6x09{"9,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x2A, Opcode_6x09{"10,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x2B, Opcode_6x09{"11,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x2C, Opcode_6x09{"12,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x2D, Opcode_6x09{"13,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x2E, Opcode_6x09{"14,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x2F, Opcode_6x09{"15,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x30, Opcode_6x09{"-16,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x31, Opcode_6x09{"-15,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x32, Opcode_6x09{"-14,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x33, Opcode_6x09{"-13,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x34, Opcode_6x09{"-12,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x35, Opcode_6x09{"-11,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x36, Opcode_6x09{"-10,Y"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x37, Opcode_6x09{"-9,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x38, Opcode_6x09{"-8,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x39, Opcode_6x09{"-7,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x3A, Opcode_6x09{"-6,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x3B, Opcode_6x09{"-5,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x3C, Opcode_6x09{"-4,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x3D, Opcode_6x09{"-3,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x3E, Opcode_6x09{"-2,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x3F, Opcode_6x09{"-1,Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x40, Opcode_6x09{"0,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x41, Opcode_6x09{"1,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x42, Opcode_6x09{"2,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x43, Opcode_6x09{"3,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x44, Opcode_6x09{"4,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x45, Opcode_6x09{"5,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x46, Opcode_6x09{"6,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x47, Opcode_6x09{"7,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x48, Opcode_6x09{"8,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x49, Opcode_6x09{"9,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x4A, Opcode_6x09{"10,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x4B, Opcode_6x09{"11,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x4C, Opcode_6x09{"12,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x4D, Opcode_6x09{"13,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x4E, Opcode_6x09{"14,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x4F, Opcode_6x09{"15,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x50, Opcode_6x09{"-16,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x51, Opcode_6x09{"-15,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x52, Opcode_6x09{"-14,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x53, Opcode_6x09{"-13,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x54, Opcode_6x09{"-12,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x55, Opcode_6x09{"-11,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x56, Opcode_6x09{"-10,U"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x57, Opcode_6x09{"-9,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x58, Opcode_6x09{"-8,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x59, Opcode_6x09{"-7,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x5A, Opcode_6x09{"-6,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x5B, Opcode_6x09{"-5,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x5C, Opcode_6x09{"-4,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x5D, Opcode_6x09{"-3,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x5E, Opcode_6x09{"-2,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x5F, Opcode_6x09{"-1,U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x60, Opcode_6x09{"0,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x61, Opcode_6x09{"1,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x62, Opcode_6x09{"2,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x63, Opcode_6x09{"3,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x64, Opcode_6x09{"4,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x65, Opcode_6x09{"5,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x66, Opcode_6x09{"6,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x67, Opcode_6x09{"7,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x68, Opcode_6x09{"8,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x69, Opcode_6x09{"9,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x6A, Opcode_6x09{"10,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x6B, Opcode_6x09{"11,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x6C, Opcode_6x09{"12,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x6D, Opcode_6x09{"13,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x6E, Opcode_6x09{"14,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x6F, Opcode_6x09{"15,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x70, Opcode_6x09{"-16,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x71, Opcode_6x09{"-15,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x72, Opcode_6x09{"-14,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x73, Opcode_6x09{"-13,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x74, Opcode_6x09{"-12,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x75, Opcode_6x09{"-11,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x76, Opcode_6x09{"-10,S"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x77, Opcode_6x09{"-9,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x78, Opcode_6x09{"-8,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x79, Opcode_6x09{"-7,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x7A, Opcode_6x09{"-6,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x7B, Opcode_6x09{"-5,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x7C, Opcode_6x09{"-4,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x7D, Opcode_6x09{"-3,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x7E, Opcode_6x09{"-2,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x7F, Opcode_6x09{"-1,S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x80, Opcode_6x09{",X+"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x81, Opcode_6x09{",X++"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x82, Opcode_6x09{",-X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x83, Opcode_6x09{",--X"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x84, Opcode_6x09{",X"     , {     }, POSTBYTE });
-        postbyte_map.emplace(0x85, Opcode_6x09{"B,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x86, Opcode_6x09{"A,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x87, Opcode_6x09{"E,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x88, Opcode_6x09{"?,X"    , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0x89, Opcode_6x09{"2,X"    , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0x8A, Opcode_6x09{"F,X"    , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0x8B, Opcode_6x09{"D,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x8C, Opcode_6x09{"?,PC"   , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0x8D, Opcode_6x09{"?,PC"   , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0x8E, Opcode_6x09{"W,X"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0x8F, Opcode_6x09{",W"     , {     }, POSTBYTE });
-        postbyte_map.emplace(0x90, Opcode_6x09{"[,W]"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x91, Opcode_6x09{"[,X++]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0x92, Opcode_6x09{"Illegal", {     }, POSTBYTE });
-        postbyte_map.emplace(0x93, Opcode_6x09{"[,--X]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0x94, Opcode_6x09{"[,X]"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0x95, Opcode_6x09{"[B,X]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x96, Opcode_6x09{"[A,X]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x97, Opcode_6x09{"[E,X]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x98, Opcode_6x09{"[?,X]"  , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0x99, Opcode_6x09{"[?,X]"  , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0x9A, Opcode_6x09{"[F,X]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x9B, Opcode_6x09{"[D,X]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x9C, Opcode_6x09{"[?,PC]" , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0x9D, Opcode_6x09{"[?,PC]" , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0x9E, Opcode_6x09{"[W,X]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0x9F, Opcode_6x09{"[?]"    , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xA0, Opcode_6x09{",Y+"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA1, Opcode_6x09{",Y++"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA2, Opcode_6x09{",-Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA3, Opcode_6x09{",--Y"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA4, Opcode_6x09{",Y"     , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA5, Opcode_6x09{"B,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA6, Opcode_6x09{"A,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA7, Opcode_6x09{"E,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xA8, Opcode_6x09{"?,Y"    , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xA9, Opcode_6x09{"?,Y"    , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xAA, Opcode_6x09{"F,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xAB, Opcode_6x09{"D,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xAC, Opcode_6x09{"?,PC"   , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xAD, Opcode_6x09{"?,PC"   , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xAE, Opcode_6x09{"W,Y"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xAF, Opcode_6x09{"?,W"    , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xB0, Opcode_6x09{"[?,W]"  , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xB1, Opcode_6x09{"[,Y++]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xB2, Opcode_6x09{"Illegal", {     }, POSTBYTE });
-        postbyte_map.emplace(0xB3, Opcode_6x09{"[,--Y]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xB4, Opcode_6x09{"[,Y]"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xB5, Opcode_6x09{"[B,Y]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xB6, Opcode_6x09{"[A,Y]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xB7, Opcode_6x09{"[E,Y]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xB8, Opcode_6x09{"[?,Y]"  , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xB9, Opcode_6x09{"[?,Y]"  , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xBA, Opcode_6x09{"[F,Y]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xBB, Opcode_6x09{"[D,Y]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xBC, Opcode_6x09{"[?,PC]" , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xBD, Opcode_6x09{"[?,PC]" , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xBE, Opcode_6x09{"[W,Y]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xBF, Opcode_6x09{"Illegal", {     }, POSTBYTE });
-        postbyte_map.emplace(0xC0, Opcode_6x09{",U+"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC1, Opcode_6x09{",U++"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC2, Opcode_6x09{",-U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC3, Opcode_6x09{",--U"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC4, Opcode_6x09{",U"     , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC5, Opcode_6x09{"B,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC6, Opcode_6x09{"A,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC7, Opcode_6x09{"E,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xC8, Opcode_6x09{"?,U"    , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xC9, Opcode_6x09{"?,U"    , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xCA, Opcode_6x09{"F,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xCB, Opcode_6x09{"D,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xCC, Opcode_6x09{"?,PC"   , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xCD, Opcode_6x09{"?,PC"   , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xCE, Opcode_6x09{"W,U"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xCF, Opcode_6x09{",W++"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD0, Opcode_6x09{"[,W++]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD1, Opcode_6x09{"[,U++]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD2, Opcode_6x09{"Illegal", {     }, POSTBYTE });
-        postbyte_map.emplace(0xD3, Opcode_6x09{"[,--U]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD4, Opcode_6x09{"[,U]"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD5, Opcode_6x09{"[B,U]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD6, Opcode_6x09{"[A,U]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD7, Opcode_6x09{"[E,U]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xD8, Opcode_6x09{"[?,U]"  , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xD9, Opcode_6x09{"[?,U]"  , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xDA, Opcode_6x09{"[F,U]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xDB, Opcode_6x09{"[D,U]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xDC, Opcode_6x09{"[?,PC]" , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xDD, Opcode_6x09{"[?,PC]" , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xDE, Opcode_6x09{"[W,U]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xDF, Opcode_6x09{"Illegal", { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xE0, Opcode_6x09{",S+"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE1, Opcode_6x09{",S++"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE2, Opcode_6x09{",-S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE3, Opcode_6x09{",--S"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE4, Opcode_6x09{",S"     , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE5, Opcode_6x09{"B,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE6, Opcode_6x09{"A,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE7, Opcode_6x09{"E,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xE8, Opcode_6x09{"?,S"    , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xE9, Opcode_6x09{"?,S"    , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xEA, Opcode_6x09{"F,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xEB, Opcode_6x09{"D,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xEC, Opcode_6x09{"?,PC"   , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xED, Opcode_6x09{"?,PC"   , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xEE, Opcode_6x09{"W,S"    , {     }, POSTBYTE });
-        postbyte_map.emplace(0xEF, Opcode_6x09{",--W"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF0, Opcode_6x09{"[,--W]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF1, Opcode_6x09{"[,S++]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF2, Opcode_6x09{"Illegal", {     }, POSTBYTE });
-        postbyte_map.emplace(0xF3, Opcode_6x09{"[,--S]" , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF4, Opcode_6x09{"[,S]"   , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF5, Opcode_6x09{"[B,S]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF6, Opcode_6x09{"[A,S]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF7, Opcode_6x09{"[E,S]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xF8, Opcode_6x09{"[?,S]"  , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xF9, Opcode_6x09{"[?,S]"  , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xFA, Opcode_6x09{"[F,S]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xFB, Opcode_6x09{"[D,S]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xFC, Opcode_6x09{"[?,PC]" , { {1} }, POSTBYTE });
-        postbyte_map.emplace(0xFD, Opcode_6x09{"[?,PC]" , { {2} }, POSTBYTE });
-        postbyte_map.emplace(0xFE, Opcode_6x09{"[W,S]"  , {     }, POSTBYTE });
-        postbyte_map.emplace(0xFF, Opcode_6x09{"Illegal", { {2} }, POSTBYTE });
-    }
+        postbyte_map.emplace(0x00, PostByte_6x09{"0,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x01, PostByte_6x09{"1,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x02, PostByte_6x09{"2,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x03, PostByte_6x09{"3,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x04, PostByte_6x09{"4,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x05, PostByte_6x09{"5,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x06, PostByte_6x09{"6,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x07, PostByte_6x09{"7,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x08, PostByte_6x09{"8,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x09, PostByte_6x09{"9,X"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x0A, PostByte_6x09{"10,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x0B, PostByte_6x09{"11,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x0C, PostByte_6x09{"12,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x0D, PostByte_6x09{"13,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x0E, PostByte_6x09{"14,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x0F, PostByte_6x09{"15,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x10, PostByte_6x09{"-16,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x11, PostByte_6x09{"-15,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x12, PostByte_6x09{"-14,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x13, PostByte_6x09{"-13,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x14, PostByte_6x09{"-12,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x15, PostByte_6x09{"-11,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x16, PostByte_6x09{"-10,X"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x17, PostByte_6x09{"-9,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x18, PostByte_6x09{"-8,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x19, PostByte_6x09{"-7,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x1A, PostByte_6x09{"-6,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x1B, PostByte_6x09{"-5,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x1C, PostByte_6x09{"-4,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x1D, PostByte_6x09{"-3,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x1E, PostByte_6x09{"-2,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x1F, PostByte_6x09{"-1,X"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x20, PostByte_6x09{"0,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x21, PostByte_6x09{"1,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x22, PostByte_6x09{"2,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x23, PostByte_6x09{"3,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x24, PostByte_6x09{"4,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x25, PostByte_6x09{"5,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x26, PostByte_6x09{"6,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x27, PostByte_6x09{"7,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x28, PostByte_6x09{"8,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x29, PostByte_6x09{"9,Y"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x2A, PostByte_6x09{"10,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x2B, PostByte_6x09{"11,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x2C, PostByte_6x09{"12,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x2D, PostByte_6x09{"13,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x2E, PostByte_6x09{"14,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x2F, PostByte_6x09{"15,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x30, PostByte_6x09{"-16,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x31, PostByte_6x09{"-15,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x32, PostByte_6x09{"-14,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x33, PostByte_6x09{"-13,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x34, PostByte_6x09{"-12,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x35, PostByte_6x09{"-11,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x36, PostByte_6x09{"-10,Y"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x37, PostByte_6x09{"-9,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x38, PostByte_6x09{"-8,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x39, PostByte_6x09{"-7,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x3A, PostByte_6x09{"-6,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x3B, PostByte_6x09{"-5,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x3C, PostByte_6x09{"-4,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x3D, PostByte_6x09{"-3,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x3E, PostByte_6x09{"-2,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x3F, PostByte_6x09{"-1,Y"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x40, PostByte_6x09{"0,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x41, PostByte_6x09{"1,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x42, PostByte_6x09{"2,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x43, PostByte_6x09{"3,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x44, PostByte_6x09{"4,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x45, PostByte_6x09{"5,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x46, PostByte_6x09{"6,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x47, PostByte_6x09{"7,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x48, PostByte_6x09{"8,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x49, PostByte_6x09{"9,U"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x4A, PostByte_6x09{"10,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x4B, PostByte_6x09{"11,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x4C, PostByte_6x09{"12,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x4D, PostByte_6x09{"13,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x4E, PostByte_6x09{"14,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x4F, PostByte_6x09{"15,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x50, PostByte_6x09{"-16,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x51, PostByte_6x09{"-15,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x52, PostByte_6x09{"-14,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x53, PostByte_6x09{"-13,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x54, PostByte_6x09{"-12,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x55, PostByte_6x09{"-11,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x56, PostByte_6x09{"-10,U"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x57, PostByte_6x09{"-9,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x58, PostByte_6x09{"-8,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x59, PostByte_6x09{"-7,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x5A, PostByte_6x09{"-6,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x5B, PostByte_6x09{"-5,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x5C, PostByte_6x09{"-4,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x5D, PostByte_6x09{"-3,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x5E, PostByte_6x09{"-2,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x5F, PostByte_6x09{"-1,U"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x60, PostByte_6x09{"0,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x61, PostByte_6x09{"1,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x62, PostByte_6x09{"2,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x63, PostByte_6x09{"3,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x64, PostByte_6x09{"4,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x65, PostByte_6x09{"5,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x66, PostByte_6x09{"6,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x67, PostByte_6x09{"7,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x68, PostByte_6x09{"8,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x69, PostByte_6x09{"9,S"    , "EAD"       , {     } });
+        postbyte_map.emplace(0x6A, PostByte_6x09{"10,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x6B, PostByte_6x09{"11,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x6C, PostByte_6x09{"12,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x6D, PostByte_6x09{"13,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x6E, PostByte_6x09{"14,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x6F, PostByte_6x09{"15,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x70, PostByte_6x09{"-16,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x71, PostByte_6x09{"-15,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x72, PostByte_6x09{"-14,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x73, PostByte_6x09{"-13,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x74, PostByte_6x09{"-12,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x75, PostByte_6x09{"-11,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x76, PostByte_6x09{"-10,S"  , "EEEAD"     , {     } });
+        postbyte_map.emplace(0x77, PostByte_6x09{"-9,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x78, PostByte_6x09{"-8,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x79, PostByte_6x09{"-7,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x7A, PostByte_6x09{"-6,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x7B, PostByte_6x09{"-5,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x7C, PostByte_6x09{"-4,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x7D, PostByte_6x09{"-3,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x7E, PostByte_6x09{"-2,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x7F, PostByte_6x09{"-1,S"   , "EEAD"      , {     } });
+        postbyte_map.emplace(0x80, PostByte_6x09{",X+"    , "ADA"       , {     } });
+        postbyte_map.emplace(0x81, PostByte_6x09{",X++"   , "ADAA"      , {     } });
+        postbyte_map.emplace(0x82, PostByte_6x09{",-X"    , "AAD"       , {     } });
+        postbyte_map.emplace(0x83, PostByte_6x09{",--X"   , "AAAD"      , {     } });
+        postbyte_map.emplace(0x84, PostByte_6x09{",X"     , "AD"        , {     } });
+        postbyte_map.emplace(0x85, PostByte_6x09{"B,X"    , "DAD"       , {     } });
+        postbyte_map.emplace(0x86, PostByte_6x09{"A,X"    , "DAD"       , {     } });
+        postbyte_map.emplace(0x87, PostByte_6x09{"E,X"    , "DAD"       , {     } });
+        postbyte_map.emplace(0x88, PostByte_6x09{"?,X"    , "AEEAD"     , { {1} } });
+        postbyte_map.emplace(0x89, PostByte_6x09{"?,X"    , "AEEEEAD"   , { {2} } });
+        postbyte_map.emplace(0x8A, PostByte_6x09{"F,X"    , "DAD"       , { {1} } });
+        postbyte_map.emplace(0x8B, PostByte_6x09{"D,X"    , "DAD"       , {     } });
+        postbyte_map.emplace(0x8C, PostByte_6x09{"?,PC"   , "AEEADD"    , { {1} } });
+        postbyte_map.emplace(0x8D, PostByte_6x09{"?,PC"   , "AEEEEADD"  , { {2} } });
+        postbyte_map.emplace(0x8E, PostByte_6x09{"W,X"    , "DAD"       , {     } });
+        postbyte_map.emplace(0x8F, PostByte_6x09{",W"     , "AD"        , {     } });
+        postbyte_map.emplace(0x90, PostByte_6x09{"[,W]"   , "AADA"      , {     } });
+        postbyte_map.emplace(0x91, PostByte_6x09{"[,X++]" , "AADAAA"    , {     } });
+        postbyte_map.emplace(0x92, PostByte_6x09{"Illegal", "BBBBBBB"   , {     } });
+        postbyte_map.emplace(0x93, PostByte_6x09{"[,--X]" , "AAAADA"    , {     } });
+        postbyte_map.emplace(0x94, PostByte_6x09{"[,X]"   , "AADA"      , {     } });
+        postbyte_map.emplace(0x95, PostByte_6x09{"[B,X]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0x96, PostByte_6x09{"[A,X]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0x97, PostByte_6x09{"[E,X]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0x98, PostByte_6x09{"[?,X]"  , "AAEEADA"   , { {1} } });
+        postbyte_map.emplace(0x99, PostByte_6x09{"[?,X]"  , "AAEEEEADA" , { {2} } });
+        postbyte_map.emplace(0x9A, PostByte_6x09{"[F,X]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0x9B, PostByte_6x09{"[D,X]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0x9C, PostByte_6x09{"[?,PC]" , "AAEEADDA"  , { {1} } });
+        postbyte_map.emplace(0x9D, PostByte_6x09{"[?,PC]" , "AAEEEEADDA", { {2} } });
+        postbyte_map.emplace(0x9E, PostByte_6x09{"[W,X]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0x9F, PostByte_6x09{"[?]"    , "AAEEEEA"   , { {2} } });
+        postbyte_map.emplace(0xA0, PostByte_6x09{",Y+"    , "ADA"       , {     } });
+        postbyte_map.emplace(0xA1, PostByte_6x09{",Y++"   , "ADAA"      , {     } });
+        postbyte_map.emplace(0xA2, PostByte_6x09{",-Y"    , "AAD"       , {     } });
+        postbyte_map.emplace(0xA3, PostByte_6x09{",--Y"   , "AAAD"      , {     } });
+        postbyte_map.emplace(0xA4, PostByte_6x09{",Y"     , "AD"        , {     } });
+        postbyte_map.emplace(0xA5, PostByte_6x09{"B,Y"    , "ADA"       , {     } });
+        postbyte_map.emplace(0xA6, PostByte_6x09{"A,Y"    , "ADA"       , {     } });
+        postbyte_map.emplace(0xA7, PostByte_6x09{"E,Y"    , "ADA"       , {     } });
+        postbyte_map.emplace(0xA8, PostByte_6x09{"?,Y"    , "AEEAD"     , { {1} } });
+        postbyte_map.emplace(0xA9, PostByte_6x09{"?,Y"    , "AEEEEAD"   , { {2} } });
+        postbyte_map.emplace(0xAA, PostByte_6x09{"F,Y"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xAB, PostByte_6x09{"D,Y"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xAC, PostByte_6x09{"?,PC"   , "AEEADD"    , { {1} } });
+        postbyte_map.emplace(0xAD, PostByte_6x09{"?,PC"   , "AEEADD"    , { {2} } });
+        postbyte_map.emplace(0xAE, PostByte_6x09{"W,Y"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xAF, PostByte_6x09{"?,W"    , "AEEEEAD"   , { {2} } });
+        postbyte_map.emplace(0xB0, PostByte_6x09{"[?,W]"  , "AAEEEEADA" , { {2} } });
+        postbyte_map.emplace(0xB1, PostByte_6x09{"[,Y++]" , "AADAAA"    , {     } });
+        postbyte_map.emplace(0xB2, PostByte_6x09{"Illegal", "BBBBBBB"   , {     } });
+        postbyte_map.emplace(0xB3, PostByte_6x09{"[,--Y]" , "AAAADA"    , {     } });
+        postbyte_map.emplace(0xB4, PostByte_6x09{"[,Y]"   , "AADA"      , {     } });
+        postbyte_map.emplace(0xB5, PostByte_6x09{"[B,Y]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xB6, PostByte_6x09{"[A,Y]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xB7, PostByte_6x09{"[E,Y]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xB8, PostByte_6x09{"[?,Y]"  , "AAEEADA"   , { {1} } });
+        postbyte_map.emplace(0xB9, PostByte_6x09{"[?,Y]"  , "AAEEEEADA" , { {2} } });
+        postbyte_map.emplace(0xBA, PostByte_6x09{"[F,Y]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xBB, PostByte_6x09{"[D,Y]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xBC, PostByte_6x09{"[?,PC]" , "AAEEADDA"  , { {1} } });
+        postbyte_map.emplace(0xBD, PostByte_6x09{"[?,PC]" , "AAEEEEADDA", { {2} } });
+        postbyte_map.emplace(0xBE, PostByte_6x09{"[W,Y]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xBF, PostByte_6x09{"Illegal", "BBBBBBB"   , {     } });
+        postbyte_map.emplace(0xC0, PostByte_6x09{",U+"    , "ADA"       , {     } });
+        postbyte_map.emplace(0xC1, PostByte_6x09{",U++"   , "ADAA"      , {     } });
+        postbyte_map.emplace(0xC2, PostByte_6x09{",-U"    , "AAD"       , {     } });
+        postbyte_map.emplace(0xC3, PostByte_6x09{",--U"   , "AAAD"      , {     } });
+        postbyte_map.emplace(0xC4, PostByte_6x09{",U"     , "AD"        , {     } });
+        postbyte_map.emplace(0xC5, PostByte_6x09{"B,U"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xC6, PostByte_6x09{"A,U"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xC7, PostByte_6x09{"E,U"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xC8, PostByte_6x09{"?,U"    , "AEEAD"     , { {1} } });
+        postbyte_map.emplace(0xC9, PostByte_6x09{"?,U"    , "AEEEEAD"   , { {2} } });
+        postbyte_map.emplace(0xCA, PostByte_6x09{"F,U"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xCB, PostByte_6x09{"D,U"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xCC, PostByte_6x09{"?,PC"   , "AEEADD"    , { {1} } });
+        postbyte_map.emplace(0xCD, PostByte_6x09{"?,PC"   , "AEEEEADD"  , { {2} } });
+        postbyte_map.emplace(0xCE, PostByte_6x09{"W,U"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xCF, PostByte_6x09{",W++"   , "ADAA"      , {     } });
+        postbyte_map.emplace(0xD0, PostByte_6x09{"[,W++]" , "AADAAA"    , {     } });
+        postbyte_map.emplace(0xD1, PostByte_6x09{"[,U++]" , "AADAAA"    , {     } });
+        postbyte_map.emplace(0xD2, PostByte_6x09{"Illegal", "BBBBBBB"   , {     } });
+        postbyte_map.emplace(0xD3, PostByte_6x09{"[,--U]" , "AAAADA"    , {     } });
+        postbyte_map.emplace(0xD4, PostByte_6x09{"[,U]"   , "AADA"      , {     } });
+        postbyte_map.emplace(0xD5, PostByte_6x09{"[B,U]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xD6, PostByte_6x09{"[A,U]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xD7, PostByte_6x09{"[E,U]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xD8, PostByte_6x09{"[?,U]"  , "AAEEADA"   , { {1} } });
+        postbyte_map.emplace(0xD9, PostByte_6x09{"[?,U]"  , "AAEEEEADA" , { {2} } });
+        postbyte_map.emplace(0xDA, PostByte_6x09{"[F,U]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xDB, PostByte_6x09{"[D,U]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xDC, PostByte_6x09{"[?,PC]" , "AAEEADDA"  , { {1} } });
+        postbyte_map.emplace(0xDD, PostByte_6x09{"[?,PC]" , "AAEEEEADDA", { {2} } });
+        postbyte_map.emplace(0xDE, PostByte_6x09{"[W,U]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xDF, PostByte_6x09{"Illegal", "BBBBBBB"   , { {2} } });
+        postbyte_map.emplace(0xE0, PostByte_6x09{",S+"    , "ADA"       , {     } });
+        postbyte_map.emplace(0xE1, PostByte_6x09{",S++"   , "ADAA"      , {     } });
+        postbyte_map.emplace(0xE2, PostByte_6x09{",-S"    , "AAD"       , {     } });
+        postbyte_map.emplace(0xE3, PostByte_6x09{",--S"   , "AAAD"      , {     } });
+        postbyte_map.emplace(0xE4, PostByte_6x09{",S"     , "AD"        , {     } });
+        postbyte_map.emplace(0xE5, PostByte_6x09{"B,S"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xE6, PostByte_6x09{"A,S"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xE7, PostByte_6x09{"E,S"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xE8, PostByte_6x09{"?,S"    , "AEEAD"     , { {1} } });
+        postbyte_map.emplace(0xE9, PostByte_6x09{"?,S"    , "AEEEEAD"   , { {2} } });
+        postbyte_map.emplace(0xEA, PostByte_6x09{"F,S"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xEB, PostByte_6x09{"D,S"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xEC, PostByte_6x09{"?,PC"   , "AEEADD"    , { {1} } });
+        postbyte_map.emplace(0xED, PostByte_6x09{"?,PC"   , "AEEEEADD"  , { {2} } });
+        postbyte_map.emplace(0xEE, PostByte_6x09{"W,S"    , "DAD"       , {     } });
+        postbyte_map.emplace(0xEF, PostByte_6x09{",--W"   , "AAAD"      , {     } });
+        postbyte_map.emplace(0xF0, PostByte_6x09{"[,--W]" , "AAAADA"    , {     } });
+        postbyte_map.emplace(0xF1, PostByte_6x09{"[,S++]" , "AADAAA"    , {     } });
+        postbyte_map.emplace(0xF2, PostByte_6x09{"Illegal", "BBBBBBB"   , {     } });
+        postbyte_map.emplace(0xF3, PostByte_6x09{"[,--S]" , "AAAADA"    , {     } });
+        postbyte_map.emplace(0xF4, PostByte_6x09{"[,S]"   , "AADA"      , {     } });
+        postbyte_map.emplace(0xF5, PostByte_6x09{"[B,S]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xF6, PostByte_6x09{"[A,S]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xF7, PostByte_6x09{"[E,S]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xF8, PostByte_6x09{"[?,S]"  , "AAEEADA"   , { {1} } });
+        postbyte_map.emplace(0xF9, PostByte_6x09{"[?,S]"  , "AAEEEEADA" , { {2} } });
+        postbyte_map.emplace(0xFA, PostByte_6x09{"[F,S]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xFB, PostByte_6x09{"[D,S]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xFC, PostByte_6x09{"[?,PC]" , "AAEEADDA"  , { {1} } });
+        postbyte_map.emplace(0xFD, PostByte_6x09{"[?,PC]" , "AAEEEEADDA", { {2} } });
+        postbyte_map.emplace(0xFE, PostByte_6x09{"[W,S]"  , "ADADA"     , {     } });
+        postbyte_map.emplace(0xFF, PostByte_6x09{"Illegal", "BBBBBBB"   , { {2} } });
+    }   
     // * means need for special parameter formatting
 }
 
@@ -1205,347 +1204,32 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
             {
                 // Get the postbyte
                 uint8_t postByte = param & 0xFF;
-                uint8_t pbRegister = (postByte & POSTBYTE_REGISTER_MASK) >> 5;
-                uint8_t pbOperation = (postByte & POSTBYTE_OP_MASK);
-
-                // Special case: Constant Offset from Register
-                if( 0 == (postByte & POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT) )
+                std::map<unsigned char, PostByte_6x09>::const_iterator postbyteIter = postbyte_map.find(postByte);
+                if( postbyteIter != postbyte_map.end() )
                 {
-                    int num = postByte & 0x1F;
-                    num = -num & 0x1F;
-
-                    _ss << "$" << std::setw(2) << std::setfill('0') << std::right << std::hex << num << "," << Postbyte_Registers[pbRegister];
-                    _dstColors.append(1, COLOR_TEXT);
-                    _dstColors.append(2, COLOR_NUMBER);
-                    _dstColors.append(1, COLOR_TEXT);
-                    _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                    break;
-                }
-
-                // Following the table at https://www.maddes.net/m6809pm/appendix_f.htm#tabF-2
-                bool isNonIndirect = (POSTBYTE_MODE_NONINDIRECT == (postByte & POSTBYTE_MODE_MASK));
-
-                // Non Indirect
-                if( isNonIndirect )
-                {
-                    switch( pbOperation )
+                    if( postbyteIter->second.params.empty() )
                     {
-                        ////////////////////////////////
-                        // Constant Offset from Register
-                        ////////////////////////////////
-                        // 1) No offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_NOOFFSET:
-                        {
-                            _ss << "," << Postbyte_Registers[pbRegister];
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        // 2) 5-bit offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT:
-                        break;
-                        // 3) 8-bit offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_8BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos, 1);
-                            ++_pos;
-
-                            std::string offsetStr = std::to_string( TwosComplement( offset, 1) );
-                            _ss << offsetStr << "," << Postbyte_Registers[pbRegister];
-                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        // 4) 16-bit offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_16BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos, 2);
-                            ++_pos;
-
-                            std::string offsetStr = std::to_string( TwosComplement( offset, 2) );
-                            _ss << offsetStr << "," << Postbyte_Registers[pbRegister];
-                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        ///////////////////////////////////
-                        // Accumulator Offset from Register
-                        ///////////////////////////////////
-                        // 1) A - Register Offset
-                        case POSTBYTE_OP_ACCOFFSETFROMREG_A:
-                        {
-                            _ss << "A," << Postbyte_Registers[pbRegister];
-                            _dstColors.append(1, COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        // 2) B - Register Offset
-                        case POSTBYTE_OP_ACCOFFSETFROMREG_B:
-                        {
-                            _ss << "B," << Postbyte_Registers[pbRegister];
-                            _dstColors.append(1, COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        // 3) D - Register Offset
-                        case POSTBYTE_OP_ACCOFFSETFROMREG_D:
-                        {
-                            _ss << "D," << Postbyte_Registers[pbRegister];
-                            _dstColors.append(1, COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        ////////////////////////////////////
-                        // Auto Increment/Decrement Register
-                        ////////////////////////////////////
-                        // 1) Increment by 1
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC1:
-                        {
-                            _ss << "," << Postbyte_Registers[pbRegister] << "+";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        // 2) Increment by 2
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC2:
-                        {
-                            _ss << "," << Postbyte_Registers[pbRegister] << "++";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(2, COLOR_TEXT);
-                        }
-                        break;
-                        // 3) Decrement by 1
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC1:
-                        {
-                            _ss << ",-" << Postbyte_Registers[pbRegister];
-                            _dstColors.append(2, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        // 4) Decrement by 2
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC2:
-                        {
-                            _ss << ",--" << Postbyte_Registers[pbRegister];
-                            _dstColors.append(3, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                        }
-                        break;
-                        //////////////////////////
-                        // Constant Offset From PC
-                        //////////////////////////
-                        case POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos++, 1);
-                            size_t newPC  = (_pos + _execAddress + TwosComplement( offset, 1)) & 0xFFFF;
-
-                            _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(4, COLOR_NUMBER);
-                        }
-                        break;
-                        case POSTBYTE_OP_CONSTOFFSETFROMPC_16BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos, 2);
-                            _pos += 2;
-                            size_t newPC  = (_pos + _execAddress + TwosComplement( offset, 2)) & 0xFFFF;
-
-                            _ss << "$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC;
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(4, COLOR_NUMBER);
-                        }
-                        break;
-                        ////////////////////
-                        // Invalid operation
-                        ////////////////////
-                        default:
-                        {
-                            std::string invalidOP = "Invalid Operation";
-                            _ss << invalidOP;
-                            _dstColors.append( invalidOP.length(), COLOR_ERROR );
-                        }
-                        break;
+                        _ss << postbyteIter->second.name;
                     }
-                }
-                else // Indirect
-                {
-                    switch( pbOperation )
+                    else
                     {
-                        ////////////////////////////////
-                        // Constant Offset from Register
-                        ////////////////////////////////
-                        // 1) No offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_NOOFFSET:
+                        size_t postbyteParam = ReadParameter(_data, _pos, postbyteIter->second.params[0].size);
+                        _pos += postbyteIter->second.params[0].size;
+                        size_t postbyteParamWidth = postbyteIter->second.params[0].size * 2;
+                        std::stringstream formatter;
+                        std::string postbyteStr = postbyteIter->second.name;
+                        formatter << "$" << std::hex << std::setfill('0') << std::right << std::setw(postbyteParamWidth) << std::uppercase << postbyteParam;
+                        size_t strPos = postbyteStr.find('?');
+                        if( strPos != std::string::npos )
                         {
-                            _ss << "[," << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(2, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
+                            _ss << postbyteStr.replace(strPos, 1, formatter.str());
                         }
-                        break;
-                        // 2) 5-bit offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_5BIT:
-                        break;
-                        // 3) 8-bit offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_8BIT:
+                        else
                         {
-                            size_t offset = ReadParameter(_data, _pos, 1);
-                            ++_pos;
-
-                            std::string offsetStr = std::to_string( TwosComplement( offset, 1) );
-                            _ss << "[" << offsetStr << "," << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
+                            _ss << postbyteIter->second.name;
                         }
-                        break;
-                        // 4) 16-bit offset
-                        case POSTBYTE_OP_CONSTOFFSETFROMREG_16BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos, 2);
-                            ++_pos;
-
-                            std::string offsetStr = std::to_string( TwosComplement( offset, 2) );
-                            _ss << "[" << offsetStr << "," << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(offsetStr.length(), COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        ///////////////////////////////////
-                        // Accumulator Offset from Register
-                        ///////////////////////////////////
-                        // 1) A - Register Offset
-                        case POSTBYTE_OP_ACCOFFSETFROMREG_A:
-                        {
-                            _ss << "[A," << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(1, COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        // 2) B - Register Offset
-                        case POSTBYTE_OP_ACCOFFSETFROMREG_B:
-                        {
-                            _ss << "[B," << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(1, COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        // 3) D - Register Offset
-                        case POSTBYTE_OP_ACCOFFSETFROMREG_D:
-                        {
-                            _ss << "[D," << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(1, COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        ////////////////////////////////////
-                        // Auto Increment/Decrement Register
-                        ////////////////////////////////////
-                        // 1) Increment by 1
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC1:
-                        {
-                            std::string notAllowed = "[,R+] Operation not allowed";
-                            _ss << notAllowed;
-                            _dstColors.append(notAllowed.length(), COLOR_ERROR);
-                        }
-                        break;
-                        // 2) Increment by 2
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_INC2:
-                        {
-                            _ss << "[," << Postbyte_Registers[pbRegister] << "++]";
-                            _dstColors.append(2, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(3, COLOR_TEXT);
-                        }
-                        break;
-                        // 3) Decrement by 1
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC1:
-                        {
-                            std::string notAllowed = "[,-R] Operation not allowed";
-                            _ss << notAllowed;
-                            _dstColors.append(notAllowed.length(), COLOR_ERROR);
-                        }
-                        break;
-                        // 4) Decrement by 2
-                        case POSTBYTE_OP_AUTOINCDECFROMREG_DEC2:
-                        {
-                            _ss << "[,--" << Postbyte_Registers[pbRegister] << "]";
-                            _dstColors.append(4, COLOR_TEXT);
-                            _dstColors.append(Postbyte_Registers[pbRegister].length(), COLOR_REGISTER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        //////////////////////////
-                        // Constant Offset From PC
-                        //////////////////////////
-                        case POSTBYTE_OP_CONSTOFFSETFROMPC_8BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos++, 1);
-                            size_t newPC  = (_pos + _execAddress + TwosComplement( offset, 1)) & 0xFFFF;
-
-                            _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
-                            _dstColors.append(2, COLOR_TEXT);
-                            _dstColors.append(4, COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        case POSTBYTE_OP_CONSTOFFSETFROMPC_16BIT:
-                        {
-                            size_t offset = ReadParameter(_data, _pos, 2);
-                            _pos += 2;
-                            size_t newPC = (_pos + _execAddress + TwosComplement( offset, 2)) & 0xFFFF;
-
-                            _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
-                            _dstColors.append(2, COLOR_TEXT);
-                            _dstColors.append(4, COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        ////////////////////
-                        // Extended Indirect
-                        ////////////////////
-                        case POSTBYTE_OP_EXTENDEDINDIRECT:
-                        {
-                            size_t newPC = ReadParameter(_data, _pos, 2);
-                            _pos += 2;
-
-                            _ss << "[$" << std::uppercase << std::setw(4) << std::right << std::setfill('0') << std::hex << newPC << "]";
-                            _dstColors.append(2, COLOR_TEXT);
-                            _dstColors.append(4, COLOR_NUMBER);
-                            _dstColors.append(1, COLOR_TEXT);
-                        }
-                        break;
-                        ////////////////////
-                        // Invalid operation
-                        ////////////////////
-                        default:
-                        {
-                            std::string invalidOP = "Invalid Operation";
-                            _ss << invalidOP;
-                            _dstColors.append( invalidOP.length(), COLOR_ERROR );
-                        }
-                        break;
                     }
+                    _dstColors.append(postbyteIter->second.colors);
                 }
             }
             break;
