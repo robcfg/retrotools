@@ -292,17 +292,37 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
     uint16_t pos = _execAddress - _loadAddress;
     uint8_t pagePrefix = 0x0;
 
-    while (pos < _data.size())
+    while( pos < _data.size() )
     {
-        size_t startLen = ss.str().length();
-        ss << std::uppercase << std::right << std::setw(4) << std::setfill('0') << std::hex << _loadAddress + pos << ' ';
-        _dstColors.append(5, COLOR_NUMBER);
-
         pagePrefix = 0x0;
         while( _data[pos] == OPCODE_PAGE_2 || _data[pos] == OPCODE_PAGE_3 )
         {
+            if( 0x00 != pagePrefix )
+            {
+                ss << std::uppercase << std::right << std::setw(4) << std::setfill('0') << std::hex << _loadAddress + pos - 1;
+                ss << " $" << std::setw(2) << std::setfill('0') << (unsigned int)pagePrefix << std::endl;
+                _dstColors.append(8, COLOR_NUMBER);
+                _dstColors.append("\n");
+            }
             pagePrefix = _data[pos++];
         }
+
+        if( pos >= _data.size() )
+        {
+            if( 0x00 != pagePrefix )
+            {
+                ss << std::uppercase << std::right << std::setw(4) << std::setfill('0') << std::hex << _loadAddress + pos - 1;
+                ss << " $" << std::setw(2) << std::setfill('0') << (unsigned int)pagePrefix << std::endl;
+                _dstColors.append(8, COLOR_NUMBER);
+                _dstColors.append("\n");
+            }
+            break;
+        }
+
+        uint16_t opcodeStartAddress = _loadAddress + ((0x00 != pagePrefix) ? pos-1 : pos);
+        size_t startLen = ss.str().length();
+        ss << std::uppercase << std::right << std::setw(4) << std::setfill('0') << std::hex << opcodeStartAddress << ' ';
+        _dstColors.append(5, COLOR_NUMBER);
 
         std::map<unsigned char, Opcode_6x09>::const_iterator opcode;
         switch (pagePrefix)
