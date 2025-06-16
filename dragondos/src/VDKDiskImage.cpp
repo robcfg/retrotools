@@ -103,6 +103,13 @@ bool CVDKDiskImage::Save( const std::string& _filename )
         fwrite( name, 1, uNameLen, pOut );
     }
 
+    // Write padding if header size exceeds fixed header portion plus name length
+    unsigned int paddingNeeded = vdkHead.header_len - (sizeof(vdkHead) + uNameLen);
+    while (paddingNeeded--)
+    {
+        fputc(0, pOut);
+    }
+
     // Save Data
     fwrite( dataBlock, 1, dataBlockSize, pOut );
 
