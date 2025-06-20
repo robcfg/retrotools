@@ -13,6 +13,7 @@
 #include "FileSystemInterface.h"
 #include "VDKDiskImage.h"
 #include "RawDiskImage.h"
+#include "JVCDiskImage.h"
 
 std::string PadFilename( const std::string& _name )
 {
@@ -22,29 +23,48 @@ std::string PadFilename( const std::string& _name )
     return retVal;
 }
 
-bool LoadImageAndFilesystem( std::string _filename, IDiskImageInterface* _img, IFilesystemInterface* _fs )
+bool LoadImageAndFilesystem( std::string _filename, IDiskImageInterface** _img, IFilesystemInterface* _fs )
 {
+    // Create appropriate disk image handler based on file extension
+    IDiskImageInterface* pDisk = nullptr;
+    std::string ext = _filename.substr(_filename.find_last_of(".") + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    
+    if (ext == "vdk") {
+        pDisk = new CVDKDiskImage();
+    } else if (ext == "jvc" || ext == "dsk") {
+        pDisk = new CJVCDiskImage();
+    } else {
+        std::cout << "Unsupported file extension: " << ext << std::endl;
+        std::cout << "Supported extensions are: .vdk for VDK format, .dsk or .jvc for DSK/JVC format" << std::endl;
+        return false;
+    }
+
     // Load disk image and set disk geometry
-    if( !_img->Load( _filename ) )
+    if( !pDisk->Load( _filename ) )
     {
         std::cout << "Failed to load " << _filename << std::endl;
+        delete pDisk;
         return false;
     }
 
     // Initialize filesystem
-    if( !_fs->Load( _img ) )
+    if( !_fs->Load( pDisk ) )
     {
         std::cout << "Unable to initialize " << _fs->GetFSName() << " file system from " << _filename << std::endl;
+        delete pDisk;
         return false;
     }
 
+    // Update the passed disk image pointer
+    *_img = pDisk;
     return true;
 }
 
 bool HelpCommand()
 {
     std::cout << "usage: dragondos <command> [<args> ...]" << std::endl << std::endl;
-    std::cout << "A command-line tool for managing DragonDOS disk images." << std::endl << std::endl;
+    std::cout << "A command-line tool for managing DragonDOS disk images (.vdk, .dsk or .jvc)." << std::endl << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "\thelp" << std::endl << "\t  Displays this help text." << std::endl << std::endl;
     std::cout << "\tinfo <filename>" << std::endl << "\t  Displays disk image information like type, free space and number of files." << std::endl << std::endl;
@@ -57,10 +77,11 @@ bool HelpCommand()
     std::cout << "\t  current directory." << std::endl;
     std::cout << "\t  If the optional flag -strip_binary_header is specified, binary type files" << std::endl;
     std::cout << "\t  will be extracted without the DragonDOS header." << std::endl << std::endl;
-    std::cout << "\tnew <filename> <size>" << std::endl;
+    std::cout << "\tnew <filename> <size> [<sides>]" << std::endl;
     std::cout << "\t  Creates a new, formatted disk image." << std::endl;
     std::cout << "\t  Size is the size of the new disk image in kilobytes." << std::endl;
-    std::cout << "\t  Valid values are 180, 360 and 720." << std::endl << std::endl;
+    std::cout << "\t  Valid values are 180, 360 and 720." << std::endl;
+    std::cout << "\t  The optional Sides parameter sets the number of sides/tracks for 360k disks" << std::endl << std::endl;
     std::cout << "\tdelete <filename> <index>" << std::endl;
     std::cout << "\t  Deletes a file from the disk image." << std::endl;
     std::cout << "\t  A backup copy of the disk image will be created." << std::endl << std::endl;
@@ -89,7 +110,7 @@ bool ListCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -105,6 +126,8 @@ bool ListCommand( const std::vector<std::string>& _args )
         std::cout << fileIdx << "\t" << PadFilename(fi.name) << "\t" <<  fs.GetFileSize(fileIdx) << std::hex;
         std::cout << "\tLoad: 0x" << ddosFile.GetLoadAddress() << "\tExec: 0x" << ddosFile.GetExecAddress() << std::dec << std::endl;
     }
+
+    delete img;
     
     return true;
 }
@@ -131,7 +154,7 @@ bool ExtractCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -199,6 +222,8 @@ bool ExtractCommand( const std::vector<std::string>& _args )
         std::cout << fileIdx << "\t" << PadFilename(fi.name) << "\t" << bytesWritten << " of " << fileData.size() << " bytes written." << std::endl;
     }
 
+    delete img;
+
     return true;
 }
 
@@ -217,7 +242,7 @@ bool InfoCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -225,10 +250,10 @@ bool InfoCommand( const std::vector<std::string>& _args )
         return false;
     } 
 
-    size_t sides = img.GetSidesNum();
-    size_t tracks = img.GetTracksNum();
-    size_t sectors = img.GetSectorsNum();
-    size_t sectorSize = img.GetSectorSize();
+    size_t sides = img->GetSidesNum();
+    size_t tracks = img->GetTracksNum();
+    size_t sectors = img->GetSectorsNum();
+    size_t sectorSize = img->GetSectorSize();
     size_t totalBytes = sides * tracks * sectors * sectorSize;
 
     std::cout << sides            << " sides"             << std::endl;
@@ -240,6 +265,22 @@ bool InfoCommand( const std::vector<std::string>& _args )
     std::cout << fs.GetFSName()   << " file system"       << std::endl;
     std::cout << fs.GetFilesNum() << " files"             << std::endl;
 
+    // Show image file type
+    if (auto vdk = dynamic_cast<CVDKDiskImage*>(img)) {
+        const char* vdkName = vdk->GetName();
+        if (vdkName && vdkName[0]) {
+            std::cout << "VDK disk image file - " << vdkName << std::endl;
+        } else {
+            std::cout << "VDK disk image file - unnamed" << std::endl;
+        }
+    } else if (auto jvc = dynamic_cast<CJVCDiskImage*>(img)) {
+        if (jvc->GetHeaderSize() > 0) {
+            std::cout << jvc->GetHeaderSize() << " byte header JVC/DSK disk image file" << std::endl;
+        } else {
+            std::cout << "Headerless disk image file" << std::endl;
+        }
+    }
+
     return true;
 }
 
@@ -248,53 +289,114 @@ bool NewCommand( const std::vector<std::string>& _args )
     // Check arguments
     if( _args.size() < 4 )
     {
-        std::cout << "The New command requires a filename and a disk size (180,360 or 720)." << std::endl << std::endl;
+        std::cout << "The New command requires a filename and a disk size (180,360 or 720). Optionally, you can specify sides (1 or 2)." << std::endl << std::endl;
         std::cout << "Examples:" << std::endl;
-        std::cout << "\tdragondos new blank.vdk 180" << std::endl << std::endl;
+        std::cout << "\tdragondos new blank.vdk 180" << std::endl;
+        std::cout << "\tdragondos new blank.dsk 360 1" << std::endl;
+        std::cout << "\tdragondos new blank.jvc 360 2" << std::endl << std::endl;
 
         HelpCommand();
 
         return false;
     }
 
-    CVDKDiskImage img;
+    // Check file extension
+    std::string ext = _args[2].substr(_args[2].find_last_of(".") + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    
+    if (ext != "vdk" && ext != "jvc" && ext != "dsk") {
+        std::cout << "Invalid file extension: " << ext << std::endl;
+        std::cout << "Supported extensions are: .vdk for VDK format, .jvc or .dsk for JVC/headerless format" << std::endl;
+        return false;
+    }
+
+    // Create appropriate disk image handler based on file extension
+    IDiskImageInterface* pDisk = nullptr;
+    if (ext == "vdk") {
+        pDisk = new CVDKDiskImage();
+    } else if (ext == "jvc") {
+        pDisk = new CJVCDiskImage();
+        ((CJVCDiskImage*)pDisk)->SetHeaderSize(5); // JVC_NORMAL_HEADER_SIZE
+    } else { // dsk
+        pDisk = new CJVCDiskImage();
+        ((CJVCDiskImage*)pDisk)->SetHeaderSize(0);
+    }
+
     CDragonDOS_FS fs;
 
-    // Create new disk image
+    // Parse disk size
     int disk_size = stoi(_args[3]);
+    int sides = -1;
+    if (_args.size() > 4) {
+        sides = atoi(_args[4].c_str());
+        if (sides != 1 && sides != 2) {
+            std::cout << "Invalid sides value (" << _args[4] << "). Sides must be 1 or 2." << std::endl;
+            delete pDisk;
+            return false;
+        }
+    }
+
+    // Geometry selection
     switch( disk_size )
     {
-        case 180:img.New( 40, 1, VDK_SECTORSPERTRACK);break;
-        case 360:img.New( 40, 2, VDK_SECTORSPERTRACK);break;
-        case 720:img.New( 80, 2, VDK_SECTORSPERTRACK);break;
+        case 180:
+            if (sides == -1 || sides == 1) {
+                pDisk->New(40, 1, VDK_SECTORSPERTRACK);
+            } else {
+                std::cout << "Invalid disk geometry" << std::endl;
+                delete pDisk;
+                return false;
+            }
+            break;
+        case 360:
+            if (sides == -1 || sides == 2) {
+                pDisk->New(40, 2, VDK_SECTORSPERTRACK);
+            } else if (sides == 1) {
+                pDisk->New(80, 1, VDK_SECTORSPERTRACK);
+            } else {
+                std::cout << "Invalid disk geometry" << std::endl;
+                delete pDisk;
+                return false;
+            }
+            break;
+        case 720:
+            if (sides == -1 || sides == 2) {
+                pDisk->New(80, 2, VDK_SECTORSPERTRACK);
+            } else {
+                std::cout << "Invalid disk geometry" << std::endl;
+                delete pDisk;
+                return false;
+            }
+            break;
         default:
-        {
             std::cout << "Invalid disk size (" << disk_size << ")." << std::endl;
             std::cout << "Please use either 180, 360 or 720 as size values." << std::endl << std::endl;
 
             HelpCommand();
 
+            delete pDisk;
             return false;
-        }
     }
 
     // Initialize filesystem
-    if( !fs.InitDisk( &img ) )
+    if( !fs.InitDisk( pDisk ) )
     {
         std::cout << "Couldn't initialize the file system on the new disk image." << std::endl << std::endl;
+        delete pDisk;
         return false;
     }
 
     // Save image
-    if( !img.Save(_args[2]) )
+    if( !pDisk->Save(_args[2]) )
     {
         std::cout << "Couldn't save new image file " << _args[2] << std::endl << std::endl;
+        delete pDisk;
         return false;
     }
 
+    delete pDisk;
     return true;
 }
-
 bool DeleteCommand( const std::vector<std::string>& _args )
 {
     // Check arguments
@@ -310,7 +412,7 @@ bool DeleteCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -370,7 +472,7 @@ bool InsertBasicCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -461,6 +563,8 @@ bool InsertBasicCommand( const std::vector<std::string>& _args )
         return false;
     }
 
+    delete img;
+    
     return true;
 }
 
@@ -483,7 +587,7 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -598,6 +702,8 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
         return false;
     }
 
+    delete img;
+    
     return true;
 }
 
@@ -616,7 +722,7 @@ bool InsertDataCommand( const std::vector<std::string>& _args )
     }
 
     // Load disk image and initialize file system
-    CVDKDiskImage img;
+    IDiskImageInterface* img = nullptr;
     CDragonDOS_FS fs;
 
     if( !LoadImageAndFilesystem( _args[2], &img, &fs ) )
@@ -684,6 +790,8 @@ bool InsertDataCommand( const std::vector<std::string>& _args )
         std::cout << "Could not overwrite file " << _args[2] << std::endl;
         return false;
     }
+
+    delete img;
 
     return true;
 }

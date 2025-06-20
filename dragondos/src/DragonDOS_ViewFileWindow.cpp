@@ -257,6 +257,31 @@ void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vec
     mBasicView.clear();
     mBasicViewColors.clear();
 
+    // Default to HEX view
+    mViewMode = VM_HEX;
+    if (_selectedFiles.size() == 1) {
+        int fileIdx = _selectedFiles[0];
+        unsigned char fileType = _fs->GetFile(fileIdx).GetFileType();
+        if (fileType == DRAGONDOS_FILETYPE_BASIC) {
+            mViewMode = VM_BASIC;
+        } else if (fileType == DRAGONDOS_FILETYPE_BINARY) {
+            mViewMode = VM_HEX;
+        }
+    }
+
+    // Update radio button state
+    if (mViewMode == VM_BASIC) {
+        mViewAsHexButton->value(0);
+        mViewAsTextButton->value(0);
+        mViewAsBasicButton->value(1);
+        mViewAsImageButton->value(0);
+    } else if (mViewMode == VM_HEX) {
+        mViewAsHexButton->value(1);
+        mViewAsTextButton->value(0);
+        mViewAsBasicButton->value(0);
+        mViewAsImageButton->value(0);
+    }
+
     for( auto file : _selectedFiles )
     {
         std::string fileName = _fs->GetFileName( file );

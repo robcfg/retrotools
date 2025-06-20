@@ -17,6 +17,7 @@
 #include "DragonDOS_UI_Callbacks.h"
 #include "RawDiskImage.h"
 #include "VDKDiskImage.h"
+#include "JVCDiskImage.h"
 
 #ifndef __APPLE__
 #define DRAGONDOSUI_MENUBARHEIGHT 30
@@ -263,16 +264,30 @@ int main( int argc, char** argv )
 
     mainWindow->begin();
 
-    CVDKDiskImage img;
+    // Create disk image handler based on file extension
+    std::string filename = argc > 1 ? argv[1] : "";
+    IDiskImageInterface* pDisk = nullptr;
+    
+    if (!filename.empty()) {
+        std::string ext = filename.substr(filename.find_last_of(".") + 1);
+        if (ext == "jvc") {
+            pDisk = new CJVCDiskImage();
+        } else {
+            pDisk = new CVDKDiskImage();
+        }
+    } else {
+        pDisk = new CVDKDiskImage();
+    }
+    
     CDragonDOS_FS fs;
     
-    img.SetSectorSize( DRAGONDOS_SECTOR_SIZE     );
-    img.SetSectorsNum( DRAGONDOS_SECTORSPERTRACK );
-    img.SetSidesNum  ( 1  );
-    img.SetTracksNum ( 40 );
-    fs.InitDisk( &img );
+    pDisk->SetSectorSize( DRAGONDOS_SECTOR_SIZE     );
+    pDisk->SetSectorsNum( DRAGONDOS_SECTORSPERTRACK );
+    pDisk->SetSidesNum  ( 1  );
+    pDisk->SetTracksNum ( 40 );
+    fs.InitDisk( pDisk );
 
-    context.disk = &img;
+    context.disk = pDisk;
     context.fs = &fs;
 
     CreateMenuBar( mainWindow->w(), DRAGONDOSUI_MENUBARHEIGHT, modifierKey, &context );

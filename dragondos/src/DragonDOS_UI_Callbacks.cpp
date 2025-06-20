@@ -5,6 +5,7 @@
 #include <FL/Fl_Native_File_Chooser.H>
 #include <string>
 #include <filesystem>
+#include <algorithm>
 
 #include "FileSystemInterface.h"
 #include "DragonDOS_BASIC.h"
@@ -13,6 +14,7 @@
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
 #include "VDKDiskImage.h"
+#include "JVCDiskImage.h"
 
 #define UI_MAX_FILE_NAME_LEN 8
 #define UI_MAX_FILE_EXT_LEN  4            // Dot plus three characters
@@ -107,8 +109,8 @@ bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory 
 			native.title("Select file to open");
 			native.type(Fl_Native_File_Chooser::BROWSE_FILE);
 		}
-		//native.filter("Disk image files\t*.*\n");
-		//native.preset_file("");
+		native.filter("VDK disk images \t*.vdk\nDSK/JVC disk images \t*.{dsk,jvc}\n");
+		native.preset_file(".vdk");
 	}
 
 	// Show native chooser
@@ -223,88 +225,170 @@ void menuAbout_cb(Fl_Widget* pWidget,void* _context)
 
 void newDisk_cb(Fl_Widget* pWidget,void* _context)
 {
-    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
- 
-    // fl_choice_n was giving link errors on Linux and Windows, so back to fl_choice.
-    int diskSize = fl_choice( "Please select disk size:", "180KB", "360KB", "720KB");
+    SDRAGONDOS_Context* context = (SDRAGONDOS_Context*)_context;
 
-    std::string fileName;
-    if( !ChooseFilename( fileName, true, false ) )
+    // Ask for disk size
+    int diskSize = fl_choice("Choose disk size", "180KB", "360KB", "720KB", nullptr);
+    if( diskSize < 0 )
     {
         return;
     }
 
-    pContext->diskFilename = "(No disk)";
-    UpdateUI( pContext );
+    // Ask for filename
+    std::string filename;
+    if( !ChooseFilename( filename, true, false ) )
+    {
+        return;
+    }
 
-    // Create new disk
+    // Check file extension
+    std::string ext = filename.substr(filename.find_last_of(".") + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    
+    if (ext != "vdk" && ext != "jvc" && ext != "dsk") {
+        fl_alert("Invalid file extension: %s\nSupported extensions are: .vdk for VDK format, .dsk or .jvc for DSK/JVC format", ext.c_str());
+        return;
+    }
+
+    // Create appropriate disk image
+    IDiskImageInterface* pDisk = nullptr;
+    if (ext == "jvc" || ext == "dsk") {
+        pDisk = new CJVCDiskImage();
+        ((CJVCDiskImage*)pDisk)->SetFileName(filename);
+    } else if (ext == "vdk") {
+        pDisk = new CVDKDiskImage();
+    } else {
+        fl_alert("Unsupported file format");
+        return;
+    }
+
+    // Delete existing disk image
+    if( context->disk )
+    {
+        delete context->disk;
+        context->disk = nullptr;
+    }
+
+    // Create new disk image
     switch( diskSize )
     {
-        case 0 :pContext->disk->New( 40, 1, VDK_SECTORSPERTRACK);break;
-        case 1 :pContext->disk->New( 40, 2, VDK_SECTORSPERTRACK);break;
-        default:pContext->disk->New( 80, 2, VDK_SECTORSPERTRACK);break;
+        case 0: pDisk->New( 40, 1, VDK_SECTORSPERTRACK); break;
+        case 1: {
+            int geometry = fl_choice("Please clarify 360k disk geometry", "40 track double sided", "80 track single sided", nullptr);
+            if (geometry == 0) {
+                pDisk->New(40, 2, VDK_SECTORSPERTRACK);
+            } else if (geometry == 1) {
+                pDisk->New(80, 1, VDK_SECTORSPERTRACK);
+            } else {
+                delete pDisk;
+                return;
+            }
+            break;
+        }
+        case 2: pDisk->New( 80, 2, VDK_SECTORSPERTRACK); break;
     }
 
-    // Format it
-    if( !pContext->fs->InitDisk(pContext->disk) )
+    // Initialize filesystem
+    if( !context->fs->InitDisk( pDisk ) )
     {
-        fl_alert( "Could not initialize filesystem" );
+        fl_alert("Couldn't initialize the file system on the new disk image.");
+        delete pDisk;
         return;
     }
 
-    // Save it
-    if( !pContext->disk->Save(fileName) )
+    // Save image
+    if( !pDisk->Save( filename ) )
     {
-        fl_alert( "Could not save new disk to %s", fileName.c_str() );
+        fl_alert("Couldn't save new image file %s", filename.c_str());
+        delete pDisk;
         return;
     }
 
-    if( !pContext->fs->Load( pContext->disk ) )
-    {
-        fl_alert( "Could not open new disk from %s", fileName.c_str() );
-        return;
-    }
+    // Update disk image pointer
+    context->disk = pDisk;
 
-    pContext->diskFilename = fileName;
-    UpdateUI( pContext );
+    // Update UI
+    context->diskFilename = filename;
+    context->fileLabel->copy_label(filename.c_str());
+    context->fileLabel->redraw();
+    context->fileLabel->do_callback();
 }
 
-void openDisk_cb(Fl_Widget* pWidget,void* _context)
-{
-    std::string fileName;
-
-    if( !ChooseFilename( fileName, false, false ) )
-    {
-        return;
-    }
-
+void openDisk_cb(Fl_Widget*, void* _context) {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+    std::string filename;
 
-    if( !pContext->disk->Load( fileName ) )
-    {
-        fl_alert( "Error opening file %s", pContext->diskFilename.c_str() );
+    if (!ChooseFilename(filename, false, false)) {
         return;
     }
 
-    if( !pContext->fs->Load( pContext->disk ) )
-    {
-        fl_alert( "Error processing file %s\nImage may be damaged or corrupt.", fileName.c_str() );
+    std::string ext = filename.substr(filename.find_last_of(".") + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    // Create appropriate disk image
+    IDiskImageInterface* pDisk = nullptr;
+    if (ext == "jvc" || ext == "dsk") {
+        pDisk = new CJVCDiskImage();
+        ((CJVCDiskImage*)pDisk)->SetFileName(filename);
+    } else if (ext == "vdk") {
+        pDisk = new CVDKDiskImage();
+    } else {
+        fl_alert("Unsupported file format");
+        return;
     }
 
-    pContext->diskFilename = fileName;
-    UpdateUI( pContext );
+    if (!pDisk->Load(filename)) {
+        fl_alert("Error loading disk image");
+        delete pDisk;
+        return;
+    }
+
+    if (pContext->disk) {
+        delete pContext->disk;
+    }
+
+    if (!pContext->fs->Load(pDisk)) {
+        fl_alert("Error loading filesystem");
+        delete pDisk;
+        return;
+    }
+
+    pContext->disk = pDisk;
+    pContext->diskFilename = filename;
+    pContext->fileLabel->label(filename.c_str());
+
+    UpdateUI(pContext);
 }
 
-void saveDisk_cb(Fl_Widget* pWidget,void* _context)
-{
+void saveDisk_cb(Fl_Widget*, void* _context) {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-    IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
-
-    if( !fs->Save(pContext->diskFilename) )
-    {
-        std::string error = "Couldn't save changes to ";
-        error += pContext->diskFilename;
+    if (!pContext->disk) {
+        fl_alert("No disk loaded");
+        return;
     }
+
+    std::string filename;
+    if (!ChooseFilename(filename, true, false)) {
+        return;
+    }
+
+    std::string ext = filename.substr(filename.find_last_of(".") + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    // Set filename for JVC images to ensure correct header state
+    if (ext == "jvc" || ext == "dsk") {
+        ((CJVCDiskImage*)pContext->disk)->SetFileName(filename);
+    }
+
+    if (!pContext->disk->Save(filename)) {
+        std::string error = "Error saving disk image to ";
+        error += filename;
+        fl_alert("%s", error.c_str());
+        return;
+    }
+
+    pContext->diskFilename = filename;
+    pContext->fileLabel->label(filename.c_str());
 }
 
 void insertBasic_cb(Fl_Widget* pWidget,void* _context)
@@ -385,7 +469,7 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         encodedData[4] = (encodedData.size() / 256) & 0xFF;
         encodedData[5] = encodedData.size() & 0xFF;
 
-        std::filesystem::path filePath( file );
+        std::filesystem::path filePath(file);
         fs->InsertFile( filePath.filename().string(), encodedData );
     }
 
@@ -479,7 +563,7 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
             ////////////////////////////////////////////////////
         }
 
-        std::filesystem::path filePath( file );
+        std::filesystem::path filePath(file);
         fs->InsertFile( filePath.filename().string(), fileData );
     }
 
@@ -548,7 +632,7 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
         size_t bytesRead = fread( fileData.data(), 1, insertFileSize, pIn );
         fclose( pIn );
 
-        std::filesystem::path filePath( file );
+        std::filesystem::path filePath(file);
         fs->InsertFile( filePath.filename().string(), fileData );
     }
 

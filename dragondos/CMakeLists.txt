@@ -25,6 +25,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/JVCDiskImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
 	)
 
@@ -46,6 +47,7 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/JVCDiskImage.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
     )
 

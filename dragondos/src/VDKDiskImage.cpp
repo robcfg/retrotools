@@ -262,11 +262,7 @@ int CVDKDiskImage::GetSectorsNum(size_t _side, size_t _track) const
 
 std::string CVDKDiskImage::GetFileSpec()
 {
-//#if defined(__APPLE__) || defined(WIN32)
-	return "Dragon VDK files\t*.{vdk,dsk}\n"; // Native chooser format.
-//#else
-//	return "Dragon VDK files (*.{vdk})\t";
-//#endif
+    return "Dragon VDK files\t*.vdk\n"; // Native chooser format.
 }
 
 std::string CVDKDiskImage::GetDiskInfo()

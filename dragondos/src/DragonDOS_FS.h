@@ -145,7 +145,7 @@ public:
     unsigned short int    GetNumberOfFiles() const                        { return (unsigned short int)files.size(); }
     unsigned short int    GetFileIdx      ( std::string _fileName ) const;
     unsigned short int    GetFileEntry    ( std::string _fileName ) const;
-    const CDGNDosFile&    GetFile         ( unsigned short int fileIdx )  { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
+    const CDGNDosFile&    GetFile         ( unsigned short int fileIdx ) const { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
     bool                  InsertFile      ( std::string _fileName, const std::vector<unsigned char>& _data );
     bool                  DeleteFile      ( std::string _fileName );
     bool                  Save            ( std::string _fileName );
