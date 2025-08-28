@@ -8,9 +8,13 @@ if( WIN32 )
 	# Set here the path to the FLTK folder
 	set(FLTK_INCLUDE_DIR "C:\\Users\\example\\fltk-1.3.8\\")
 endif()
+
 set(FLTK_SKIP_FLUID True)
+
 FIND_PACKAGE(FLTK QUIET REQUIRED)
 FIND_PACKAGE(OpenGL REQUIRED)
+#message(STATUS "FLTK Include Dir: ${FLTK_INCLUDE_DIR}")
+#message(STATUS "FLTK Libraries: ${FLTK_LIBRARIES}")
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 17)

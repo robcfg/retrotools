@@ -99,7 +99,6 @@ Disassembler_6x09::Disassembler_6x09()
     {
         Init_Postbyte_Opcode_Map( postbyte_map );
     }   
-    // * means need for special parameter formatting
 }
 
 size_t Disassembler_6x09::ReadParameter(const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize)
@@ -131,7 +130,7 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
 
     uint8_t opcodeID = _data[_pos++];
 
-    // Read first param and depnding on the opcode read more if needed.
+    // Read first param and depending on the opcode read more if needed.
     size_t paramIdx = 0;
     size_t paramSize =  _opcode.params[paramIdx].size;
     size_t param = ReadParameter(_data, _pos, paramSize);
@@ -200,12 +199,9 @@ void Disassembler_6x09::FormatParameters(const Opcode_6x09& _opcode, const std::
             break;
             case DIRECT:
             {
-                _ss << "$(DP)" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
-                _dstColors.append(1, COLOR_NUMBER);
+                _ss << "<$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
                 _dstColors.append(1, COLOR_TEXT);
-                _dstColors.append(2, COLOR_REGISTER);
-                _dstColors.append(1, COLOR_TEXT);
-                _dstColors.append(paramSize * 2, COLOR_NUMBER);
+                _dstColors.append((paramSize * 2)+1, COLOR_NUMBER);
             }
             break;
             case EXTENDED:
@@ -286,12 +282,15 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
     }
 
     std::stringstream ss;
+    std::stringstream ssBytes;
     std::string paramBuffer;
     std::string paramColorBuffer;
     size_t paramValue;
     uint16_t pos = _execAddress - _loadAddress;
     uint8_t pagePrefix = 0x0;
 
+    // TODO: track the start and end positions of the opcode and params and use the range to get the bytes :D
+    //       And use a local string stream for the formatted parameters so you can put the bytes first. 
     while( pos < _data.size() )
     {
         pagePrefix = 0x0;

@@ -140,7 +140,7 @@ void Disassembler_6x09::Init_Postbyte_Opcode_Map( std::map<unsigned char, PostBy
     _map.emplace(0x87, PostByte_6x09{"E,X"    , "DAD"       , {     } });
     _map.emplace(0x88, PostByte_6x09{"?,X"    , "AEEAD"     , { {1} } });
     _map.emplace(0x89, PostByte_6x09{"?,X"    , "AEEEEAD"   , { {2} } });
-    _map.emplace(0x8A, PostByte_6x09{"F,X"    , "DAD"       , { {1} } });
+    _map.emplace(0x8A, PostByte_6x09{"F,X"    , "DAD"       , {     } });
     _map.emplace(0x8B, PostByte_6x09{"D,X"    , "DAD"       , {     } });
     _map.emplace(0x8C, PostByte_6x09{"?,PC"   , "AEEADD"    , { {1} } });
     _map.emplace(0x8D, PostByte_6x09{"?,PC"   , "AEEEEADD"  , { {2} } });
