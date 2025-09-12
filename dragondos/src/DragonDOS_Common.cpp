@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////
 
 #include "DragonDOS_Common.h"
-#include "DragonDOS_FS.h"
+#include "../../common/FileSystems/DragonDOS_FS.h"
 
 // Returns true and sets loadAddress and execAddress if the file contains the DragonDOS header, false otherwise.
 bool GetBinaryFileHeaderParams( FILE* file, size_t fileSize, unsigned short int& loadAddress, unsigned short int& execAddress )

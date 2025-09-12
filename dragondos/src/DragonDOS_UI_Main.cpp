@@ -12,11 +12,12 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
 
-#include "DragonDOS_FS.h"
+#include "../../common/FileSystems/DragonDOS_FS.h"
+#include "../../common/DiskImages/DiskImageInterface.h"
 #include "../logo/DragonDOS_Logo.xpm"
 #include "DragonDOS_UI_Callbacks.h"
-#include "RawDiskImage.h"
-#include "VDKDiskImage.h"
+#include "../../common/DiskImages/RawDiskImage.h"
+#include "../../common/DiskImages/VDKDiskImage.h"
 
 #ifndef __APPLE__
 #define DRAGONDOSUI_MENUBARHEIGHT 30
@@ -297,7 +298,7 @@ int main( int argc, char** argv )
 
     UpdateUI( (const SDRAGONDOS_Context*)&context );
     context.fileLabel->copy_label("(No disk)");
-    mainWindow->show(0, nullptr);
+    mainWindow->show(argc, argv);
     mainWindow->redraw();
     
     return Fl::run();

@@ -6,8 +6,8 @@
 #include <FL/Fl_Multi_Browser.H>
 #include <string>
 
-#include "DiskImageInterface.h"
-#include "FileSystemInterface.h"
+#include "../../common/DiskImages/DiskImageInterface.h"
+#include "../../common/FileSystems/FileSystemInterface.h"
 
 #include "DragonDOS_ViewFileWindow.h"
 
@@ -15,7 +15,7 @@ struct SDRAGONDOS_Context
 {
     std::string                 diskFilename;
     IDiskImageInterface*        disk;
-    IFilesystemInterface*       fs;
+    IFileSystemInterface*       fs;
 
     Fl_Box*                     fileLabel       = nullptr;
     Fl_Box*                     diskInfoLabel   = nullptr;

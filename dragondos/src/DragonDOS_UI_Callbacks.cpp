@@ -6,13 +6,13 @@
 #include <string>
 #include <filesystem>
 
-#include "FileSystemInterface.h"
+#include "../../common/FileSystems/FileSystemInterface.h"
 #include "DragonDOS_BASIC.h"
 #include "DragonDOS_Common.h"
-#include "DragonDOS_FS.h"
+#include "../../common/FileSystems/DragonDOS_FS.h"
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
-#include "VDKDiskImage.h"
+#include "../../common/DiskImages/VDKDiskImage.h"
 
 #define UI_MAX_FILE_NAME_LEN 8
 #define UI_MAX_FILE_EXT_LEN  4            // Dot plus three characters
@@ -240,9 +240,9 @@ void newDisk_cb(Fl_Widget* pWidget,void* _context)
     // Create new disk
     switch( diskSize )
     {
-        case 0 :pContext->disk->New( 40, 1, VDK_SECTORSPERTRACK);break;
-        case 1 :pContext->disk->New( 40, 2, VDK_SECTORSPERTRACK);break;
-        default:pContext->disk->New( 80, 2, VDK_SECTORSPERTRACK);break;
+        case 0 :pContext->disk->New( 40, 1, VDK_SECTORSPERTRACK, VDK_SECTORSIZE );break;
+        case 1 :pContext->disk->New( 40, 2, VDK_SECTORSPERTRACK, VDK_SECTORSIZE );break;
+        default:pContext->disk->New( 80, 2, VDK_SECTORSPERTRACK, VDK_SECTORSIZE );break;
     }
 
     // Format it
@@ -298,7 +298,7 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 void saveDisk_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-    IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
+    IFileSystemInterface* fs = (IFileSystemInterface*)pContext->fs;
 
     if( !fs->Save(pContext->diskFilename) )
     {
@@ -386,7 +386,7 @@ void insertBasic_cb(Fl_Widget* pWidget,void* _context)
         encodedData[5] = encodedData.size() & 0xFF;
 
         std::filesystem::path filePath( file );
-        fs->InsertFile( filePath.filename().string(), encodedData );
+        fs->InsertFile( filePath.filename().string(), encodedData, true );
     }
 
     if( !errorStr.empty() )
@@ -480,7 +480,7 @@ void insertBinary_cb(Fl_Widget* pWidget,void* _context)
         }
 
         std::filesystem::path filePath( file );
-        fs->InsertFile( filePath.filename().string(), fileData );
+        fs->InsertFile( filePath.filename().string(), fileData, true );
     }
 
     if( !errorStr.empty() )
@@ -549,7 +549,7 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
         fclose( pIn );
 
         std::filesystem::path filePath( file );
-        fs->InsertFile( filePath.filename().string(), fileData );
+        fs->InsertFile( filePath.filename().string(), fileData, true );
     }
 
     if( !errorStr.empty() )
@@ -657,7 +657,7 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
 void removeFiles_cb(Fl_Widget* pWidget,void* _context)
 {
     SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-    IFilesystemInterface* fs = (IFilesystemInterface*)pContext->fs;
+    IFileSystemInterface* fs = (IFileSystemInterface*)pContext->fs;
 
     std::vector<std::string> fileNames;
 

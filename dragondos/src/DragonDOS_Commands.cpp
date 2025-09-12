@@ -8,11 +8,11 @@
 #include "DragonDOS_BASIC.h"
 #include "DragonDOS_Commands.h"
 #include "DragonDOS_Common.h"
-#include "DragonDOS_FS.h"
-#include "DiskImageInterface.h"
-#include "FileSystemInterface.h"
-#include "VDKDiskImage.h"
-#include "RawDiskImage.h"
+#include "../../common/FileSystems/DragonDOS_FS.h"
+#include "../../common/DiskImages/DiskImageInterface.h"
+#include "../../common/FileSystems/FileSystemInterface.h"
+#include "../../common/DiskImages/VDKDiskImage.h"
+#include "../../common/DiskImages/RawDiskImage.h"
 
 std::string PadFilename( const std::string& _name )
 {
@@ -22,7 +22,7 @@ std::string PadFilename( const std::string& _name )
     return retVal;
 }
 
-bool LoadImageAndFilesystem( std::string _filename, IDiskImageInterface* _img, IFilesystemInterface* _fs )
+bool LoadImageAndFilesystem( std::string _filename, IDiskImageInterface* _img, IFileSystemInterface* _fs )
 {
     // Load disk image and set disk geometry
     if( !_img->Load( _filename ) )
@@ -264,9 +264,9 @@ bool NewCommand( const std::vector<std::string>& _args )
     int disk_size = stoi(_args[3]);
     switch( disk_size )
     {
-        case 180:img.New( 40, 1, VDK_SECTORSPERTRACK);break;
-        case 360:img.New( 40, 2, VDK_SECTORSPERTRACK);break;
-        case 720:img.New( 80, 2, VDK_SECTORSPERTRACK);break;
+        case 180:img.New( 40, 1, VDK_SECTORSPERTRACK, VDK_SECTORSIZE );break;
+        case 360:img.New( 40, 2, VDK_SECTORSPERTRACK, VDK_SECTORSIZE );break;
+        case 720:img.New( 80, 2, VDK_SECTORSPERTRACK, VDK_SECTORSIZE );break;
         default:
         {
             std::cout << "Invalid disk size (" << disk_size << ")." << std::endl;
@@ -447,7 +447,7 @@ bool InsertBasicCommand( const std::vector<std::string>& _args )
 
     std::filesystem::path filePath( _args[3] );
 
-    if( !fs.InsertFile( filePath.filename().string(), encodedData ) )
+    if( !fs.InsertFile( filePath.filename().string(), encodedData, true ) )
     {
         std::cout << "The requested file couldn't be inserted. Please check that the file name is correct." << std::endl;
         std::cout << "The disk image may not have enough free space or be damaged or corrupted." << std::endl;
@@ -584,7 +584,7 @@ bool InsertBinaryCommand( const std::vector<std::string>& _args )
 
     std::filesystem::path filePath( _args[3] );
 
-    if( !fs.InsertFile( filePath.filename().string(), fileData ) )
+    if( !fs.InsertFile( filePath.filename().string(), fileData, true ) )
     {
         std::cout << "The requested file couldn't be inserted. Please check that the file name is correct." << std::endl;
         std::cout << "The disk image may not have enough free space or be damaged or corrupted." << std::endl;
@@ -671,7 +671,7 @@ bool InsertDataCommand( const std::vector<std::string>& _args )
 
     std::filesystem::path filePath( _args[3] );
 
-    if( !fs.InsertFile( filePath.filename().string(), fileData ) )
+    if( !fs.InsertFile( filePath.filename().string(), fileData, true ) )
     {
         std::cout << "The requested file couldn't be inserted. Please check that the file name is correct." << std::endl;
         std::cout << "The disk image may not have enough free space or be damaged or corrupted." << std::endl;
