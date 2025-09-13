@@ -1,3 +1,6 @@
+#ifndef __DISK_IMAGE_FACTORY__
+#define __DISK_IMAGE_FACTORY__
+
 #include <string>
 #include <vector>
 
@@ -19,3 +22,5 @@ public:
 private:
 	std::vector<IDiskImageInterface*> m_DiskImages;
 };
+
+#endif

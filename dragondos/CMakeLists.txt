@@ -25,6 +25,7 @@ add_executable(
 	# File systems
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
     # Disk image formats
+	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/DiskImageFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/EDSKDiskImage.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/IMDDiskImage.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/JVCDiskImage.cpp
@@ -52,6 +53,7 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
 	# File systems
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
     # Disk image formats
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/DiskImageFactory.cpp
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/EDSKDiskImage.cpp
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/IMDDiskImage.cpp
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/JVCDiskImage.cpp

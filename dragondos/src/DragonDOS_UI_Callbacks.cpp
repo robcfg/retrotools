@@ -38,6 +38,11 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
 	_context->browser->add("@f@.File|Name    |Ext|Type|Sec|Bytes |Load|Exec\n");
     _context->browser->add("@f@.----+--------+---+----+---+------+----+----\n");
 
+	if( pDisk == nullptr )
+	{
+		return;
+	}
+
     for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
     {
         SFileInfo fileInfo = _context->fs->GetFileInfo( fileIdx );
@@ -84,10 +89,12 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
     _context->diskInfoLabel->copy_label( tmpBuf );
 }
 
-bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory )
+bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory, const SDRAGONDOS_Context* _context  )
 {
 	// Create native chooser
 	Fl_Native_File_Chooser native;
+	std::string filters;
+
 	if( bDirectory )
 	{
 		native.title( bSaveAsDialog ? "Save to folder" : "Choose folder" );
@@ -106,6 +113,16 @@ bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory 
 		{
 			native.title("Select file to open");
 			native.type(Fl_Native_File_Chooser::BROWSE_FILE);
+		}
+
+		if( _context != nullptr )
+		{
+			for( size_t format = 0; format < _context->diskImageFactory->Size(); ++ format )
+			{
+				filters += _context->diskImageFactory->GetDiskImage(format)->GetFileSpec();
+			}
+
+			native.filter( filters.c_str() );
 		}
 		//native.filter("Disk image files\t*.*\n");
 		//native.preset_file("");
@@ -229,7 +246,7 @@ void newDisk_cb(Fl_Widget* pWidget,void* _context)
     int diskSize = fl_choice( "Please select disk size:", "180KB", "360KB", "720KB");
 
     std::string fileName;
-    if( !ChooseFilename( fileName, true, false ) )
+    if( !ChooseFilename( fileName, true, false, pContext ) )
     {
         return;
     }
@@ -273,17 +290,31 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 {
     std::string fileName;
 
-    if( !ChooseFilename( fileName, false, false ) )
+    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+
+    if( !ChooseFilename( fileName, false, false, pContext ) )
     {
         return;
     }
 
-    SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
+	if( pContext->disk )
+	{
+		delete pContext->disk;
+	}
+	pContext->disk = pContext->diskImageFactory->LoadDiskImage( fileName );
 
-    if( !pContext->disk->Load( fileName ) )
+    if( pContext->disk == nullptr )
     {
         fl_alert( "Error opening file %s", pContext->diskFilename.c_str() );
         return;
+    }
+
+    if( pContext->disk->NeedManualSetup() )
+    {
+        pContext->disk->SetSidesNum(1);
+        pContext->disk->SetTracksNum(40);
+        pContext->disk->SetSectorsNum(18);
+        pContext->disk->SetSectorSize(256);
     }
 
     if( !pContext->fs->Load( pContext->disk ) )
@@ -572,7 +603,7 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
         return;
     }
 
-    if( !ChooseFilename( path, true, true ) )
+    if( !ChooseFilename( path, true, true, pContext ) )
     {
         return;
     }
