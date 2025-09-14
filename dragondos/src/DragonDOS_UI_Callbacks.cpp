@@ -111,7 +111,7 @@ bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory,
 		{
 			native.title("Save as");
 			native.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-			native.options(Fl_Native_File_Chooser::SAVEAS_CONFIRM | Fl_Native_File_Chooser::USE_FILTER_EXT);
+			native.options(Fl_Native_File_Chooser::SAVEAS_CONFIRM);
 		}
 		else
 		{
@@ -119,17 +119,8 @@ bool ChooseFilename( std::string& fileName, bool bSaveAsDialog, bool bDirectory,
 			native.type(Fl_Native_File_Chooser::BROWSE_FILE);
 		}
 
-		if( _context != nullptr )
-		{
-			for( size_t format = 0; format < _context->diskImageFactory->Size(); ++ format )
-			{
-				filters += _context->diskImageFactory->GetDiskImage(format)->GetFileSpec();
-			}
-
-			native.filter( filters.c_str() );
-		}
-		//native.filter("Disk image files\t*.*\n");
-		//native.preset_file("");
+		native.filter("Disk image files\t*.*\n");
+		native.preset_file("");
 	}
 
 	// Show native chooser

@@ -10,8 +10,6 @@
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 12/11/2023
-//
 // File entries in directory table are 25 byte long.
 // Example:
 //  00504D4F 44453200 0042494E 01440D00 00000000 00000000 09

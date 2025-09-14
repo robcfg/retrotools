@@ -10,8 +10,6 @@
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 12/11/2023
-//
 ////////////////////////////////////////////////////////////////////
 #pragma once
 
