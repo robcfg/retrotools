@@ -50,6 +50,7 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_NewDiskWindow.cpp
 	# File systems
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
     # Disk image formats

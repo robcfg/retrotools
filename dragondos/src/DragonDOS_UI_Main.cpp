@@ -183,6 +183,11 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
 
     // View file window
     _context->viewFileWindow = new CDragonDOSViewFileWindow( DRAGONDOS_UI_VIEWFILE_WIDTH, DRAGONDOS_UI_VIEWFILE_HEIGHT, "View file(s)" );
+
+	// New disk window
+	_context->newDiskWindow = new CDragonDOSNewDiskWindow( 310, 125, "Create new disk" );
+	_context->newDiskWindow->set_modal();
+	_context->newDiskWindow->SetData( _context );
 }
 
 #ifndef __APPLE__
@@ -304,7 +309,7 @@ int main( int argc, char** argv )
     context.fileLabel->copy_label("(No disk)");
     mainWindow->show(argc, argv);
     mainWindow->redraw();
-    
+
 	int retVal = Fl::run();
 
 	// Cleanup
