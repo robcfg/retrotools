@@ -253,6 +253,9 @@ void newDisk_cb(Fl_Widget* pWidget,void* _context)
 
 	if( pContext->newDiskWindow->IsDataSet() )
 	{
+		int posX = pContext->mainWindow->x() + ((pContext->mainWindow->w() - pContext->newDiskWindow->w())/2);
+		int posY = pContext->mainWindow->y() + ((pContext->mainWindow->h() - pContext->newDiskWindow->h())/2);
+		pContext->newDiskWindow->position(posX,posY);
 		pContext->newDiskWindow->show();
 	}
 }
