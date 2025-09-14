@@ -50,7 +50,8 @@
 #define DRAGONDOS_SECTORSPERBITMAPSECTOR    0x5A0
 #define DRAGONDOS_FILE_HEADER_BEGIN         0x55
 #define DRAGONDOS_FILE_HEADER_END           0xAA
-#define DRAGONDOS_BITMAPSIZE                180
+#define DRAGONDOS_BITMAPSIZE                180    // 180 bytes * 8 sectors per byte = 1440 sectors.
+#define DRAGONDOS_HALFBITMAPSIZE			90
 
 #define DRAGONDOS_INVALID                   0xFFFF // To signal invalid indices. DragonDOS can only have 160 entries max.
 
@@ -194,12 +195,12 @@ private:
 
     bool                ParseDirectory();
     bool                ParseFiles    ();
-    bool                BackUpDirTrack();
+    bool                BackUpDirTrack( IDiskImageInterface* _disk );
 
     unsigned char GetMaxContiguousFreeSectorsInBitmapByte( unsigned char _bitmapByte );
-    bool          IsBitmapLSNFree  ( size_t _LSN );
-    void          MarkBitmapLSNFree( size_t _LSN );
-    void          MarkBitmapLSNUsed( size_t _LSN );
+    bool          IsBitmapLSNFree  ( IDiskImageInterface* _disk, size_t _LSN );
+    void          MarkBitmapLSNFree( IDiskImageInterface* _disk, size_t _LSN );
+    void          MarkBitmapLSNUsed( IDiskImageInterface* _disk, size_t _LSN );
 };
 
 #endif
