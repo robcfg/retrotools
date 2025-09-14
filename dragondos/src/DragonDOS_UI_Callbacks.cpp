@@ -23,6 +23,10 @@
 #define DRAGONDOSUI_PATH_SEPARATOR '/';
 #endif
 
+const size_t DRAGONDOS_DISK_SIZE_180KB = (1 * 40 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
+const size_t DRAGONDOS_DISK_SIZE_360KB = (2 * 40 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
+const size_t DRAGONDOS_DISK_SIZE_720KB = (2 * 80 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
+
 const size_t tmpBufSize = 256;
 
 void UpdateUI( const SDRAGONDOS_Context* _context )
@@ -308,16 +312,64 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
         fl_alert( "Error opening file %s", pContext->diskFilename.c_str() );
         return;
     }
-
+	
+	// If a raw disk is loaded, try to guess geometry based on known disk sizes.
+	bool fsLoaded = false;
     if( pContext->disk->NeedManualSetup() )
     {
-        pContext->disk->SetSidesNum(1);
-        pContext->disk->SetTracksNum(40);
-        pContext->disk->SetSectorsNum(18);
-        pContext->disk->SetSectorSize(256);
-    }
+		switch( pContext->disk->GetDataSize() )
+		{
+		case DRAGONDOS_DISK_SIZE_180KB:
+		{
+			pContext->disk->SetSidesNum(1);
+			pContext->disk->SetTracksNum(40);
+			pContext->disk->SetSectorsNum(DRAGONDOS_SECTORSPERTRACK);
+			pContext->disk->SetSectorSize(DRAGONDOS_SECTOR_SIZE);
+			fsLoaded = pContext->fs->Load( pContext->disk );
+		}
+		break;
+		// This case is ambiguous as it can be either 1 side and 80 tracks, or
+		// 2 sides and 40 tracks. As only one of these configurations would be
+		// valid, let the filesystem try to load them to determine which one
+		// works.
+		case DRAGONDOS_DISK_SIZE_360KB:
+		{
+			// Try 1 side and 80 tracks.
+			pContext->disk->SetSidesNum(1);
+			pContext->disk->SetTracksNum(80);
+			pContext->disk->SetSectorsNum(DRAGONDOS_SECTORSPERTRACK);
+			pContext->disk->SetSectorSize(DRAGONDOS_SECTOR_SIZE);
+			fsLoaded = pContext->fs->Load( pContext->disk );
 
-    if( !pContext->fs->Load( pContext->disk ) )
+			// If the filesystem didn't load, try 2 sides and 40 tracks.
+			if( !fsLoaded )
+			{
+				pContext->disk->SetSidesNum(2);
+				pContext->disk->SetTracksNum(40);
+				fsLoaded = pContext->fs->Load( pContext->disk );
+			}
+		}
+		break;
+		case DRAGONDOS_DISK_SIZE_720KB:
+		{
+			pContext->disk->SetSidesNum(2);
+			pContext->disk->SetTracksNum(80);
+			pContext->disk->SetSectorsNum(DRAGONDOS_SECTORSPERTRACK);
+			pContext->disk->SetSectorSize(DRAGONDOS_SECTOR_SIZE);
+			fsLoaded = pContext->fs->Load( pContext->disk );
+		}
+		break;
+		
+		default:
+			break;
+		}
+    }
+	else
+	{
+		fsLoaded = pContext->fs->Load( pContext->disk );
+	}
+
+    if( !fsLoaded )
     {
         fl_alert( "Error processing file %s\nImage may be damaged or corrupt.", fileName.c_str() );
     }
