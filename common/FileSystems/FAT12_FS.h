@@ -102,7 +102,7 @@ public:
 
 	bool InitDisk( IDiskImageInterface* _disk );
 
-	IFileSystemInterface* NewFileSystem() { return new CFAT12_FS; }
+	IFileSystemInterface* NewFileSystem();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:

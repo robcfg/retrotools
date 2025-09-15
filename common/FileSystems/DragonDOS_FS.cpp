@@ -1016,3 +1016,8 @@ std::string CDragonDOS_FS::GetFileTypeString( unsigned short int fileIdx ) const
 
 	return retVal;
 }
+
+IFileSystemInterface* CDragonDOS_FS::NewFileSystem()
+{
+	return new CDragonDOS_FS;
+}

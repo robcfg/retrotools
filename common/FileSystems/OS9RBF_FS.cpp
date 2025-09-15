@@ -404,3 +404,8 @@ bool COS9RBF_FS::InitDisk( IDiskImageInterface* _disk )
 {
 	return false;
 }
+
+IFileSystemInterface* COS9RBF_FS::NewFileSystem()
+{
+	return new COS9RBF_FS;
+}

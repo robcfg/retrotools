@@ -631,3 +631,8 @@ bool CDOS68_FS::InitDisk( IDiskImageInterface* _disk )
 {
 	return false;
 }
+
+IFileSystemInterface* CDOS68_FS::NewFileSystem()
+{
+	return new CDOS68_FS;
+}

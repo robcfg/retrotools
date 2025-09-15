@@ -179,7 +179,7 @@ public:
 
 	bool InitDisk( IDiskImageInterface* _disk );
 
-	IFileSystemInterface* NewFileSystem() { return new CDragonDOS_FS; }
+	IFileSystemInterface* NewFileSystem();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:

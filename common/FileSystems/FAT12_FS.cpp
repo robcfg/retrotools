@@ -472,3 +472,8 @@ size_t CFAT12_FS::GetFreeSize() const
 {
 	return 0;
 }
+
+IFileSystemInterface* CFAT12_FS::NewFileSystem()
+{
+	return new CFAT12_FS;
+}

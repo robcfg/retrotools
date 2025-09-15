@@ -111,7 +111,7 @@ public:
 
 	bool InitDisk( IDiskImageInterface* _disk );
 
-	IFileSystemInterface* NewFileSystem() { return new CDOS68_FS; }
+	IFileSystemInterface* NewFileSystem();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     uint8_t  GetDiskType();

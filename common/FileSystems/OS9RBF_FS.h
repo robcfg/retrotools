@@ -174,7 +174,7 @@ public:
 
 	bool InitDisk( IDiskImageInterface* _disk );
 
-	IFileSystemInterface* NewFileSystem() { return new COS9RBF_FS; }
+	IFileSystemInterface* NewFileSystem();
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
