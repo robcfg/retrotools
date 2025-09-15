@@ -10,7 +10,7 @@ class DiskImageFactory
 {
 public:
 	DiskImageFactory() = default;
-	~DiskImageFactory() = default;
+	~DiskImageFactory();
 
 	void RegisterDiskImageFormat( IDiskImageInterface* _diskImageInterface );
 

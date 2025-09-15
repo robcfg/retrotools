@@ -15,6 +15,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <iomanip>
 #include <iostream>

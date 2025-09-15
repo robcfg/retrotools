@@ -6,14 +6,17 @@
 #include <string>
 #include <vector>
 
+#include "../../common/DiskImages/DiskImageFactory.h"
+
 bool HelpCommand         ();
-bool ListCommand         ( const std::vector<std::string>& _args );
-bool ExtractCommand      ( const std::vector<std::string>& _args );
-bool InfoCommand         ( const std::vector<std::string>& _args );
-bool NewCommand          ( const std::vector<std::string>& _args );
-bool DeleteCommand       ( const std::vector<std::string>& _args );
-bool InsertBasicCommand  ( const std::vector<std::string>& _args );
-bool InsertBinaryCommand ( const std::vector<std::string>& _args );
-bool InsertDataCommand   ( const std::vector<std::string>& _args );
+bool ListCommand         ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool ExtractCommand      ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool InfoCommand         ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool NewCommand          ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool DeleteCommand       ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool InsertBasicCommand  ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool InsertBinaryCommand ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool InsertDataCommand   ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
+bool ListImagesCommand   ( const std::vector<std::string>& _args, DiskImageFactory& _diskFactory );
 
 #endif

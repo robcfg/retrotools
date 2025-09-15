@@ -1,5 +1,13 @@
 #include "DiskImageFactory.h"
 
+DiskImageFactory::~DiskImageFactory()
+{
+	for( auto diskImage : m_DiskImages )
+	{
+		delete diskImage;
+	}
+}
+
 void DiskImageFactory::RegisterDiskImageFormat( IDiskImageInterface* _diskImageInterface )
 {
 	m_DiskImages.push_back(_diskImageInterface);

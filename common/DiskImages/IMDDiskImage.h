@@ -16,6 +16,7 @@
 #ifndef __IMD_DISK_IMAGE_H__
 #define __IMD_DISK_IMAGE_H__
 
+#include <stdint.h>
 #include <string.h>
 #include <vector>
 
