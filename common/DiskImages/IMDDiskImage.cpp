@@ -271,7 +271,7 @@ unsigned int CIMDDiskImage::New( unsigned char uTracks, unsigned char uSides, un
 	}
 
 	// Insert tracks
-	for( unsigned char side = 0; side < IMD_MAX_SIDE_NUM; ++side )
+	for( unsigned char side = 0; side < uSides; ++side )
 	{
 		sides[side].clear();
 		tmpTrack.side = side;
@@ -615,4 +615,9 @@ uint8_t CIMDDiskImage::SectorTypeToByte( EIMDSectorType _sectorType ) const
 		case EIMDSectorType::COMPRESSED_DELETED_READ_ERROR			: return 8; break;
 		default: return 9; break;
 	}
+}
+
+IDiskImageInterface* CIMDDiskImage::NewImage() const
+{
+	return new CIMDDiskImage;
 }

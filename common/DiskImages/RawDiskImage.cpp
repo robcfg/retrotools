@@ -191,3 +191,8 @@ unsigned int CRAWDiskImage::GetSectorID( unsigned int uTrack, unsigned int uSide
 {
 	return uSector+1;
 }
+
+IDiskImageInterface* CRAWDiskImage::NewImage() const
+{
+	return new CRAWDiskImage;
+}

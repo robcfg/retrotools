@@ -712,3 +712,8 @@ size_t CEDSKDiskImage::GetDataSize()
 
 	return retVal;
 }
+
+IDiskImageInterface* CEDSKDiskImage::NewImage() const
+{
+	return new CEDSKDiskImage;
+}

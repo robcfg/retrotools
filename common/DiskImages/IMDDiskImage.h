@@ -123,7 +123,7 @@ public:
 
 	bool 					NeedManualSetup() const override { return false; }
 
-	IDiskImageInterface*	NewImage() const override { return new CIMDDiskImage; }
+	IDiskImageInterface*	NewImage() const override;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void            SetComment	 ( const char* newComment ) { comment = newComment; }

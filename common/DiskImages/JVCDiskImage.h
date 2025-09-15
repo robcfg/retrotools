@@ -60,7 +60,7 @@ public:
 
 	bool 					NeedManualSetup() const override;
 
-	IDiskImageInterface*	NewImage() const override { return new CJVCDiskImage; }
+	IDiskImageInterface*	NewImage() const override;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 private:
 	unsigned char* dataBlock;

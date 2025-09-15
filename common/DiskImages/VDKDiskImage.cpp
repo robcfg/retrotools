@@ -311,3 +311,8 @@ size_t CVDKDiskImage::GetDataSize()
 {
 	return dataBlockSize;
 }
+
+IDiskImageInterface* CVDKDiskImage::NewImage() const
+{
+	return new CVDKDiskImage;
+}

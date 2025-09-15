@@ -52,7 +52,7 @@ public:
 
 	bool 					NeedManualSetup() const override { return true; }
 
-	IDiskImageInterface*	NewImage() const override { return new CRAWDiskImage; }
+	IDiskImageInterface*	NewImage() const override;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:

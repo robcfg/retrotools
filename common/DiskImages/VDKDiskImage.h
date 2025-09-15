@@ -126,7 +126,7 @@ public:
 
 	bool 					NeedManualSetup() const override { return false; }
 
-	IDiskImageInterface*	NewImage() const override { return new CVDKDiskImage; }
+	IDiskImageInterface*	NewImage() const override;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	const SVDKHeader&		GetHeader       () const { return vdkHead;			}

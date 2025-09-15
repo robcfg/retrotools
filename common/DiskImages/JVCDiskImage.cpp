@@ -327,3 +327,8 @@ unsigned int CJVCDiskImage::GetSectorID( unsigned int uTrack, unsigned int uSide
 {
 	return uSector+1;
 }
+
+IDiskImageInterface* CJVCDiskImage::NewImage() const
+{
+	return new CJVCDiskImage;
+}
