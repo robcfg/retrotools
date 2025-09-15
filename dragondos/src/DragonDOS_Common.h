@@ -5,8 +5,6 @@
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 06/03/2025
-//
 ////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>

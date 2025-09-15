@@ -11,8 +11,6 @@
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 07/11/2023
-//
 ////////////////////////////////////////////////////////////////////
 
 #include <sstream>
@@ -22,13 +20,13 @@
 
 namespace DragonDOS_BASIC
 {
-    bool Decode( const std::vector<unsigned char>& _in, 
-                 std::stringstream& _out, 
-                 std::string& _fltkTextColor, 
-                 unsigned short int& _lineAddress,
-                 bool _bIgnoreLineHeader = false, 
-                 bool _bShowLineAddresses = false );
+	bool Decode( const std::vector<unsigned char>& _in, 
+				 std::stringstream& _out, 
+				 std::string& _fltkTextColor, 
+				 unsigned short int& _lineAddress,
+				 bool _bIgnoreLineHeader = false, 
+				 bool _bShowLineAddresses = false );
 
-    bool Encode( const std::vector<char>& _in,
-                       std::vector<unsigned char>& _out );
+	bool Encode( const std::vector<char>& _in,
+					   std::vector<unsigned char>& _out );
 }
