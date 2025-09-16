@@ -60,10 +60,16 @@ bool HelpCommand()
 	std::cout << "\t  current directory." << std::endl;
 	std::cout << "\t  If the optional flag -strip_binary_header is specified, binary type files" << std::endl;
 	std::cout << "\t  will be extracted without the DragonDOS header." << std::endl << std::endl;
-	std::cout << "\tnew <filename> <size>" << std::endl;
+	std::cout << "\tnew <filename> <size> [<image_type>] [<sides_num>]" << std::endl;
 	std::cout << "\t  Creates a new, formatted disk image." << std::endl;
 	std::cout << "\t  Size is the size of the new disk image in kilobytes." << std::endl;
 	std::cout << "\t  Valid values are 180, 360 and 720." << std::endl << std::endl;
+	std::cout << "\t  Optionally, you can specify a disk image format using the desired" << std::endl;
+	std::cout << "\t  format index from the 'listimages' command." << std::endl;
+	std::cout << "\t  The default image type is .VDK." << std::endl;
+	std::cout << "\t  If you are creating a 360KB disk, you can specify the number of sides" << std::endl;
+	std::cout << "\t  (1 or 2) after the disk image format." << std::endl;
+	std::cout << "\t  The default number of sides is 1." << std::endl << std::endl;
 	std::cout << "\tdelete <filename> <index>" << std::endl;
 	std::cout << "\t  Deletes a file from the disk image." << std::endl;
 	std::cout << "\t  A backup copy of the disk image will be created." << std::endl << std::endl;
