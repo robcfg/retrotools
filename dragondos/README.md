@@ -50,13 +50,21 @@ The following commands are available:
       dragondos extract mydisk.vdk 2
       dragondos extract mydisk.vdk 2 -strip_binary_header
 
-* **new \<filename\> \<image size\>**
+* **new \<filename\> \<image size\> [\<image type\>] [\<sides num\>]**
 
   Creates a new, formatted disk image.\
   The size of the image in Kilobytes needs to be specified.\
-  Valid values for the image size are 180, 360 and 720.
+  Valid values for the image size are 180, 360 and 720.\
+  Optionally, you can specify a disk image format using the desired\
+  format index from the **listimages** command.\
+  The default image type is .VDK.\
+  If you are creating a 360KB disk, you can specify the number of sides\
+  (1 or 2) after the disk image format.\
+  The default number of sides is 1.
 
-      dragondos new mydisk.vdk 720
+      dragondos new mydisk.vdk 180     (1 side,  40 tracks, 180KB .VDK file)
+      dragondos new mydisk.imd 720 2   (2 sides, 80 tracks, 720KB .IMD file)
+      dragondos new mydisk.jvc 360 1 2 (2 sides, 40 tracks, 360KB .JVC file)
 
 * **delete \<filename\> \<index\>**
 
@@ -98,6 +106,18 @@ The following commands are available:
 
   A backup copy of the disk image will be created.
 
+* **listimages**
+
+  Displays a list of the available disk image formats and their\
+  indices for use with the **new** command.
+
+  |   |                     |                  |
+  |---|---------------------|------------------|
+  | 0 | Dragon VDK files    | (\*.vdk)         |
+  | 1 | JVC disk images     | (\*.jvc, \*.dsk) |
+  | 2 | ImageDISK IMD files | (\*.imd)         |
+  | 3 | Raw image files     | (\*.\*)          |
+
 ## How to build it
 
 * Install [CMake](https://cmake.org/)
@@ -113,6 +133,12 @@ The following commands are available:
 * Type `cmake -DCMAKE_BUILD_TYPE=Release ..` This will generate a Makefile on MacOS and Linux platforms, and a Visual Studio solution on Windows.
 
 * On MacOS and Linux, type `make`. On Windows, open the solution with Visual Studio, select 'Release' as build type and build the solution.
+
+### Notes
+
+* FLTK has started deprecating (X)Forms for Wayland on Linux, so starting on version 1.4.4, they are not built by default.\
+  This creates a dependency even on non-Linux platforms. If this is your case, you'll need to compile FLTK using the\
+  FLTK_BUILD_FORMS flag.
 
 ## Links    
 * **Dragon computers**

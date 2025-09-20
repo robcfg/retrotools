@@ -823,7 +823,7 @@ int CMMBEGui::Run( int argc, char** argv )
 
     if( nullptr != mMainWindow )
     {
-        mMainWindow->show(0, nullptr);
+        mMainWindow->show(argc,argv);
         mMainWindow->redraw();
         return Fl::run();
     }

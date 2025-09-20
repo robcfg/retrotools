@@ -10,12 +10,13 @@
 //
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
-// Last update: 12/11/2023
-//
 ////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include "DiskImageInterface.h"
+#ifndef __DRAGONDOSDOS_FS__
+#define __DRAGONDOSDOS_FS__
+
+#include "../DiskImages/DiskImageInterface.h"
 #include "FileSystemInterface.h"
 #include <vector>
 #include <string>
@@ -47,7 +48,8 @@
 #define DRAGONDOS_SECTORSPERBITMAPSECTOR    0x5A0
 #define DRAGONDOS_FILE_HEADER_BEGIN         0x55
 #define DRAGONDOS_FILE_HEADER_END           0xAA
-#define DRAGONDOS_BITMAPSIZE                180
+#define DRAGONDOS_BITMAPSIZE                180    // 180 bytes * 8 sectors per byte = 1440 sectors.
+#define DRAGONDOS_HALFBITMAPSIZE			90
 
 #define DRAGONDOS_INVALID                   0xFFFF // To signal invalid indices. DragonDOS can only have 160 entries max.
 
@@ -115,7 +117,7 @@ public:
     void               SetFileData      ( const std::vector<unsigned char>& src );
     void               SetFileData      ( const unsigned char* src, size_t size );
     size_t             GetFileSize      () const                                    { return data.size(); }
-    bool               GetFileProtected ()                                          { return bProtected; }
+    bool               GetFileProtected () const                                    { return bProtected; }
     void               SetFileProtected ( bool _protected )                         { bProtected = _protected; }
     unsigned char      GetFileType      () const                                    { return fileType; }
     void               SetFileType      ( unsigned char _fileType )                 { fileType = _fileType; }
@@ -134,7 +136,7 @@ private:
 };
 
 // DragonDOS File system
-class CDragonDOS_FS : public IFilesystemInterface
+class CDragonDOS_FS : public IFileSystemInterface
 {
 public:
     CDragonDOS_FS();
@@ -146,33 +148,39 @@ public:
     unsigned short int    GetFileIdx      ( std::string _fileName ) const;
     unsigned short int    GetFileEntry    ( std::string _fileName ) const;
     const CDGNDosFile&    GetFile         ( unsigned short int fileIdx ) const { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
-    bool                  InsertFile      ( std::string _fileName, const std::vector<unsigned char>& _data );
-    bool                  DeleteFile      ( std::string _fileName );
-    bool                  Save            ( std::string _fileName );
 
     std::string GetFileTypeString( unsigned short int fileIdx ) const;
 
     const std::vector<SDGNDosDirectoryEntry>& GetDirectory() { return directory; }
 
-    // IFilesystemInterface
-    bool Load(IDiskImageInterface* _disk);
-    bool Save(const std::string& _filename);
+	// IFileSystemInterface //////////////////////////////////////////////////////////////////////////////////
+	bool Load(IDiskImageInterface* _disk);
+	bool Save(const std::string& _filename);
 
-    const CDirectoryEntryWrapper& GetFSRoot() const;
+	size_t      GetFilesNum() const;
+	std::string GetFileName(size_t _fileIdx) const;
+	size_t      GetFileSize( size_t _fileIdx ) const;
+	size_t      GetFreeSize() const;
 
-    size_t      GetFilesNum() const;
-    std::string GetFileName(size_t _fileIdx) const;
-    size_t      GetFileSize( size_t _fileIdx ) const;
-    size_t      GetFreeSize() const;
+	SFileInfo   GetFileInfo(size_t _fileIdx) const;
 
-    SFileInfo   GetFileInfo(size_t _fileIdx);
-    bool        ExtractFile( std::string _fileName, std::vector<unsigned char>& _dst, bool _withBinaryHeader ) const;
+	std::string GetFSName() const;
+	std::string GetFSVariant() const;
 
-    std::string GetFSName() const;
-    std::string GetFSVariant() const;
-    std::string GetVolumeLabel() const;
+	std::string GetVolumeLabel() const;
 
-    bool InitDisk( IDiskImageInterface* _disk );
+	const CDirectoryEntryWrapper& GetFSRoot() const;
+
+	virtual bool ExtractFile( const std::string& _fileName, std::vector<unsigned char>& dst, bool _withBinaryHeader ) const;
+	virtual bool InsertFile ( const std::string& _fileName, const std::vector<unsigned char>& src, bool _binaryFile );
+	virtual bool DeleteFile ( const std::string& _fileName );
+
+	bool NeedManualSetup() { return false; }
+
+	bool InitDisk( IDiskImageInterface* _disk );
+
+	IFileSystemInterface* NewFileSystem();
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 private:
     IDiskImageInterface*           disk;
@@ -185,10 +193,12 @@ private:
 
     bool                ParseDirectory();
     bool                ParseFiles    ();
-    bool                BackUpDirTrack();
+    bool                BackUpDirTrack( IDiskImageInterface* _disk );
 
     unsigned char GetMaxContiguousFreeSectorsInBitmapByte( unsigned char _bitmapByte );
-    bool          IsBitmapLSNFree  ( size_t _LSN );
-    void          MarkBitmapLSNFree( size_t _LSN );
-    void          MarkBitmapLSNUsed( size_t _LSN );
+    bool          IsBitmapLSNFree  ( IDiskImageInterface* _disk, size_t _LSN );
+    void          MarkBitmapLSNFree( IDiskImageInterface* _disk, size_t _LSN );
+    void          MarkBitmapLSNUsed( IDiskImageInterface* _disk, size_t _LSN );
 };
+
+#endif

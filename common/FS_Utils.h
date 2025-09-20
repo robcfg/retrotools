@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "DiskImageInterface.h"
-#include "FileSystemInterface.h"
+#include "DiskImages/DiskImageInterface.h"
+#include "FileSystems/FileSystemInterface.h"
 
 unsigned short int LSN      ( const IDiskImageInterface& _disk, unsigned short int _track, unsigned short int _side, unsigned short int _sector );
 unsigned char      LSNTrack ( const IDiskImageInterface& _disk, unsigned short int LSN );

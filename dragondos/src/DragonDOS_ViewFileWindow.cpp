@@ -912,7 +912,7 @@ void CDragonDOSViewFileWindow::ExportImage()
 {
     std::string fileName;
 
-    if( !ChooseFilename( fileName, true, false ) )
+    if( !ChooseFilename( fileName, true, false, nullptr ) )
     {
         return;
     }

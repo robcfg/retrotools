@@ -25,11 +25,19 @@ add_executable(
 	dragondos ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Commands.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_FS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
+	# File systems
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
+    # Disk image formats
+	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/DiskImageFactory.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/EDSKDiskImage.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/IMDDiskImage.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/JVCDiskImage.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/RawDiskImage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/VDKDiskImage.cpp
+	# Common functions
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/FS_Utils.cpp
+	# Disassembler 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page1_Opcodes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page2_Opcodes.cpp
@@ -51,19 +59,27 @@ endif()
 target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Main.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Callbacks.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_FS.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/RawDiskImage.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/VDKDiskImage.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/FS_Utils.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_NewDiskWindow.cpp
+	# File systems
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
+    # Disk image formats
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/DiskImageFactory.cpp
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/EDSKDiskImage.cpp
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/IMDDiskImage.cpp
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/JVCDiskImage.cpp
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/RawDiskImage.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/VDKDiskImage.cpp
+	# Common functions
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FS_Utils.cpp
+	# Disassembler
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page1_Opcodes.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page2_Opcodes.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Page3_Opcodes.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Undefined_Opcodes.cpp
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Postbyte_Opcodes.cpp
-    )
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/6x09_Disassembler_Init_Postbyte_Opcodes.cpp    )
 
 if( APPLE )
 set_target_properties( dragondosui

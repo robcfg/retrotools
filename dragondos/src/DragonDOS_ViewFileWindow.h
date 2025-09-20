@@ -17,7 +17,7 @@
 #include <FL/Fl_RGB_Image.H>
 #include <FL/Fl_Window.H>
 
-#include "DragonDOS_FS.h"
+#include "../../common/FileSystems/DragonDOS_FS.h"
 #include "6x09_Disassembler.h"
 
 enum EDRAGONDOSVFW_ViewMode

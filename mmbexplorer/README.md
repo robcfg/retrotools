@@ -30,6 +30,12 @@ It should be as easy as following these simple steps:
 
 * On MacOS and Linux, type `make`. On Windows, open the solution with Visual Studio, select 'Release' as build type and build the solution.
 
+### Notes
+
+* FLTK has started deprecating (X)Forms for Wayland on Linux, so starting on version 1.4.4, they are not built by default.\
+  This creates a dependency even on non-Linux platforms. If this is your case, you'll need to compile FLTK using the\
+  FLTK_BUILD_FORMS flag.
+
 ## How do I use it
 
 MMBExplorer can work as a command-line application or as a graphical one. If you run MMBExplorer without any parameters, it will launch the graphical version.

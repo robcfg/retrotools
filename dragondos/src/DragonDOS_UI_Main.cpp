@@ -12,11 +12,18 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Check_Button.H>
 
-#include "DragonDOS_FS.h"
 #include "../logo/DragonDOS_Logo.xpm"
 #include "DragonDOS_UI_Callbacks.h"
-#include "RawDiskImage.h"
-#include "VDKDiskImage.h"
+
+// Disk image formats
+#include "../../common/DiskImages/DiskImageFactory.h"
+#include "../../common/DiskImages/VDKDiskImage.h"
+#include "../../common/DiskImages/JVCDiskImage.h"
+#include "../../common/DiskImages/IMDDiskImage.h"
+#include "../../common/DiskImages/RawDiskImage.h"
+
+// File systems
+#include "../../common/FileSystems/DragonDOS_FS.h"
 
 #ifndef __APPLE__
 #define DRAGONDOSUI_MENUBARHEIGHT 30
@@ -176,6 +183,11 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
 
     // View file window
     _context->viewFileWindow = new CDragonDOSViewFileWindow( DRAGONDOS_UI_VIEWFILE_WIDTH, DRAGONDOS_UI_VIEWFILE_HEIGHT, "View file(s)" );
+
+	// New disk window
+	_context->newDiskWindow = new CDragonDOSNewDiskWindow( 310, 125, "Create new disk" );
+	_context->newDiskWindow->set_modal();
+	_context->newDiskWindow->SetData( _context );
 }
 
 #ifndef __APPLE__
@@ -263,16 +275,14 @@ int main( int argc, char** argv )
 
     mainWindow->begin();
 
-    CVDKDiskImage img;
-    CDragonDOS_FS fs;
-    
-    img.SetSectorSize( DRAGONDOS_SECTOR_SIZE     );
-    img.SetSectorsNum( DRAGONDOS_SECTORSPERTRACK );
-    img.SetSidesNum  ( 1  );
-    img.SetTracksNum ( 40 );
-    fs.InitDisk( &img );
+	DiskImageFactory diskFactory;
+	diskFactory.RegisterDiskImageFormat( new CVDKDiskImage );
+	diskFactory.RegisterDiskImageFormat( new CJVCDiskImage );
+	diskFactory.RegisterDiskImageFormat( new CIMDDiskImage );
+	diskFactory.RegisterDiskImageFormat( new CRAWDiskImage );
+	context.diskImageFactory = &diskFactory;
 
-    context.disk = &img;
+    CDragonDOS_FS fs;
     context.fs = &fs;
 
     CreateMenuBar( mainWindow->w(), DRAGONDOSUI_MENUBARHEIGHT, modifierKey, &context );
@@ -299,6 +309,14 @@ int main( int argc, char** argv )
     context.fileLabel->copy_label("(No disk)");
     mainWindow->show(argc, argv);
     mainWindow->redraw();
-    
-    return Fl::run();
+
+	int retVal = Fl::run();
+
+	// Cleanup
+	if( context.disk != nullptr )
+	{
+		delete context.disk;
+	}
+
+    return retVal;
 }
