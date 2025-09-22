@@ -22,12 +22,12 @@
 
 enum EDRAGONDOSVFW_ViewMode
 {
-    VM_HEX = 0,
-    VM_TEXT,
-    VM_BASIC,
-    VM_IMAGE,
-    VM_DISASSEMBLY,
-    VM_NUM
+	VM_HEX = 0,
+	VM_TEXT,
+	VM_BASIC,
+	VM_IMAGE,
+	VM_DISASSEMBLY,
+	VM_NUM
 };
 
 //******************************************
@@ -41,66 +41,85 @@ public:
 	virtual ~CDragonDOSViewFileWindow();
 
 	virtual int handle(int _event);
-    virtual void show();
+	virtual void show();
 
-    void SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles );
+	void SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles );
 
-    void ViewAsHex();
-    void ViewAsText();
-    void ViewAsBasic();
-    void ViewAsImage();
-    void ViewAsDisassembly();
+	void ViewAsHex();
+	void ViewAsText();
+	void ViewAsBasic();
+	void ViewAsImage();
+	void ViewAsDisassembly();
 
-    void DecodeImage();
-    void ExportImage();
+	void DecodeImage();
+	void ExportImage();
+
+	void Show6809Disassembly	();
+	void Show6309Disassembly	();
 
 private:
-    void CreateControls         ();
-    void AddHexViewData         ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-    void AddTextViewData        ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-    void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-    void AddDisassemblyViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo );
+	void CreateControls         ();
+	void AddHexViewData         ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+	void AddTextViewData        ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+	void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+	void AddDisassemblyViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo );
 
-    void Decode_PMODE0_Image    ( const std::vector<unsigned char>& _src );
-    void Decode_PMODE1_Image    ( const std::vector<unsigned char>& _src );
-    void Decode_PMODE2_Image    ( const std::vector<unsigned char>& _src );
-    void Decode_PMODE3_Image    ( const std::vector<unsigned char>& _src );
-    void Decode_PMODE4_Image    ( const std::vector<unsigned char>& _src );
-    void Decode_TEXT_Image      ( const std::vector<unsigned char>& _src );
-    void ClearImage             ();
+	void Decode_PMODE0_Image    ( const std::vector<unsigned char>& _src );
+	void Decode_PMODE1_Image    ( const std::vector<unsigned char>& _src );
+	void Decode_PMODE2_Image    ( const std::vector<unsigned char>& _src );
+	void Decode_PMODE3_Image    ( const std::vector<unsigned char>& _src );
+	void Decode_PMODE4_Image    ( const std::vector<unsigned char>& _src );
+	void Decode_TEXT_Image      ( const std::vector<unsigned char>& _src );
+	void ClearImage             ();
 
-    void ShowImageControls( bool _status );
+	void ShowImageControls		( bool _status );
+	void ShowDisasmControls		( bool _status );
 
-    std::string mHexView;
-    std::string mTextView;
-    std::string mBasicView;
-    std::string mDisassemblyView;
-    std::string mHexViewColors;
-    std::string mTextViewColors;
-    std::string mBasicViewColors;
-    std::string mDisassemblyViewColors;
+	std::string mHexView;
+	std::string mTextView;
+	std::string mBasicView;
+	std::string mDisassemblyView;
+	std::string mHexViewColors;
+	std::string mTextViewColors;
+	std::string mBasicViewColors;
+	std::string mDisassemblyViewColors;
 
-    Fl_Text_Display* mTextDisplay = nullptr;
-    Fl_Text_Buffer*  mTextBuffer = nullptr;
-    Fl_Text_Buffer*  mTextColor = nullptr;
+	Fl_Text_Display* mTextDisplay = nullptr;
+	Fl_Text_Buffer*  mTextBuffer = nullptr;
+	Fl_Text_Buffer*  mTextColor = nullptr;
 
-    Fl_Radio_Light_Button* mViewAsHexButton = nullptr;
-    Fl_Radio_Light_Button* mViewAsTextButton = nullptr;
-    Fl_Radio_Light_Button* mViewAsBasicButton = nullptr;
-    Fl_Radio_Light_Button* mViewAsImageButton = nullptr;
-    Fl_Radio_Light_Button* mViewAsDisassemblyButton = nullptr;
+	Fl_Radio_Light_Button* mViewAsHexButton = nullptr;
+	Fl_Radio_Light_Button* mViewAsTextButton = nullptr;
+	Fl_Radio_Light_Button* mViewAsBasicButton = nullptr;
+	Fl_Radio_Light_Button* mViewAsImageButton = nullptr;
+	Fl_Radio_Light_Button* mViewAsDisassemblyButton = nullptr;
 
-    Fl_Box* mViewAsLabel = nullptr;
+	Fl_Box* mViewAsLabel = nullptr;
 
-    Fl_Box* mImage;
-    unsigned char * mImageData = nullptr;
-    std::vector<unsigned char> mImageFileData;
-    Fl_Choice* mVideoMode = nullptr;
-    Fl_Choice* mVideoPalette = nullptr;
+	Fl_Box* mImage;
+	unsigned char * mImageData = nullptr;
+	std::vector<unsigned char> mImageFileData;
+	Fl_Choice* mVideoMode = nullptr;
+	Fl_Choice* mVideoPalette = nullptr;
 
-    Fl_Button* mExportAsPNG = nullptr;
+	Fl_Button* mExportAsPNG = nullptr;
 
-    EDRAGONDOSVFW_ViewMode mViewMode = VM_HEX;
+	EDRAGONDOSVFW_ViewMode mViewMode = VM_HEX;
 
-    Disassembler_6x09 mDisassembler;
+	Disassembler_6x09 m6809_Disassembler;
+	Disassembler_6x09 m6309_Disassembler;
+
+	std::string mText6809;
+	std::string mText6809Colors;
+	std::string mText6309;
+	std::string mText6309Colors;
+
+	Fl_Text_Display* mTextDisasm = nullptr;
+	Fl_Text_Buffer*  mTextDisasmBuffer = nullptr;
+	Fl_Text_Buffer*  mTextDisasmColor = nullptr;
+	Fl_Box* mSeparator = nullptr;
+	Fl_Box* mProcessorLabel = nullptr;
+	Fl_Group* mProcessorButtonGroup = nullptr;
+	Fl_Radio_Light_Button* mProcessor6809Button = nullptr;
+	Fl_Radio_Light_Button* mProcessor6309Button = nullptr;
 };

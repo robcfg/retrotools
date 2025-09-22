@@ -909,3 +909,19 @@ void newDiskWindowCancel_cb(Fl_Widget* pWidget,void* _context)
 
 	pContext->newDiskWindow->hide();
 }
+
+void processor6809_cb(Fl_Widget* pWidget,void* _viewFileWindow)
+{
+	if( _viewFileWindow )
+	{
+		((CDragonDOSViewFileWindow*)_viewFileWindow)->Show6809Disassembly();
+	}
+}
+
+void processor6309_cb(Fl_Widget* pWidget,void* _viewFileWindow)
+{
+	if( _viewFileWindow )
+	{
+		((CDragonDOSViewFileWindow*)_viewFileWindow)->Show6309Disassembly();
+	}
+}

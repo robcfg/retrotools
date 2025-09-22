@@ -65,3 +65,7 @@ void viewFileExportPNG_cb       ( Fl_Widget* pWidget, void* _viewFileWindow );
 // New disk window callbacks
 void newDiskWindowOK_cb			( Fl_Widget* pWidget, void* _context );
 void newDiskWindowCancel_cb		( Fl_Widget* pWidget, void* _context );
+
+// Disassembler view callbacks
+void processor6809_cb			( Fl_Widget* pWidget, void* _viewFileWindow );
+void processor6309_cb			( Fl_Widget* pWidget, void* _viewFileWindow );

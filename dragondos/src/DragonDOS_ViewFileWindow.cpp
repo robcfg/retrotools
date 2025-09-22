@@ -38,13 +38,13 @@
 
 // Style table
 Fl_Text_Display::Style_Table_Entry stable[] = {
-    // FONT COLOR      FONT FACE   FONT SIZE
-    // --------------- ----------- --------------
-    {  FL_BLACK,       FL_COURIER, 14 }, // A - Black
-    {  FL_RED,         FL_COURIER, 14 }, // B - Red
-    {  FL_DARK_YELLOW, FL_COURIER, 14 }, // C - Yellow
-    {  FL_DARK_GREEN,  FL_COURIER, 14 }, // D - Green
-    {  FL_BLUE,        FL_COURIER, 14 }  // E - Blue
+	// FONT COLOR      FONT FACE   FONT SIZE
+	// --------------- ----------- --------------
+	{  FL_BLACK,       FL_COURIER, 14 }, // A - Black
+	{  FL_RED,         FL_COURIER, 14 }, // B - Red
+	{  FL_DARK_YELLOW, FL_COURIER, 14 }, // C - Yellow
+	{  FL_DARK_GREEN,  FL_COURIER, 14 }, // D - Green
+	{  FL_BLUE,        FL_COURIER, 14 }  // E - Blue
 };
 
 #define DRAGONDOSVFW_STYLE_TABLE_SIZE        sizeof(stable)/sizeof(stable[0])
@@ -82,845 +82,957 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 
 // Palettes
 const unsigned char TwoColorPalettes[2][2][3] = {   0x4C, 0x56, 0x3C, 0xBE, 0xC8, 0xAC,
-                                                    0x28, 0x58, 0x10, 0x2F, 0xD2, 0x00 };
+													0x28, 0x58, 0x10, 0x2F, 0xD2, 0x00 };
 
 const unsigned char FourColorPalettes[2][4][3] = {  0xBE, 0xC8, 0xAC, 0x40, 0xAF, 0x71,
-                                                    0xC7, 0x4E, 0xF0, 0xD4, 0x7F, 0x00,
-                                                    0x2F, 0xD2, 0x00, 0xC0, 0xE5, 0x01,
-                                                    0x4C, 0x3A, 0xC4, 0x9A, 0x31, 0x36 };
+													0xC7, 0x4E, 0xF0, 0xD4, 0x7F, 0x00,
+													0x2F, 0xD2, 0x00, 0xC0, 0xE5, 0x01,
+													0x4C, 0x3A, 0xC4, 0x9A, 0x31, 0x36 };
 
 CDragonDOSViewFileWindow::CDragonDOSViewFileWindow( int _w, int _h, const char* _label ) : 
-    Fl_Window( _w, _h, _label ) 
+	Fl_Window( _w, _h, _label )
 {
-    mImageData = new unsigned char[DRAGONDOSVFW_IMAGE_VIEW_SIZE];
-    CreateControls();
+	mImageData = new unsigned char[DRAGONDOSVFW_IMAGE_VIEW_SIZE];
+	CreateControls();
+	m6809_Disassembler.Init( Disassembler_6x09::EProcessor::M6809 );
+	m6309_Disassembler.Init( Disassembler_6x09::EProcessor::M6309 );
 }
 
 CDragonDOSViewFileWindow::CDragonDOSViewFileWindow( int _x, int _y, int _w, int _h, const char* _label ) : 
-    Fl_Window( _x, _y, _w, _h, _label )
+	Fl_Window( _x, _y, _w, _h, _label )
 {
-    mImageData = new unsigned char[DRAGONDOSVFW_IMAGE_VIEW_SIZE];
-    CreateControls();
+	mImageData = new unsigned char[DRAGONDOSVFW_IMAGE_VIEW_SIZE];
+	CreateControls();
+	m6809_Disassembler.Init( Disassembler_6x09::EProcessor::M6809 );
+	m6309_Disassembler.Init( Disassembler_6x09::EProcessor::M6309 );
 }
 
 CDragonDOSViewFileWindow::~CDragonDOSViewFileWindow()
 {
-    if( nullptr != mImageData )
-    {
-        delete[] mImageData;
-    }
+	if( nullptr != mImageData )
+	{
+		delete[] mImageData;
+	}
 }
 
 int CDragonDOSViewFileWindow::handle(int _event)
 {
 	if( _event == FL_KEYUP )
 	{
-        int key = Fl::event_key();
-        if( key == DRAGONDOSVFW_KEY_H )
-        {
-            ViewAsHex();
-            mViewAsHexButton->value(1);
-            mViewAsTextButton->value(0);
-            mViewAsBasicButton->value(0);
-            mViewAsImageButton->value(0);
-            mViewAsDisassemblyButton->value(0);
-            return 1;
-        }
-        else if( key == DRAGONDOSVFW_KEY_T )
-        {
-            ViewAsText();
-            mViewAsHexButton->value(0);
-            mViewAsTextButton->value(1);
-            mViewAsBasicButton->value(0);
-            mViewAsImageButton->value(0);
-            mViewAsDisassemblyButton->value(0);
-            return 1;
-        }
-        else if( key == DRAGONDOSVFW_KEY_B )
-        {
-            ViewAsBasic();
-            mViewAsHexButton->value(0);
-            mViewAsTextButton->value(0);
-            mViewAsBasicButton->value(1);
-            mViewAsImageButton->value(0);
-            mViewAsDisassemblyButton->value(0);
-            return 1;
-        }
-        else if( key == DRAGONDOSVFW_KEY_I )
-        {
-            ViewAsImage();
-            mViewAsHexButton->value(0);
-            mViewAsTextButton->value(0);
-            mViewAsBasicButton->value(0);
-            mViewAsImageButton->value(1);
-            mViewAsDisassemblyButton->value(0);
-            return 1;
-        }
-        else if( key == DRAGONDOSVFW_KEY_D )
-        {
-            ViewAsDisassembly();
-            mViewAsHexButton->value(0);
-            mViewAsTextButton->value(0);
-            mViewAsBasicButton->value(0);
-            mViewAsImageButton->value(0);
-            mViewAsDisassemblyButton->value(1);
-            return 1;
-        }
-    }
+		int key = Fl::event_key();
+		if( key == DRAGONDOSVFW_KEY_H )
+		{
+			ViewAsHex();
+			mViewAsHexButton->value(1);
+			mViewAsTextButton->value(0);
+			mViewAsBasicButton->value(0);
+			mViewAsImageButton->value(0);
+			mViewAsDisassemblyButton->value(0);
+			return 1;
+		}
+		else if( key == DRAGONDOSVFW_KEY_T )
+		{
+			ViewAsText();
+			mViewAsHexButton->value(0);
+			mViewAsTextButton->value(1);
+			mViewAsBasicButton->value(0);
+			mViewAsImageButton->value(0);
+			mViewAsDisassemblyButton->value(0);
+			return 1;
+		}
+		else if( key == DRAGONDOSVFW_KEY_B )
+		{
+			ViewAsBasic();
+			mViewAsHexButton->value(0);
+			mViewAsTextButton->value(0);
+			mViewAsBasicButton->value(1);
+			mViewAsImageButton->value(0);
+			mViewAsDisassemblyButton->value(0);
+			return 1;
+		}
+		else if( key == DRAGONDOSVFW_KEY_I )
+		{
+			ViewAsImage();
+			mViewAsHexButton->value(0);
+			mViewAsTextButton->value(0);
+			mViewAsBasicButton->value(0);
+			mViewAsImageButton->value(1);
+			mViewAsDisassemblyButton->value(0);
+			return 1;
+		}
+		else if( key == DRAGONDOSVFW_KEY_D )
+		{
+			ViewAsDisassembly();
+			mViewAsHexButton->value(0);
+			mViewAsTextButton->value(0);
+			mViewAsBasicButton->value(0);
+			mViewAsImageButton->value(0);
+			mViewAsDisassemblyButton->value(1);
+			return 1;
+		}
+	}
 
-    int ret = Fl_Window::handle( _event );
+	int ret = Fl_Window::handle( _event );
 
-    return( ret );
+	return( ret );
 }
 
 void CDragonDOSViewFileWindow::show()
 {
-    switch( mViewMode )
-    {
-        case VM_HEX  :      ViewAsHex();         break;
-        case VM_TEXT :      ViewAsText();        break;
-        case VM_BASIC:      ViewAsBasic();       break;
-        case VM_IMAGE:      ViewAsImage();       break;
-        case VM_DISASSEMBLY:ViewAsDisassembly(); break;
-        default:            ViewAsHex();         break;
-    }
+	switch( mViewMode )
+	{
+		case VM_HEX  :      ViewAsHex();         break;
+		case VM_TEXT :      ViewAsText();        break;
+		case VM_BASIC:      ViewAsBasic();       break;
+		case VM_IMAGE:      ViewAsImage();       break;
+		case VM_DISASSEMBLY:ViewAsDisassembly(); break;
+		default:            ViewAsHex();         break;
+	}
 
-    Fl_Window::show();
+	Fl_Window::show();
 }
 
 void CDragonDOSViewFileWindow::CreateControls()
 {
-    mTextBuffer = new Fl_Text_Buffer();
-    mTextColor  = new Fl_Text_Buffer();
+	mTextBuffer = new Fl_Text_Buffer();
+	mTextColor  = new Fl_Text_Buffer();
+	mTextDisasmBuffer = new Fl_Text_Buffer();
+	mTextDisasmColor  = new Fl_Text_Buffer();
 
-    box(FL_FLAT_BOX);
-    color(FL_DARK2);
-    begin();
+	box(FL_FLAT_BOX);
+	color(FL_DARK2);
+	begin();
 
-    int x = DRAGONDOSVFW_WINDOW_MARGIN;
-    int y = DRAGONDOSVFW_WINDOW_MARGIN;
+	int x = DRAGONDOSVFW_WINDOW_MARGIN;
+	int y = DRAGONDOSVFW_WINDOW_MARGIN;
 
-    mViewAsLabel = new Fl_Box( FL_NO_BOX, x, y, 90, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "View as:" );
-    mViewAsLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
-    x += 90;
-    
-    mViewAsHexButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Hex (H)");
-    mViewAsHexButton->callback( viewFileAsHex_cb, (void*)this );
-    mViewAsHexButton->value(1);
-    x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
-    
-    mViewAsTextButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Text (T)");
-    mViewAsTextButton->callback( viewFileAsText_cb, (void*)this );
-    x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
-    
-    mViewAsBasicButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Basic (B)");
-    mViewAsBasicButton->callback( viewFileAsBasic_cb, (void*)this );
-    x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
-    
-    mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Image (I)");
-    mViewAsImageButton->callback( viewFileAsImage_cb, (void*)this );
-    x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
-    
-    mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Disasm. (D)");
-    mViewAsImageButton->callback( viewFileAsDisassembly_cb, (void*)this );
-    x = DRAGONDOSVFW_WINDOW_MARGIN;
-    y += 35;
+	mViewAsLabel = new Fl_Box( FL_NO_BOX, x, y, 90, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "View as:" );
+	mViewAsLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
+	x += 90;
+	
+	mViewAsHexButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Hex (H)");
+	mViewAsHexButton->callback( viewFileAsHex_cb, (void*)this );
+	mViewAsHexButton->value(1);
+	x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
+	
+	mViewAsTextButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Text (T)");
+	mViewAsTextButton->callback( viewFileAsText_cb, (void*)this );
+	x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
+	
+	mViewAsBasicButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Basic (B)");
+	mViewAsBasicButton->callback( viewFileAsBasic_cb, (void*)this );
+	x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
+	
+	mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Image (I)");
+	mViewAsImageButton->callback( viewFileAsImage_cb, (void*)this );
+	x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
+	
+	mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Disasm. (D)");
+	mViewAsImageButton->callback( viewFileAsDisassembly_cb, (void*)this );
+	x = DRAGONDOSVFW_WINDOW_MARGIN;
+	y += 35;
+	int disasmY = y;
 
-    mTextDisplay = new Fl_Text_Display( x, y, w() - (DRAGONDOSVFW_WINDOW_MARGIN * 2), h() - y - DRAGONDOSVFW_WINDOW_MARGIN, nullptr );
-    mTextDisplay->textfont(FL_COURIER);
-    mTextDisplay->buffer( mTextBuffer );
+	mTextDisplay = new Fl_Text_Display( x, y, w() - (DRAGONDOSVFW_WINDOW_MARGIN * 2), h() - y - DRAGONDOSVFW_WINDOW_MARGIN, nullptr );
+	mTextDisplay->textfont(FL_COURIER);
+	mTextDisplay->buffer( mTextBuffer );
+	mTextDisplay->highlight_data( mTextColor, stable, DRAGONDOSVFW_STYLE_TABLE_SIZE, 'A', 0, 0 );
 
-    mTextDisplay->highlight_data( mTextColor, stable, DRAGONDOSVFW_STYLE_TABLE_SIZE, 'A', 0, 0 );
+	// Image view controls
+	x = (w() - DRAGONDOSVFW_IMAGE_VIEW_WIDTH)/2;
+	mImage = new Fl_Box( FL_BORDER_BOX, x-1, y-1, DRAGONDOSVFW_IMAGE_VIEW_WIDTH+2, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT+2, nullptr );
+	mImage->align( FL_ALIGN_INSIDE );
+	mImage->hide();
+	y += DRAGONDOSVFW_IMAGE_VIEW_HEIGHT + 25;
 
-    // Image view controls
-    x = (w() - DRAGONDOSVFW_IMAGE_VIEW_WIDTH)/2;
-    mImage = new Fl_Box( FL_BORDER_BOX, x-1, y-1, DRAGONDOSVFW_IMAGE_VIEW_WIDTH+2, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT+2, nullptr );
-    mImage->align( FL_ALIGN_INSIDE );
-    mImage->hide();
-    y += DRAGONDOSVFW_IMAGE_VIEW_HEIGHT + 25;
+	mVideoMode = new Fl_Choice( x, y, DRAGONDOSVFW_MODE_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
+	mVideoMode->add("PMODE 0");
+	mVideoMode->add("PMODE 1");
+	mVideoMode->add("PMODE 2");
+	mVideoMode->add("PMODE 3");
+	mVideoMode->add("PMODE 4");
+	mVideoMode->add("TEXT");
+	mVideoMode->value(4);
+	mVideoMode->align( FL_ALIGN_TOP_LEFT );
+	mVideoMode->copy_label("Video mode");
+	mVideoMode->callback( viewFileModeChanged_cb, (void*)this );
+	x += DRAGONDOSVFW_MODE_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
 
-    mVideoMode = new Fl_Choice( x, y, DRAGONDOSVFW_MODE_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
-    mVideoMode->add("PMODE 0");
-    mVideoMode->add("PMODE 1");
-    mVideoMode->add("PMODE 2");
-    mVideoMode->add("PMODE 3");
-    mVideoMode->add("PMODE 4");
-    mVideoMode->add("TEXT");
-    mVideoMode->value(4);
-    mVideoMode->align( FL_ALIGN_TOP_LEFT );
-    mVideoMode->copy_label("Video mode");
-    mVideoMode->callback( viewFileModeChanged_cb, (void*)this );
-    x += DRAGONDOSVFW_MODE_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
+	mVideoPalette = new Fl_Choice( x, y, DRAGONDOSVFW_PALETTE_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
+	mVideoPalette->add("White");
+	mVideoPalette->add("Green");
+	mVideoPalette->value(1);
+	mVideoPalette->align( FL_ALIGN_TOP_LEFT );
+	mVideoPalette->copy_label("Palette");
+	mVideoPalette->callback( viewFilePaletteChanged_cb, (void*)this );
+	x += DRAGONDOSVFW_PALETTE_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
 
-    mVideoPalette = new Fl_Choice( x, y, DRAGONDOSVFW_PALETTE_COMBO_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, nullptr );
-    mVideoPalette->add("White");
-    mVideoPalette->add("Green");
-    mVideoPalette->value(1);
-    mVideoPalette->align( FL_ALIGN_TOP_LEFT );
-    mVideoPalette->copy_label("Palette");
-    mVideoPalette->callback( viewFilePaletteChanged_cb, (void*)this );
-    x += DRAGONDOSVFW_PALETTE_COMBO_WIDTH + DRAGONDOSVFW_WINDOW_MARGIN;
+	mExportAsPNG = new Fl_Button( x, y, 100, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Export as PNG" );
+	mExportAsPNG->callback( viewFileExportPNG_cb, (void*)this );
+	y += 23;
 
-    mExportAsPNG = new Fl_Button( x, y, 100, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Export as PNG" );
-    mExportAsPNG->callback( viewFileExportPNG_cb, (void*)this );
-    y += 23;
+	// Disassembler view controls
+	x = DRAGONDOSVFW_WINDOW_MARGIN;
+	y = disasmY;
 
-    end();
+	mSeparator = new Fl_Box(x, y,  w() - (DRAGONDOSVFW_WINDOW_MARGIN * 2), 2);
+	mSeparator->box(FL_FLAT_BOX);
+	mSeparator->color(FL_DARK3);
+	y += DRAGONDOSVFW_WINDOW_MARGIN;
+
+	//mProcessorButtonGroup = new Fl_Group( x, y, w() - (DRAGONDOSVFW_WINDOW_MARGIN * 2), DRAGONDOSVFW_RADIO_BUTTON_HEIGHT );
+	mProcessorButtonGroup = new Fl_Group( x, y, w() - (DRAGONDOSVFW_WINDOW_MARGIN * 2), DRAGONDOSVFW_RADIO_BUTTON_HEIGHT );
+
+	mProcessorLabel = new Fl_Box( FL_NO_BOX, x, y, 90, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Processor:" );
+	mProcessorLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
+	mProcessorButtonGroup->add( mProcessorLabel );
+	x += 90;
+	
+	mProcessor6809Button = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "6809");
+	mProcessor6809Button->callback( processor6809_cb, (void*)this );
+	mProcessor6809Button->value(1);
+	mProcessorButtonGroup->add( mProcessor6809Button );
+	x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
+	
+	mProcessor6309Button = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "6309");
+	mProcessor6309Button->callback( processor6309_cb, (void*)this );
+	mProcessorButtonGroup->add( mProcessor6309Button );
+	mProcessorButtonGroup->end();
+	x = DRAGONDOSVFW_WINDOW_MARGIN;
+
+	y += DRAGONDOSVFW_RADIO_BUTTON_HEIGHT + DRAGONDOSVFW_WINDOW_MARGIN;
+
+	mTextDisasm = new Fl_Text_Display( x, y, w() - (DRAGONDOSVFW_WINDOW_MARGIN * 2), h() - y - DRAGONDOSVFW_WINDOW_MARGIN, nullptr );
+	mTextDisasm->textfont(FL_COURIER);
+	mTextDisasm->buffer( mTextDisasmBuffer );
+	mTextDisasm->highlight_data( mTextDisasmColor, stable, DRAGONDOSVFW_STYLE_TABLE_SIZE, 'A', 0, 0 );
+
+	end();
 }
 
 void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles )
 {
-    mHexView.clear();
-    mHexViewColors.clear();
-    mTextView.clear();
-    mTextViewColors.clear();
-    mBasicView.clear();
-    mBasicViewColors.clear();
-    mDisassemblyView.clear();
-    mDisassemblyViewColors.clear();
+	mHexView.clear();
+	mHexViewColors.clear();
+	mTextView.clear();
+	mTextViewColors.clear();
+	mBasicView.clear();
+	mBasicViewColors.clear();
+	mDisassemblyView.clear();
+	mDisassemblyViewColors.clear();
 
-    for( auto file : _selectedFiles )
-    {
-        std::string fileName = _fs->GetFileName( file );
-        if( fileName.length() > DRAGONDOSVFW_MAX_FILENAME_LENGTH )
-        {
-            fileName =fileName.substr( 0, DRAGONDOSVFW_MAX_FILENAME_LENGTH );
-        }
+	for( auto file : _selectedFiles )
+	{
+		std::string fileName = _fs->GetFileName( file );
+		if( fileName.length() > DRAGONDOSVFW_MAX_FILENAME_LENGTH )
+		{
+			fileName =fileName.substr( 0, DRAGONDOSVFW_MAX_FILENAME_LENGTH );
+		}
 
-        std::string fileHeader;
-        if( _selectedFiles.size() > 1 )
-        {
-            fileHeader = "-[";
-            fileHeader += fileName;
-            fileHeader.append( DRAGONDOSVFW_MAX_FILENAME_LENGTH - fileName.length(), ' ' );
-            fileHeader += "]";
-            fileHeader.append( DRAGONDOSVFW_FILE_HEADER_FILLER_NUM, '-' );
-        }
+		std::string fileHeader;
+		if( _selectedFiles.size() > 1 )
+		{
+			fileHeader = "-[";
+			fileHeader += fileName;
+			fileHeader.append( DRAGONDOSVFW_MAX_FILENAME_LENGTH - fileName.length(), ' ' );
+			fileHeader += "]";
+			fileHeader.append( DRAGONDOSVFW_FILE_HEADER_FILLER_NUM, '-' );
+		}
 
-        const CDGNDosFile ddosFile = _fs->GetFile((unsigned short int)file);
+		const CDGNDosFile ddosFile = _fs->GetFile((unsigned short int)file);
 
-        std::vector<unsigned char> fileData;
-        _fs->ExtractFile        ( fileName, fileData, false );
-        AddHexViewData          ( fileHeader, fileData );
-        AddTextViewData         ( fileHeader, fileData );
-        AddBasicViewData        ( fileHeader, fileData );
-        AddDisassemblyViewData  ( fileHeader, fileData, ddosFile );
-    }
+		std::vector<unsigned char> fileData;
+		_fs->ExtractFile        ( fileName, fileData, false );
+		AddHexViewData          ( fileHeader, fileData );
+		AddTextViewData         ( fileHeader, fileData );
+		AddBasicViewData        ( fileHeader, fileData );
+		AddDisassemblyViewData  ( fileHeader, fileData, ddosFile );
+	}
 
-    mHexViewColors.append ( mHexView.length() , DRAGONDOSVFW_COLOR_TEXT );
-    mTextViewColors.append( mTextView.length(), DRAGONDOSVFW_COLOR_TEXT );
+	mHexViewColors.append ( mHexView.length() , DRAGONDOSVFW_COLOR_TEXT );
+	mTextViewColors.append( mTextView.length(), DRAGONDOSVFW_COLOR_TEXT );
 
-    // Create image data from 1st file selected
-    if( !_selectedFiles.empty() )
-    {
-        std::string fileName = _fs->GetFileName( _selectedFiles[0] );
-        mImageFileData.clear();
-        _fs->ExtractFile( fileName, mImageFileData, false );
+	// Create image data from 1st file selected
+	if( !_selectedFiles.empty() )
+	{
+		std::string fileName = _fs->GetFileName( _selectedFiles[0] );
+		mImageFileData.clear();
+		_fs->ExtractFile( fileName, mImageFileData, false );
 
-        DecodeImage();
-    }
+		DecodeImage();
+	}
 }
 
 void CDragonDOSViewFileWindow::ViewAsHex()
 {
-    mViewMode = VM_HEX;
-    ShowImageControls( false );
-    mTextBuffer->text( mHexView.c_str() );
-    mTextColor->text( mHexViewColors.c_str() );
+	mViewMode = VM_HEX;
+	ShowDisasmControls( false );
+	ShowImageControls( false );
+	mTextBuffer->text( mHexView.c_str() );
+	mTextColor->text( mHexViewColors.c_str() );
 }
 
 void CDragonDOSViewFileWindow::ViewAsText()
 {
-    mViewMode = VM_TEXT;
-    ShowImageControls( false );
-    mTextBuffer->text( mTextView.c_str() );
-    mTextColor->text( mTextViewColors.c_str() );
+	mViewMode = VM_TEXT;
+	ShowDisasmControls( false );
+	ShowImageControls( false );
+	mTextBuffer->text( mTextView.c_str() );
+	mTextColor->text( mTextViewColors.c_str() );
 }
 
 void CDragonDOSViewFileWindow::ViewAsBasic()
 {
-    mViewMode = VM_BASIC;
-    ShowImageControls( false );
-    mTextBuffer->text( mBasicView.c_str() );
-    mTextColor->text( mBasicViewColors.c_str() );
+	mViewMode = VM_BASIC;
+	ShowDisasmControls( false );
+	ShowImageControls( false );
+	mTextBuffer->text( mBasicView.c_str() );
+	mTextColor->text( mBasicViewColors.c_str() );
 }
 
 void CDragonDOSViewFileWindow::ViewAsImage()
 {
-    mViewMode = VM_IMAGE;
-    ShowImageControls( true );
+	mViewMode = VM_IMAGE;
+	ShowDisasmControls( false );
+	ShowImageControls( true );
 }
 
 void CDragonDOSViewFileWindow::ViewAsDisassembly()
 {
-    mViewMode = VM_DISASSEMBLY;
-    ShowImageControls( false );
-    mTextBuffer->text( mDisassemblyView.c_str() );
-    mTextColor->text( mDisassemblyViewColors.c_str() );
+	mViewMode = VM_DISASSEMBLY;
+	ShowDisasmControls( true );
+	if( mProcessor6809Button->value() != 0 )
+	{
+		mTextDisasmBuffer->text( mText6809.c_str() );
+		mTextDisasmColor->text( mText6809Colors.c_str() );
+	}
+	else
+	{
+		mTextDisasmBuffer->text( mText6309.c_str() );
+		mTextDisasmColor->text( mText6309Colors.c_str() );
+	}
 }
 
 void CDragonDOSViewFileWindow::AddHexViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
-    std::stringstream strStream;
-    if( !_fileHeader.empty() )
-    {
-        strStream << _fileHeader << std::endl;
-    }
+	std::stringstream strStream;
+	if( !_fileHeader.empty() )
+	{
+		strStream << _fileHeader << std::endl;
+	}
 
-    size_t c = 0;
-    size_t filesize = _fileData.size();
+	size_t c = 0;
+	size_t filesize = _fileData.size();
 
-    while( c < _fileData.size() )
-    {
-        strStream << std::hex << std::uppercase << std::setfill('0') << std::setw(5);
-        strStream << c << ": ";
+	while( c < _fileData.size() )
+	{
+		strStream << std::hex << std::uppercase << std::setfill('0') << std::setw(5);
+		strStream << c << ": ";
 
-        for( int x = 0; x < 16; ++x )
-        {
-            if( c < filesize )
-            {
-                strStream << std::setfill('0') << std::setw(2) << (size_t)_fileData[c] << " ";
-            }
-            else {
-                strStream << "   ";
-            }
-            ++c;
-        }
-        c -= 16;
+		for( int x = 0; x < 16; ++x )
+		{
+			if( c < filesize )
+			{
+				strStream << std::setfill('0') << std::setw(2) << (size_t)_fileData[c] << " ";
+			}
+			else {
+				strStream << "   ";
+			}
+			++c;
+		}
+		c -= 16;
 
-        for( int x = 0; x < 16; ++x )
-        {
-            if( (c < filesize) && (_fileData[c] > 31) && (_fileData[c] < 128) )
-            {
-                strStream << (char)_fileData[c];
-            }
-            else if( c < filesize )
-            {
-                strStream << ".";
-            }
-            ++c;
-        }
+		for( int x = 0; x < 16; ++x )
+		{
+			if( (c < filesize) && (_fileData[c] > 31) && (_fileData[c] < 128) )
+			{
+				strStream << (char)_fileData[c];
+			}
+			else if( c < filesize )
+			{
+				strStream << ".";
+			}
+			++c;
+		}
 
-        strStream << std::endl;
-    }
+		strStream << std::endl;
+	}
 
-    strStream << std::endl;
+	strStream << std::endl;
 
-    mHexView += strStream.str();
+	mHexView += strStream.str();
 }
 
 void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
-    if( _fileData.empty() )
-    {
-        mTextView = "";
-        return;
-    }
-    std::stringstream strStream;
-    if( !_fileHeader.empty() )
-    {
-        strStream << _fileHeader << std::endl;
-    }
+	if( _fileData.empty() )
+	{
+		mTextView = "";
+		return;
+	}
+	std::stringstream strStream;
+	if( !_fileHeader.empty() )
+	{
+		strStream << _fileHeader << std::endl;
+	}
 
-    size_t c = 0;
-    size_t charsPerLineCount = 0;
-    size_t filesize = _fileData.size();
+	size_t c = 0;
+	size_t charsPerLineCount = 0;
+	size_t filesize = _fileData.size();
 
-    while( c < filesize )
-    {
-        if( (_fileData[c] > 31) && (_fileData[c] < 128) )
-        {
-            strStream << (char)_fileData[c];
-            ++charsPerLineCount;
-        }
-        else if( _fileData[c] == '\n' )
-        {
-            strStream << std::endl;
-            charsPerLineCount = 0;
-        }
-        c++;
+	while( c < filesize )
+	{
+		if( (_fileData[c] > 31) && (_fileData[c] < 128) )
+		{
+			strStream << (char)_fileData[c];
+			++charsPerLineCount;
+		}
+		else if( _fileData[c] == '\n' )
+		{
+			strStream << std::endl;
+			charsPerLineCount = 0;
+		}
+		c++;
 
-        if( charsPerLineCount && 0 == charsPerLineCount % 64 )
-        {
-            strStream << std::endl;
-        }
-    }
+		if( charsPerLineCount && 0 == charsPerLineCount % 64 )
+		{
+			strStream << std::endl;
+		}
+	}
 
-    if( _fileData.back() != '\n' )
-    {
-        strStream << std::endl;
-    }
+	if( _fileData.back() != '\n' )
+	{
+		strStream << std::endl;
+	}
 
-    strStream << std::endl;
+	strStream << std::endl;
 
-    mTextView += strStream.str();
+	mTextView += strStream.str();
 }
 
 void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
-    if( _fileData.empty() )
-    {
-        mBasicView = "";
-        mBasicViewColors = "";
-        return;
-    }
+	if( _fileData.empty() )
+	{
+		mBasicView = "";
+		mBasicViewColors = "";
+		return;
+	}
 
-    std::stringstream strStream;
-    std::stringstream clrStream;
-    std::string textColors;
+	std::stringstream strStream;
+	std::stringstream clrStream;
+	std::string textColors;
 
-    if( !_fileHeader.empty() )
-    {
-        strStream << _fileHeader << std::endl;
-        textColors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
-        textColors += "\n";
-    }
+	if( !_fileHeader.empty() )
+	{
+		strStream << _fileHeader << std::endl;
+		textColors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
+		textColors += "\n";
+	}
 
-    unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
-    DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
+	unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
+	DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
 
-    strStream << std::endl;
-    textColors += "\n";
+	strStream << std::endl;
+	textColors += "\n";
 
-    mBasicView += strStream.str();
-    mBasicViewColors += textColors;
+	mBasicView += strStream.str();
+	mBasicViewColors += textColors;
 }
 
 void CDragonDOSViewFileWindow::AddDisassemblyViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo )
 {
-    if( _fileData.empty() )
-    {
-        mDisassemblyView = "";
-        mDisassemblyViewColors = "";
-        return;
-    }
+	if( _fileData.empty() )
+	{
+		mDisassemblyView = "";
+		mDisassemblyViewColors = "";
+		return;
+	}
 
-    std::string text;
-    std::string textColors;
+	mText6809 		= "";
+	mText6809Colors = "";
+	mText6309 		= "";
+	mText6309Colors = "";
 
-    if( !_fileHeader.empty() )
-    {
-        text += _fileHeader;
-        text += "\n";
-        textColors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
-        textColors += "\n";
-    }
+	if( !_fileHeader.empty() )
+	{
+		mText6809 += _fileHeader;
+		mText6809 += "\n";
+		mText6809Colors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
+		mText6809Colors += "\n";
 
-    if( _fileInfo.GetFileType() == DRAGONDOS_FILETYPE_BINARY )
-    {
-        mDisassembler.Disassemble( _fileData, _fileInfo.GetLoadAddress(), _fileInfo.GetExecAddress(), text, textColors );
-    }
+		mText6309 += _fileHeader;
+		mText6309 += "\n";
+		mText6309Colors.append( _fileHeader.length(), DRAGONDOSVFW_COLOR_TEXT );
+		mText6309Colors += "\n";
+	}
 
-    text += "\n";
-    textColors += "\n";
+	if( _fileInfo.GetFileType() == DRAGONDOS_FILETYPE_BINARY )
+	{
+		m6809_Disassembler.Disassemble( _fileData, _fileInfo.GetLoadAddress(), _fileInfo.GetExecAddress(), mText6809, mText6809Colors );
+		m6309_Disassembler.Disassemble( _fileData, _fileInfo.GetLoadAddress(), _fileInfo.GetExecAddress(), mText6309, mText6309Colors );
+	}
 
-    mDisassemblyView += text;
-    mDisassemblyViewColors += textColors;
+	mText6809 += "\n";
+	mText6809Colors += "\n";
+	mText6309 += "\n";
+	mText6309Colors += "\n";
+
+	if( mProcessor6809Button->value() != 0 )
+	{
+		mDisassemblyView = mText6809;
+		mDisassemblyViewColors = mText6809Colors;
+	}
+	else
+	{
+		mDisassemblyView = mText6309;
+		mDisassemblyViewColors = mText6309Colors;
+	}
 }
 
 void CDragonDOSViewFileWindow::ShowImageControls( bool _status )
 {
-    if( _status )
-    {
-        mTextDisplay->hide();
-        mImage->show();
-        mVideoMode->show();
-        mVideoPalette->show();
-        mExportAsPNG->show();
-    }
-    else
-    {
-        mTextDisplay->show();
-        mImage->hide();
-        mVideoMode->hide();
-        mVideoPalette->hide();
-        mExportAsPNG->hide();
-    }
+	if( _status )
+	{
+		mTextDisplay->hide();
+		mImage->show();
+		mVideoMode->show();
+		mVideoPalette->show();
+		mExportAsPNG->show();
+	}
+	else
+	{
+		mTextDisplay->show();
+		mImage->hide();
+		mVideoMode->hide();
+		mVideoPalette->hide();
+		mExportAsPNG->hide();
+	}
+}
+
+void CDragonDOSViewFileWindow::ShowDisasmControls( bool _status )
+{
+	if( _status )
+	{
+		mTextDisplay->hide();
+		mImage->hide();
+		mVideoMode->hide();
+		mVideoPalette->hide();
+		mExportAsPNG->hide();
+		mSeparator->show();
+		mProcessorButtonGroup->show();
+		mTextDisasm->show();
+	}
+	else
+	{
+		mTextDisplay->show();
+		mImage->hide();
+		mVideoMode->hide();
+		mVideoPalette->hide();
+		mExportAsPNG->hide();
+		mSeparator->hide();
+		mProcessorButtonGroup->hide();
+		mTextDisasm->hide();
+	}
+}
+
+void CDragonDOSViewFileWindow::Show6809Disassembly()
+{
+	mTextDisasmBuffer->text( mText6809.c_str() );
+	mTextDisasmColor->text( mText6809Colors.c_str() );
+	mTextDisasm->redraw();
+}
+
+void CDragonDOSViewFileWindow::Show6309Disassembly()
+{
+	mTextDisasmBuffer->text( mText6309.c_str() );
+	mTextDisasmColor->text( mText6309Colors.c_str() );
+	mTextDisasm->redraw();
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE0_Image( const std::vector<unsigned char>& _src )
 {
-    size_t lineBytes = 16; // PMODE0 line size in bytes.
-    size_t rgbBytes = 512 * 3;
-    size_t rgbBytes2 = rgbBytes * 2;
-    size_t rgbBytes3 = rgbBytes * 3;
-    size_t linesNum = _src.size() / lineBytes;
-    if( 0 == linesNum )
-    {
-        lineBytes = _src.size();
-        linesNum = 1;
-    }
-    if( linesNum >= 192 )
-    {
-        linesNum = 192;
-    }
+	size_t lineBytes = 16; // PMODE0 line size in bytes.
+	size_t rgbBytes = 512 * 3;
+	size_t rgbBytes2 = rgbBytes * 2;
+	size_t rgbBytes3 = rgbBytes * 3;
+	size_t linesNum = _src.size() / lineBytes;
+	if( 0 == linesNum )
+	{
+		lineBytes = _src.size();
+		linesNum = 1;
+	}
+	if( linesNum >= 192 )
+	{
+		linesNum = 192;
+	}
 
-    size_t dataPtr = 0;
-    size_t imagePtr = 0;
-    int paletteIdx = mVideoPalette->value();
-    int palettePixelIdx = 0;
-    unsigned char pixelR = 0;
-    unsigned char pixelG = 0;
-    unsigned char pixelB = 0;
-    unsigned char pixelMask = 0b11000000;
+	size_t dataPtr = 0;
+	size_t imagePtr = 0;
+	int paletteIdx = mVideoPalette->value();
+	int palettePixelIdx = 0;
+	unsigned char pixelR = 0;
+	unsigned char pixelG = 0;
+	unsigned char pixelB = 0;
+	unsigned char pixelMask = 0b11000000;
 
-    for( size_t y = 0; y < linesNum; ++y )
-    {
-        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
-        {
-            for( unsigned char bit = 0; bit < 8; ++bit )
-            {
-                palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
-                pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
-                pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
-                pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
+	for( size_t y = 0; y < linesNum; ++y )
+	{
+		for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+		{
+			for( unsigned char bit = 0; bit < 8; ++bit )
+			{
+				palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
+				pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
+				pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
+				pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
 
-                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
-                {
-                    mImageData[imagePtr+dstPixel  ] = pixelR;
-                    mImageData[imagePtr+dstPixel+1] = pixelG;
-                    mImageData[imagePtr+dstPixel+2] = pixelB;
+				for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+				{
+					mImageData[imagePtr+dstPixel  ] = pixelR;
+					mImageData[imagePtr+dstPixel+1] = pixelG;
+					mImageData[imagePtr+dstPixel+2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+					mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes2] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes2] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes2] = pixelB;
+					mImageData[imagePtr+dstPixel  +rgbBytes2] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes2] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes3] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes3] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes3] = pixelB;
-                }
+					mImageData[imagePtr+dstPixel  +rgbBytes3] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes3] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes3] = pixelB;
+				}
 
-                imagePtr += 12;
-            }
-        }
-        imagePtr += rgbBytes3;
-        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
-        {
-            return;
-        }
-    }
+				imagePtr += 12;
+			}
+		}
+		imagePtr += rgbBytes3;
+		if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+		{
+			return;
+		}
+	}
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE1_Image( const std::vector<unsigned char>& _src )
 {
-    size_t lineBytes = 32; // PMODE1 line size in bytes.
-    size_t rgbBytes = 512 * 3;
-    size_t rgbBytes2 = rgbBytes * 2;
-    size_t rgbBytes3 = rgbBytes * 3;
-    size_t linesNum = _src.size() / lineBytes;
-    if( 0 == linesNum )
-    {
-        lineBytes = _src.size();
-        linesNum = 1;
-    }
-    if( linesNum >= 192 )
-    {
-        linesNum = 192;
-    }
+	size_t lineBytes = 32; // PMODE1 line size in bytes.
+	size_t rgbBytes = 512 * 3;
+	size_t rgbBytes2 = rgbBytes * 2;
+	size_t rgbBytes3 = rgbBytes * 3;
+	size_t linesNum = _src.size() / lineBytes;
+	if( 0 == linesNum )
+	{
+		lineBytes = _src.size();
+		linesNum = 1;
+	}
+	if( linesNum >= 192 )
+	{
+		linesNum = 192;
+	}
 
-    size_t dataPtr = 0;
-    size_t imagePtr = 0;
-    int paletteIdx = mVideoPalette->value();
-    int palettePixelIdx = 0;
-    unsigned char pixelR = 0;
-    unsigned char pixelG = 0;
-    unsigned char pixelB = 0;
-    unsigned char pixelMask = 0b11000000;
+	size_t dataPtr = 0;
+	size_t imagePtr = 0;
+	int paletteIdx = mVideoPalette->value();
+	int palettePixelIdx = 0;
+	unsigned char pixelR = 0;
+	unsigned char pixelG = 0;
+	unsigned char pixelB = 0;
+	unsigned char pixelMask = 0b11000000;
 
-    for( size_t y = 0; y < linesNum; ++y )
-    {
-        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
-        {
-            pixelMask = 0b11000000;
-            for( int pixel = 3; pixel >= 0; --pixel )
-            {
-                palettePixelIdx = ((_src[dataPtr] & pixelMask) >> (pixel * 2));
-                pixelR = FourColorPalettes[paletteIdx][palettePixelIdx][0];
-                pixelG = FourColorPalettes[paletteIdx][palettePixelIdx][1];
-                pixelB = FourColorPalettes[paletteIdx][palettePixelIdx][2];
+	for( size_t y = 0; y < linesNum; ++y )
+	{
+		for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+		{
+			pixelMask = 0b11000000;
+			for( int pixel = 3; pixel >= 0; --pixel )
+			{
+				palettePixelIdx = ((_src[dataPtr] & pixelMask) >> (pixel * 2));
+				pixelR = FourColorPalettes[paletteIdx][palettePixelIdx][0];
+				pixelG = FourColorPalettes[paletteIdx][palettePixelIdx][1];
+				pixelB = FourColorPalettes[paletteIdx][palettePixelIdx][2];
 
-                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
-                {
-                    mImageData[imagePtr+dstPixel  ] = pixelR;
-                    mImageData[imagePtr+dstPixel+1] = pixelG;
-                    mImageData[imagePtr+dstPixel+2] = pixelB;
+				for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+				{
+					mImageData[imagePtr+dstPixel  ] = pixelR;
+					mImageData[imagePtr+dstPixel+1] = pixelG;
+					mImageData[imagePtr+dstPixel+2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+					mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes2] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes2] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes2] = pixelB;
+					mImageData[imagePtr+dstPixel  +rgbBytes2] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes2] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes3] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes3] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes3] = pixelB;
-                }
+					mImageData[imagePtr+dstPixel  +rgbBytes3] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes3] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes3] = pixelB;
+				}
 
-                imagePtr += 12;
-                pixelMask >>= 2;
-            }
-        }
-        imagePtr += rgbBytes3;
-        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
-        {
-            return;
-        }
-    }
+				imagePtr += 12;
+				pixelMask >>= 2;
+			}
+		}
+		imagePtr += rgbBytes3;
+		if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+		{
+			return;
+		}
+	}
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE2_Image( const std::vector<unsigned char>& _src )
 {
-    size_t lineBytes = 16; // PMODE2 line size in bytes.
-    size_t rgbBytes = 512 * 3;
-    size_t linesNum = _src.size() / lineBytes;
-    if( 0 == linesNum )
-    {
-        lineBytes = _src.size();
-        linesNum = 1;
-    }
-    if( linesNum >= 192 )
-    {
-        linesNum = 192;
-    }
+	size_t lineBytes = 16; // PMODE2 line size in bytes.
+	size_t rgbBytes = 512 * 3;
+	size_t linesNum = _src.size() / lineBytes;
+	if( 0 == linesNum )
+	{
+		lineBytes = _src.size();
+		linesNum = 1;
+	}
+	if( linesNum >= 192 )
+	{
+		linesNum = 192;
+	}
 
-    size_t dataPtr = 0;
-    size_t imagePtr = 0;
-    int paletteIdx = mVideoPalette->value();
-    int palettePixelIdx = 0;
-    unsigned char pixelR = 0;
-    unsigned char pixelG = 0;
-    unsigned char pixelB = 0;
-    unsigned char pixelMask = 0b11000000;
+	size_t dataPtr = 0;
+	size_t imagePtr = 0;
+	int paletteIdx = mVideoPalette->value();
+	int palettePixelIdx = 0;
+	unsigned char pixelR = 0;
+	unsigned char pixelG = 0;
+	unsigned char pixelB = 0;
+	unsigned char pixelMask = 0b11000000;
 
-    for( size_t y = 0; y < linesNum; ++y )
-    {
-        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
-        {
-            for( unsigned char bit = 0; bit < 8; ++bit )
-            {
-                palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
-                pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
-                pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
-                pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
+	for( size_t y = 0; y < linesNum; ++y )
+	{
+		for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+		{
+			for( unsigned char bit = 0; bit < 8; ++bit )
+			{
+				palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
+				pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
+				pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
+				pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
 
-                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
-                {
-                    mImageData[imagePtr+dstPixel  ] = pixelR;
-                    mImageData[imagePtr+dstPixel+1] = pixelG;
-                    mImageData[imagePtr+dstPixel+2] = pixelB;
+				for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+				{
+					mImageData[imagePtr+dstPixel  ] = pixelR;
+					mImageData[imagePtr+dstPixel+1] = pixelG;
+					mImageData[imagePtr+dstPixel+2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
-                }
+					mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+				}
 
-                imagePtr += 12;
-            }
-        }
-        imagePtr += rgbBytes;
-        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
-        {
-            return;
-        }
-    }
+				imagePtr += 12;
+			}
+		}
+		imagePtr += rgbBytes;
+		if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+		{
+			return;
+		}
+	}
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE3_Image( const std::vector<unsigned char>& _src )
 {
-    size_t lineBytes = 32; // PMODE3 line size in bytes.
-    size_t rgbBytes = 512 * 3;
-    size_t linesNum = _src.size() / lineBytes;
-    if( 0 == linesNum )
-    {
-        lineBytes = _src.size();
-        linesNum = 1;
-    }
-    if( linesNum >= 192 )
-    {
-        linesNum = 192;
-    }
+	size_t lineBytes = 32; // PMODE3 line size in bytes.
+	size_t rgbBytes = 512 * 3;
+	size_t linesNum = _src.size() / lineBytes;
+	if( 0 == linesNum )
+	{
+		lineBytes = _src.size();
+		linesNum = 1;
+	}
+	if( linesNum >= 192 )
+	{
+		linesNum = 192;
+	}
 
-    size_t dataPtr = 0;
-    size_t imagePtr = 0;
-    int paletteIdx = mVideoPalette->value();
-    int palettePixelIdx = 0;
-    unsigned char pixelR = 0;
-    unsigned char pixelG = 0;
-    unsigned char pixelB = 0;
-    unsigned char pixelMask = 0b11000000;
+	size_t dataPtr = 0;
+	size_t imagePtr = 0;
+	int paletteIdx = mVideoPalette->value();
+	int palettePixelIdx = 0;
+	unsigned char pixelR = 0;
+	unsigned char pixelG = 0;
+	unsigned char pixelB = 0;
+	unsigned char pixelMask = 0b11000000;
 
-    for( size_t y = 0; y < linesNum; ++y )
-    {
-        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
-        {
-            pixelMask = 0b11000000;
-            for( int pixel = 3; pixel >= 0; --pixel )
-            {
-                palettePixelIdx = ((_src[dataPtr] & pixelMask) >> (pixel * 2));
-                pixelR = FourColorPalettes[paletteIdx][palettePixelIdx][0];
-                pixelG = FourColorPalettes[paletteIdx][palettePixelIdx][1];
-                pixelB = FourColorPalettes[paletteIdx][palettePixelIdx][2];
+	for( size_t y = 0; y < linesNum; ++y )
+	{
+		for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+		{
+			pixelMask = 0b11000000;
+			for( int pixel = 3; pixel >= 0; --pixel )
+			{
+				palettePixelIdx = ((_src[dataPtr] & pixelMask) >> (pixel * 2));
+				pixelR = FourColorPalettes[paletteIdx][palettePixelIdx][0];
+				pixelG = FourColorPalettes[paletteIdx][palettePixelIdx][1];
+				pixelB = FourColorPalettes[paletteIdx][palettePixelIdx][2];
 
-                for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
-                {
-                    mImageData[imagePtr+dstPixel  ] = pixelR;
-                    mImageData[imagePtr+dstPixel+1] = pixelG;
-                    mImageData[imagePtr+dstPixel+2] = pixelB;
+				for( size_t dstPixel = 0; dstPixel < 12; dstPixel += 3 )
+				{
+					mImageData[imagePtr+dstPixel  ] = pixelR;
+					mImageData[imagePtr+dstPixel+1] = pixelG;
+					mImageData[imagePtr+dstPixel+2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
-                }
+					mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+				}
 
-                imagePtr += 12;
-                pixelMask >>= 2;
-            }
-        }
-        imagePtr += rgbBytes;
-        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
-        {
-            return;
-        }
-    }
+				imagePtr += 12;
+				pixelMask >>= 2;
+			}
+		}
+		imagePtr += rgbBytes;
+		if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+		{
+			return;
+		}
+	}
 }
 
 void CDragonDOSViewFileWindow::Decode_PMODE4_Image( const std::vector<unsigned char>& _src )
 {
-    size_t lineBytes = 32; // PMODE4 line size in bytes.
-    size_t rgbBytes = 512 * 3;
-    size_t linesNum = _src.size() / lineBytes;
-    if( 0 == linesNum )
-    {
-        lineBytes = _src.size();
-        linesNum = 1;
-    }
-    if( linesNum >= 192 )
-    {
-        linesNum = 192;
-    }
+	size_t lineBytes = 32; // PMODE4 line size in bytes.
+	size_t rgbBytes = 512 * 3;
+	size_t linesNum = _src.size() / lineBytes;
+	if( 0 == linesNum )
+	{
+		lineBytes = _src.size();
+		linesNum = 1;
+	}
+	if( linesNum >= 192 )
+	{
+		linesNum = 192;
+	}
 
-    size_t dataPtr = 0;
-    size_t imagePtr = 0;
-    int paletteIdx = mVideoPalette->value();
-    int palettePixelIdx = 0;
-    unsigned char pixelR = 0;
-    unsigned char pixelG = 0;
-    unsigned char pixelB = 0;
+	size_t dataPtr = 0;
+	size_t imagePtr = 0;
+	int paletteIdx = mVideoPalette->value();
+	int palettePixelIdx = 0;
+	unsigned char pixelR = 0;
+	unsigned char pixelG = 0;
+	unsigned char pixelB = 0;
 
-    for( size_t y = 0; y < linesNum; ++y )
-    {
-        for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
-        {
-            for( unsigned char bit = 0; bit < 8; ++bit )
-            {
-                palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
-                pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
-                pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
-                pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
+	for( size_t y = 0; y < linesNum; ++y )
+	{
+		for( size_t x = 0; x < lineBytes; ++x, ++dataPtr )
+		{
+			for( unsigned char bit = 0; bit < 8; ++bit )
+			{
+				palettePixelIdx = (_src[dataPtr] & (1 << (7 - bit)) ) ? 1 : 0;
+				pixelR = TwoColorPalettes[paletteIdx][palettePixelIdx][0];
+				pixelG = TwoColorPalettes[paletteIdx][palettePixelIdx][1];
+				pixelB = TwoColorPalettes[paletteIdx][palettePixelIdx][2];
 
-                for( size_t dstPixel = 0; dstPixel < 6; dstPixel += 3 )
-                {
-                    mImageData[imagePtr+dstPixel  ] = pixelR;
-                    mImageData[imagePtr+dstPixel+1] = pixelG;
-                    mImageData[imagePtr+dstPixel+2] = pixelB;
+				for( size_t dstPixel = 0; dstPixel < 6; dstPixel += 3 )
+				{
+					mImageData[imagePtr+dstPixel  ] = pixelR;
+					mImageData[imagePtr+dstPixel+1] = pixelG;
+					mImageData[imagePtr+dstPixel+2] = pixelB;
 
-                    mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
-                    mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
-                    mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
-                }
+					mImageData[imagePtr+dstPixel  +rgbBytes] = pixelR;
+					mImageData[imagePtr+dstPixel+1+rgbBytes] = pixelG;
+					mImageData[imagePtr+dstPixel+2+rgbBytes] = pixelB;
+				}
 
-                imagePtr += 6;
-            }
-        }
-        imagePtr += rgbBytes;
-        if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
-        {
-            return;
-        }
-    }
+				imagePtr += 6;
+			}
+		}
+		imagePtr += rgbBytes;
+		if( imagePtr >= DRAGONDOSVFW_IMAGE_VIEW_SIZE )
+		{
+			return;
+		}
+	}
 }
 
 void CDragonDOSViewFileWindow::Decode_TEXT_Image( const std::vector<unsigned char>& _src )
 {
-    size_t x = 0;
-    size_t y = 0;
-    size_t srcOffset = 0;
-    size_t dstOffset = 0;
+	size_t x = 0;
+	size_t y = 0;
+	size_t srcOffset = 0;
+	size_t dstOffset = 0;
 
-    for( unsigned char c : _src )
-    {
-        srcOffset = c * DragonTextFont_Width * DragonTextFont_Depth;
-        dstOffset = (y * DragonTextFont_Height * DRAGONDOSVFW_IMAGE_VIEW_STRIDE) + (x * DragonTextFont_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
+	for( unsigned char c : _src )
+	{
+		srcOffset = c * DragonTextFont_Width * DragonTextFont_Depth;
+		dstOffset = (y * DragonTextFont_Height * DRAGONDOSVFW_IMAGE_VIEW_STRIDE) + (x * DragonTextFont_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
 
-        for( size_t line = 0; line < DragonTextFont_Height; ++line )
-        {
-            for( size_t charPixel = 0; charPixel < DragonTextFont_Width; ++charPixel )
-            {
-                mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
-                mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
-                mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
-            }
-            dstOffset += DRAGONDOSVFW_IMAGE_VIEW_STRIDE - (DragonTextFont_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
-            srcOffset += DragonTextFont_Stride - (DragonTextFont_Width * DragonTextFont_Depth);
-        }
+		for( size_t line = 0; line < DragonTextFont_Height; ++line )
+		{
+			for( size_t charPixel = 0; charPixel < DragonTextFont_Width; ++charPixel )
+			{
+				mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
+				mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
+				mImageData[dstOffset++] = (unsigned char)DragonTextFont[srcOffset++];
+			}
+			dstOffset += DRAGONDOSVFW_IMAGE_VIEW_STRIDE - (DragonTextFont_Width * DRAGONDOSVFW_IMAGE_VIEW_DEPTH);
+			srcOffset += DragonTextFont_Stride - (DragonTextFont_Width * DragonTextFont_Depth);
+		}
 
-        ++x;
-        if( x >= DRAGONDOSVFW_TEXT_COLUMNS )
-        {
-            x = 0;
-            ++y;
-        }
-        if( y >= DRAGONDOSVFW_TEXT_ROWS )
-        {
-            return;
-        }
-    }
+		++x;
+		if( x >= DRAGONDOSVFW_TEXT_COLUMNS )
+		{
+			x = 0;
+			++y;
+		}
+		if( y >= DRAGONDOSVFW_TEXT_ROWS )
+		{
+			return;
+		}
+	}
 }
 
 void CDragonDOSViewFileWindow::ClearImage()
 {
-    memset( mImageData, 0, DRAGONDOSVFW_IMAGE_VIEW_SIZE );
+	memset( mImageData, 0, DRAGONDOSVFW_IMAGE_VIEW_SIZE );
 }
 
 void CDragonDOSViewFileWindow::DecodeImage()
 {
-    ClearImage();
-    if( !mImageFileData.empty())
-    {
-        switch( mVideoMode->value() )
-        {
-            case DRAGONDOSVFW_PMODE0: Decode_PMODE0_Image(mImageFileData); break;
-            case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
-            case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
-            case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
-            case DRAGONDOSVFW_TEXT:   Decode_TEXT_Image  (mImageFileData); break;
-            default:                  Decode_PMODE4_Image(mImageFileData); break;
-        }
-    }
+	ClearImage();
+	if( !mImageFileData.empty())
+	{
+		switch( mVideoMode->value() )
+		{
+			case DRAGONDOSVFW_PMODE0: Decode_PMODE0_Image(mImageFileData); break;
+			case DRAGONDOSVFW_PMODE1: Decode_PMODE1_Image(mImageFileData); break;
+			case DRAGONDOSVFW_PMODE2: Decode_PMODE2_Image(mImageFileData); break;
+			case DRAGONDOSVFW_PMODE3: Decode_PMODE3_Image(mImageFileData); break;
+			case DRAGONDOSVFW_TEXT:   Decode_TEXT_Image  (mImageFileData); break;
+			default:                  Decode_PMODE4_Image(mImageFileData); break;
+		}
+	}
 
-    mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );
-    mImage->redraw();
+	mImage->image( new Fl_RGB_Image( mImageData, DRAGONDOSVFW_IMAGE_VIEW_WIDTH, DRAGONDOSVFW_IMAGE_VIEW_HEIGHT ) );
+	mImage->redraw();
 }
 
 void CDragonDOSViewFileWindow::ExportImage()
 {
-    std::string fileName;
+	std::string fileName;
 
-    if( !ChooseFilename( fileName, true, false, nullptr ) )
-    {
-        return;
-    }
+	if( !ChooseFilename( fileName, true, false, nullptr ) )
+	{
+		return;
+	}
 
-    stbi_write_png( fileName.c_str(), 
-                    DRAGONDOSVFW_IMAGE_VIEW_WIDTH, 
-                    DRAGONDOSVFW_IMAGE_VIEW_HEIGHT, 
-                    DRAGONDOSVFW_IMAGE_VIEW_DEPTH, 
-                    (const void *)mImageData, 
-                    DRAGONDOSVFW_IMAGE_VIEW_STRIDE );
+	stbi_write_png( fileName.c_str(), 
+					DRAGONDOSVFW_IMAGE_VIEW_WIDTH, 
+					DRAGONDOSVFW_IMAGE_VIEW_HEIGHT, 
+					DRAGONDOSVFW_IMAGE_VIEW_DEPTH, 
+					(const void *)mImageData, 
+					DRAGONDOSVFW_IMAGE_VIEW_STRIDE );
 }

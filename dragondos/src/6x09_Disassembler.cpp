@@ -46,12 +46,6 @@ static const uint8_t POSTBYTE_REGISTER_MASK = 0x60;
 #define POSTBYTE_REGISTER_U = 0x10
 #define POSTBYTE_REGISTER_S = 0x11
 
-static std::map<unsigned char, Opcode_6x09>     opcode_map;
-static std::map<unsigned char, Opcode_6x09>     opcode_map2;
-static std::map<unsigned char, Opcode_6x09>     opcode_map3;
-static std::map<unsigned char, Opcode_6x09>     opcode_map_undefined;
-static std::map<unsigned char, PostByte_6x09>   postbyte_map;
-
 static std::string EXG_TFR_Registers[] = {"D", "X", "Y", "U", "S", "PC", "W", "V", "A", "B", "CC", "DP", "0", "0", "E", "F"};
 static std::string PSHS_Registers[] = {"CC", "A", "B", "DP", "X", "Y", "U", "PC"};
 static std::string PSHU_Registers[] = {"CC", "A", "B", "DP", "X", "Y", "S", "PC"};
@@ -59,6 +53,10 @@ static std::string Postbyte_Registers[] = {"X", "Y", "U", "S"};
 static std::string Postbyte_AutoIncDecFromReg[] = {"+", "++", "-", "--"};
 
 Disassembler_6x09::Disassembler_6x09()
+{
+}
+
+void  Disassembler_6x09::Init( EProcessor _processor )
 {
     /////////////////////////////////////////////////////////////////////////////////
     // Undefined Opcodes
@@ -71,33 +69,33 @@ Disassembler_6x09::Disassembler_6x09()
     /////////////////////////////////////////////////////////////////////////////////
     if( opcode_map_undefined.empty() )
     {
-        Init_Undefined_Opcode_Map( opcode_map_undefined );
+        Init_Undefined_Opcode_Map( opcode_map_undefined, _processor );
     }
 
     // 1-byte opcodes
     if (opcode_map.empty())
     {
-        Init_Page1_Opcode_Map( opcode_map );
+        Init_Page1_Opcode_Map( opcode_map, _processor );
         opcode_map.merge( opcode_map_undefined );
     }
 
     // Page 2 opcodes (0x10??)
     if (opcode_map2.empty())
     {
-        Init_Page2_Opcode_Map( opcode_map2 );
+        Init_Page2_Opcode_Map( opcode_map2, _processor );
         opcode_map2.merge( opcode_map_undefined );
     }
 
     // Page 3 opcodes (0x11??)
     if (opcode_map3.empty())
     {
-        Init_Page3_Opcode_Map( opcode_map3 );
+        Init_Page3_Opcode_Map( opcode_map3, _processor );
         opcode_map3.merge( opcode_map_undefined );
     }
 
     if (postbyte_map.empty())
     {
-        Init_Postbyte_Opcode_Map( postbyte_map );
+        Init_Postbyte_Opcode_Map( postbyte_map, _processor );
     }   
 }
 

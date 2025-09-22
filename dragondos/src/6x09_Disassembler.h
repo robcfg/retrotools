@@ -37,9 +37,16 @@ struct PostByte_6x09
 class Disassembler_6x09
 {
 public:
-    Disassembler_6x09();
+	enum EProcessor
+	{
+		M6809,
+		M6309
+	};
+    
+	Disassembler_6x09();
     ~Disassembler_6x09() {}
 
+	void Init		( EProcessor _processor );
     void Disassemble( const std::vector<unsigned char> _data, uint16_t _loadAddress, uint16_t _execAddress, std::string& _dst, std::string& _dstColors );
 
 private:
@@ -47,9 +54,15 @@ private:
     size_t ReadParameter( const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize );
     int    TwosComplement( size_t _param, uint8_t _paramSize );
 
-    void Init_Page1_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
-    void Init_Page2_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
-    void Init_Page3_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
-    void Init_Undefined_Opcode_Map( std::map<unsigned char, Opcode_6x09>& _map );
-    void Init_Postbyte_Opcode_Map( std::map<unsigned char, PostByte_6x09>& _map );
+    void Init_Page1_Opcode_Map		( std::map<unsigned char, Opcode_6x09>& 	_map, EProcessor _processor );
+    void Init_Page2_Opcode_Map		( std::map<unsigned char, Opcode_6x09>& 	_map, EProcessor _processor );
+    void Init_Page3_Opcode_Map		( std::map<unsigned char, Opcode_6x09>& 	_map, EProcessor _processor );
+    void Init_Undefined_Opcode_Map	( std::map<unsigned char, Opcode_6x09>& 	_map, EProcessor _processor );
+    void Init_Postbyte_Opcode_Map	( std::map<unsigned char, PostByte_6x09>& 	_map, EProcessor _processor );
+
+	std::map<unsigned char, Opcode_6x09>     opcode_map;
+	std::map<unsigned char, Opcode_6x09>     opcode_map2;
+	std::map<unsigned char, Opcode_6x09>     opcode_map3;
+	std::map<unsigned char, Opcode_6x09>     opcode_map_undefined;
+	std::map<unsigned char, PostByte_6x09>   postbyte_map;
 };
