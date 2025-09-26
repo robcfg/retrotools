@@ -193,28 +193,28 @@ void Disassembler_6x09::FormatParameters(uint8_t _opcodeID, const Opcode_6x09& _
 	{
 		switch (_opcode.addressing)
 		{
-			case INHERENT:break;
-			case IMMEDIATE:
+			case AM_INHERENT:break;
+			case AM_IMMEDIATE:
 			{
 				_ss << "#$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
 				_dstColors.append(1, COLOR_TEXT);
 				_dstColors.append((paramSize * 2)+1, COLOR_NUMBER);
 			}
 			break;
-			case DIRECT:
+			case AM_DIRECT:
 			{
 				_ss << "<$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
 				_dstColors.append(1, COLOR_TEXT);
 				_dstColors.append((paramSize * 2)+1, COLOR_NUMBER);
 			}
 			break;
-			case EXTENDED:
+			case AM_EXTENDED:
 			{
 				_ss << "$" << std::uppercase << std::setw(paramSize * 2) << std::right << std::setfill('0') << std::hex << param;
 				_dstColors.append((paramSize * 2)+1, COLOR_NUMBER);
 			}
 			break;
-			case RELATIVE:
+			case AM_RELATIVE:
 			{
 				size_t newPC = _pos + _execAddress;
 				if (paramSize == 1)
@@ -239,7 +239,7 @@ void Disassembler_6x09::FormatParameters(uint8_t _opcodeID, const Opcode_6x09& _
 				}
 			}
 			break;
-			case INDEXED:
+			case AM_INDEXED:
 			{
 				// Get the postbyte
 				uint8_t postByte = param & 0xFF;
@@ -272,7 +272,7 @@ void Disassembler_6x09::FormatParameters(uint8_t _opcodeID, const Opcode_6x09& _
 				}
 			}
 			break;
-			case POSTBYTE:
+			case AM_POSTBYTE:
 			break;
 		}
 	}

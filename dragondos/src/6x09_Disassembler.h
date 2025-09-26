@@ -7,13 +7,13 @@
 
 enum Opcode_6x09_Addressing
 {
-    IMMEDIATE = 0,
-    DIRECT,
-    INDEXED,
-    EXTENDED,
-    INHERENT,
-    RELATIVE,
-    POSTBYTE
+    AM_IMMEDIATE = 0,
+    AM_DIRECT,
+    AM_INDEXED,
+    AM_EXTENDED,
+    AM_INHERENT,
+    AM_RELATIVE,
+    AM_POSTBYTE
 };
 
 struct Opcode_6x09_Param

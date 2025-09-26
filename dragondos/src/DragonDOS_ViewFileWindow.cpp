@@ -345,7 +345,7 @@ void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vec
 		_fs->ExtractFile        ( fileName, fileData, false );
 		AddHexViewData          ( fileHeader, fileData );
 		AddTextViewData         ( fileHeader, fileData );
-		AddBasicViewData        ( fileHeader, fileData );
+		AddBasicViewData        ( fileHeader, fileData, ddosFile );
 		AddDisassemblyViewData  ( fileHeader, fileData, ddosFile );
 	}
 
@@ -510,7 +510,7 @@ void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, 
 	mTextView += strStream.str();
 }
 
-void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
+void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo )
 {
 	if( _fileData.empty() )
 	{
@@ -531,7 +531,10 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
 	}
 
 	unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
-	DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
+	if( _fileInfo.GetFileType() == DRAGONDOS_FILETYPE_BASIC )
+	{
+		DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
+	}
 
 	strStream << std::endl;
 	textColors += "\n";
