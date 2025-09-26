@@ -50,9 +50,12 @@ public:
     void Disassemble( const std::vector<unsigned char> _data, uint16_t _loadAddress, uint16_t _execAddress, std::string& _dst, std::string& _dstColors );
 
 private:
-    void   FormatParameters(const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _execAddress, std::stringstream &_dst, std::string &_dstColors);
-    size_t ReadParameter( const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize );
-    int    TwosComplement( size_t _param, uint8_t _paramSize );
+    void 	FormatParameters	( uint8_t _opcodeID, const Opcode_6x09& _opcode, const std::vector<unsigned char>& _data, uint16_t& _pos, uint16_t _execAddress, std::vector<uint8_t>& _bytes, std::stringstream &_dst, std::string &_dstColors);
+	void 	FormatInvalidOpcode	( uint16_t _address, const std::vector<uint8_t>& _bytes, std::stringstream &_dst, std::string &_dstColors );
+	void 	FormatUnusedPrefix 	( uint16_t _address, uint8_t _prefix, std::stringstream &_dst, std::string &_dstColors );
+	void 	FormatBytes			( std::vector<uint8_t>& _bytes, std::string& _bytesStr );
+	size_t 	ReadParameter		(const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize, std::vector<uint8_t>& _bytes );
+    int 	TwosComplement		( size_t _param, uint8_t _paramSize );
 
     void Init_Page1_Opcode_Map		( std::map<unsigned char, Opcode_6x09>& 	_map, EProcessor _processor );
     void Init_Page2_Opcode_Map		( std::map<unsigned char, Opcode_6x09>& 	_map, EProcessor _processor );
