@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint> // For linux to pick standard types such as uint8_t, uint16_t, etc.
 #include <map>
 #include <string>
 #include <vector>
