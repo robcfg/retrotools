@@ -227,7 +227,7 @@ void CreateAboutDialog( SDRAGONDOS_Context* _context )
     aboutText1->labelfont( FL_HELVETICA_BOLD );
     y += textHeight + ySeparation;
 
-    std::string versionStr = "Version 1.0.5";
+    std::string versionStr = "Version 1.0.6";
     Fl_Box* aboutText2 = new Fl_Box( (aboutDialogWidth - textWidth)/2, y, textWidth, textHeight, nullptr );
     aboutText2->align( FL_ALIGN_CENTER );
     aboutText2->labelcolor( FL_BLACK );
@@ -271,7 +271,7 @@ int main( int argc, char** argv )
 
     SDRAGONDOS_Context context;
 
-    CAppWindow* mainWindow = new CAppWindow( &context, 585, 615 + menuBarOffset, "DragonDOS 1.0.5 by Robcfg" );
+    CAppWindow* mainWindow = new CAppWindow( &context, 585, 615 + menuBarOffset, "DragonDOS 1.0.6 by Robcfg" );
 
     mainWindow->begin();
 
