@@ -105,7 +105,7 @@ void  Disassembler_6x09::Init( EProcessor _processor )
 
 size_t Disassembler_6x09::ReadParameter(const std::vector<unsigned char> _data, size_t _pos, unsigned char _paramSize, std::vector<uint8_t>& _bytes )
 {
-	if (_paramSize > sizeof(size_t))
+	if (_paramSize > sizeof(size_t) || _pos + _paramSize >= _data.size())
 	{
 		return 0;
 	}
@@ -139,6 +139,7 @@ void Disassembler_6x09::FormatParameters(uint8_t _opcodeID, const Opcode_6x09& _
 	size_t paramSize =  _opcode.params[paramIdx].size;
 	size_t param = ReadParameter(_data, _pos, paramSize, _bytes);
 	_pos += paramSize;
+	if( _pos >= _data.size() ) return;
 
 	bool isSpecialCase = false;
 	// Special cases
@@ -254,6 +255,7 @@ void Disassembler_6x09::FormatParameters(uint8_t _opcodeID, const Opcode_6x09& _
 					{
 						size_t postbyteParam = ReadParameter(_data, _pos, postbyteIter->second.params[0].size, _bytes);
 						_pos += postbyteIter->second.params[0].size;
+						if( _pos >= _data.size() ) break;
 						size_t postbyteParamWidth = postbyteIter->second.params[0].size * 2;
 						std::stringstream formatter;
 						std::string postbyteStr = postbyteIter->second.name;
@@ -347,6 +349,7 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
 		currentByte = _data[pos];
 		currentAddress = _loadAddress + pos;
 		pos++;
+		if( pos >= _data.size() ) break;
 
 		// Opcode page prefix
 		if( currentByte == OPCODE_PAGE_2 || currentByte == OPCODE_PAGE_3 )
