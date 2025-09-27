@@ -371,34 +371,54 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
 		// Opcode
 		opcodeBytes.push_back( currentByte );
 
-		std::map<unsigned char, Opcode_6x09>::const_iterator opcode;
+		Opcode_6x09 opcode {"INVALID", {}, AM_IMMEDIATE};
+		std::map<unsigned char, Opcode_6x09>::const_iterator opcodeIter;
 		switch (pagePrefix)
 		{
 		case OPCODE_PAGE_2:
-			opcode = opcode_map2.find(currentByte);
-			if( opcode == opcode_map2.end() )
+			opcodeIter = opcode_map2.find(currentByte);
+			if( opcodeIter == opcode_map2.end() )
 			{
-				opcode = opcode_map.find(currentByte);
+				opcodeIter = opcode_map.find(currentByte);
+				if( opcodeIter != opcode_map.end() )
+				{
+					opcode = opcodeIter->second;
+				}
+			}
+			else
+			{
+				opcode = opcodeIter->second;
 			}
 			break;
 		case OPCODE_PAGE_3:
-			opcode = opcode_map3.find(currentByte);
-			if( opcode == opcode_map3.end() )
+			opcodeIter = opcode_map3.find(currentByte);
+			if( opcodeIter == opcode_map3.end() )
 			{
-				opcode = opcode_map.find(currentByte);
+				opcodeIter = opcode_map.find(currentByte);
+				if( opcodeIter != opcode_map.end() )
+				{
+					opcode = opcodeIter->second;
+				}
+			}
+			else
+			{
+				opcode = opcodeIter->second;
 			}
 			break;
 		default:
-			opcode = opcode_map.find(currentByte);
+			opcodeIter = opcode_map.find(currentByte);
+			if( opcodeIter != opcode_map.end() )
+			{
+				opcode = opcodeIter->second;
+			}
 			break;
 		}
 
 		// Valid opcode found?
-		if (opcode != opcode_map.end() && opcode != opcode_map2.end() && opcode != opcode_map3.end())
+		if ( 0 != opcode.name.compare("INVALID") )
 		{
-			opcodeName = opcode->second.name; // Redundant?
 			// Read and format parameters
-			FormatParameters(currentByte,opcode->second, _data, pos, _execAddress, opcodeBytes, ssParams, paramColors);
+			FormatParameters(currentByte,opcode, _data, pos, _execAddress, opcodeBytes, ssParams, paramColors);
 			// Format bytes
 			FormatBytes( opcodeBytes, bytesString );
 			// Compose final line
@@ -406,7 +426,7 @@ void Disassembler_6x09::Disassemble(const std::vector<unsigned char> _data, uint
 			_dstColors.append(6, COLOR_NUMBER);
 			ss << bytesString;
 			_dstColors += bytesColors;
-			ss << std::left << std::setw(MAX_OPCODE_STR_WIDTH) << std::setfill(' ') << opcode->second.name << std::setw(0);
+			ss << std::left << std::setw(MAX_OPCODE_STR_WIDTH) << std::setfill(' ') << opcode.name << std::setw(0);
 			_dstColors.append(MAX_OPCODE_STR_WIDTH, COLOR_OPCODE);
 			ss << ssParams.str();
 			_dstColors += paramColors;
