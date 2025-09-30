@@ -112,10 +112,10 @@ bool COS9RBF_FS::ParseDirectory()
 	}
 	idSector.DD_NAM[32] = 0;
 
-	//size_t mediaSize = (idSector.DD_LSNSize * 256) + 256;
+	size_t sectorSize = (0 != idSector.DD_LSNSize ? idSector.DD_LSNSize : 256);
 	root.Clear();
 	root.SetName(GetVolumeLabel());
-	root.Load( disk, idSector.DD_DIR, idSector.DD_LSNSize );
+	root.Load( disk, idSector.DD_DIR, sectorSize );
 
 	return true;
 }
