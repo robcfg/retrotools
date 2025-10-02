@@ -23,7 +23,9 @@
 #include "../../common/DiskImages/RawDiskImage.h"
 
 // File systems
+#include "../../common/FileSystems/FileSystemFactory.h"
 #include "../../common/FileSystems/DragonDOS_FS.h"
+#include "../../common/FileSystems/OS9RBF_FS.h"
 
 #ifndef __APPLE__
 #define DRAGONDOSUI_MENUBARHEIGHT 30
@@ -275,15 +277,19 @@ int main( int argc, char** argv )
 
     mainWindow->begin();
 
+	// Initialize disk image factory
 	DiskImageFactory diskFactory;
-	diskFactory.RegisterDiskImageFormat( new CVDKDiskImage );
-	diskFactory.RegisterDiskImageFormat( new CJVCDiskImage );
-	diskFactory.RegisterDiskImageFormat( new CIMDDiskImage );
-	diskFactory.RegisterDiskImageFormat( new CRAWDiskImage );
+	diskFactory.RegisterDiskImageFormat ( new CVDKDiskImage );
+	diskFactory.RegisterDiskImageFormat ( new CJVCDiskImage );
+	diskFactory.RegisterDiskImageFormat ( new CIMDDiskImage );
+	diskFactory.RegisterDiskImageFormat ( new CRAWDiskImage );
 	context.diskImageFactory = &diskFactory;
 
-    CDragonDOS_FS fs;
-    context.fs = &fs;
+	// Initialize file system factory
+	FileSystemFactory filesystemFactory;
+	filesystemFactory.RegisterFileSystem( new CDragonDOS_FS );
+	filesystemFactory.RegisterFileSystem( new COS9RBF_FS    );
+	context.fileSystemFactory = &filesystemFactory;
 
     CreateMenuBar( mainWindow->w(), DRAGONDOSUI_MENUBARHEIGHT, modifierKey, &context );
 
@@ -316,6 +322,10 @@ int main( int argc, char** argv )
 	if( context.disk != nullptr )
 	{
 		delete context.disk;
+	}
+	if( context.fs != nullptr )
+	{
+		delete context.fs;
 	}
 
     return retVal;

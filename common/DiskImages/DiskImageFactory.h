@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __DISK_IMAGE_FACTORY__
 #define __DISK_IMAGE_FACTORY__
 

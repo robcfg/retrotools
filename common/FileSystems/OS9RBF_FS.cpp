@@ -14,7 +14,7 @@
 #include <string.h> // for strcasecmp
 #include <sstream>
 #include "OS9RBF_FS.h"
-#include "FS_Utils.h"
+#include "../FS_Utils.h"
 
 #ifndef _WIN32
 #define _stricmp strcasecmp
@@ -54,11 +54,6 @@ bool COS9RBF_FS::SetDisk( IDiskImageInterface* _disk )
 	}
 
 	ParseFiles();
-/*  if( false == ParseFiles() )
-	{
-		disk = NULL;
-		return false;
-	}*/
 
 	return true;
 }

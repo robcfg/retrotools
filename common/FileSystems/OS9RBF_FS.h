@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////
 
-#include "DiskImageInterface.h"
+#include "../DiskImages/DiskImageInterface.h"
 #include "FileSystemInterface.h"
 #include <vector>
 #include <string>

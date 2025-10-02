@@ -7,7 +7,7 @@
 #include <string>
 
 #include "../../common/DiskImages/DiskImageFactory.h"
-#include "../../common/FileSystems/FileSystemInterface.h"
+#include "../../common/FileSystems/FileSystemFactory.h"
 
 #include "DragonDOS_ViewFileWindow.h"
 #include "DragonDOS_NewDiskWindow.h"
@@ -19,6 +19,7 @@ struct SDRAGONDOS_Context
     IFileSystemInterface*       fs	       			= nullptr;
 
 	DiskImageFactory*			diskImageFactory	= nullptr;
+	FileSystemFactory*			fileSystemFactory	= nullptr;
 
     Fl_Box*                     fileLabel       	= nullptr;
     Fl_Box*                     diskInfoLabel   	= nullptr;

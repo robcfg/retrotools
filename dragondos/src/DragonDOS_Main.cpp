@@ -11,6 +11,7 @@
 
 // File systems
 #include "../../common/FileSystems/DragonDOS_FS.h"
+#include "../../common/FileSystems/OS9RBF_FS.h"
 
 #include "DragonDOS_Commands.h"
 

@@ -10,6 +10,7 @@
 #include "DragonDOS_BASIC.h"
 #include "DragonDOS_Common.h"
 #include "../../common/FileSystems/DragonDOS_FS.h"
+#include "../../common/FileSystems/OS9RBF_FS.h"
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
 #include "../../common/DiskImages/VDKDiskImage.h"
@@ -28,67 +29,107 @@ const size_t DRAGONDOS_DISK_SIZE_360KB = (2 * 40 * DRAGONDOS_SECTORSPERTRACK * D
 const size_t DRAGONDOS_DISK_SIZE_720KB = (2 * 80 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
 
 const size_t tmpBufSize = 256;
+const size_t indentSize = 3;
+
+void FormatTreeEntry( const CDirectoryEntryWrapper& _entry, char* _buf, size_t _bufSize, size_t _indent, const SDRAGONDOS_Context* _context )
+{
+	std::string indentStr;
+	indentStr.insert( indentStr.begin(), _indent, ' ' );
+
+	if( _entry.IsDirectory() )
+	{
+		snprintf( _buf, _bufSize, "@f@C%d@.%s[%s]\n", FL_BLUE, indentStr.c_str(), _entry.GetName().c_str() );
+		_context->browser->add(_buf);
+
+		for( auto child : _entry.GetChildren() )
+		{
+			FormatTreeEntry( *child, _buf, _bufSize, _indent + indentSize, _context );
+		}
+	}
+	else
+	{
+		snprintf( _buf, _bufSize, "@f@.%s%s\n", indentStr.c_str(), _entry.GetName().c_str() );
+		_context->browser->add(_buf);
+	}
+}
 
 void UpdateUI( const SDRAGONDOS_Context* _context )
 {
-	CDragonDOS_FS* pFS = (CDragonDOS_FS*)_context->fs;
-	IDiskImageInterface* pDisk = (IDiskImageInterface*)_context->disk;
-	char tmpBuf[256] = {0};
-
-	_context->fileLabel->copy_label( _context->diskFilename.c_str() );
-
-	_context->browser->clear();
-
-	_context->browser->add("@f@.File|Name    |Ext|Type|Sec|Bytes |Load|Exec\n");
-	_context->browser->add("@f@.----+--------+---+----+---+------+----+----\n");
-
-	if( pDisk == nullptr )
+	if( nullptr == _context->disk || nullptr == _context->fs )
 	{
 		return;
 	}
 
-	for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
+	IDiskImageInterface* pDisk = (IDiskImageInterface*)_context->disk;
+	char tmpBuf[256] = {0};
+
+	_context->fileLabel->copy_label( _context->diskFilename.c_str() );
+	_context->browser->clear();
+
+	if( 0 == _context->fs->GetFSName().compare("DragonDOS") )
 	{
-		SFileInfo fileInfo = _context->fs->GetFileInfo( fileIdx );
+		_context->browser->add("@f@.File|Name    |Ext|Type|Sec|Bytes |Load|Exec\n");
+		_context->browser->add("@f@.----+--------+---+----+---+------+----+----\n");
 
-		std::filesystem::path filePath( pFS->GetFileName( fileIdx ) );
-		
-		std::string tmpName = filePath.stem().string();
-		if( tmpName.length() < UI_MAX_FILE_NAME_LEN )
+		for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
 		{
-			tmpName.insert( tmpName.end(), UI_MAX_FILE_NAME_LEN - tmpName.length(), ' ' );
+			CDragonDOS_FS* pFS = (CDragonDOS_FS*)_context->fs;
+			SFileInfo fileInfo = _context->fs->GetFileInfo( fileIdx );
+
+			std::filesystem::path filePath( pFS->GetFileName( fileIdx ) );
+			
+			std::string tmpName = filePath.stem().string();
+			if( tmpName.length() < UI_MAX_FILE_NAME_LEN )
+			{
+				tmpName.insert( tmpName.end(), UI_MAX_FILE_NAME_LEN - tmpName.length(), ' ' );
+			}
+			std::string tmpExt = filePath.extension().string();
+			if( tmpExt.length() < UI_MAX_FILE_EXT_LEN )
+			{
+				tmpExt.insert( tmpExt.end(), UI_MAX_FILE_EXT_LEN - tmpExt.length(), ' ' );
+			}
+
+			uint16_t fileSectors = (uint16_t)(pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize());
+			fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize() != 0) ? 1 : 0;
+
+			CDGNDosFile ddosFile = pFS->GetFile((unsigned short int)fileIdx);
+			std::string fileType = pFS->GetFileTypeString((unsigned short int)fileIdx);
+			fileType += ' '; // padding
+
+			snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu %04X %04X\n", 
+						fileIdx, 
+						tmpName.c_str(), 
+						tmpExt.c_str(),
+						fileType.c_str(),
+						fileSectors,
+						pFS->GetFileSize(fileIdx),
+						ddosFile.GetLoadAddress(),
+						ddosFile.GetExecAddress() );
+			_context->browser->add(tmpBuf);
 		}
-		std::string tmpExt = filePath.extension().string();
-		if( tmpExt.length() < UI_MAX_FILE_EXT_LEN )
-		{
-			tmpExt.insert( tmpExt.end(), UI_MAX_FILE_EXT_LEN - tmpExt.length(), ' ' );
-		}
+	}
+	else if( 0 == _context->fs->GetFSName().compare("OS-9 RBF") )
+	{
+		COS9RBF_FS* pFS = (COS9RBF_FS*)_context->fs;
 
-		uint16_t fileSectors = (uint16_t)(pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize());
-		fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize() != 0) ? 1 : 0;
+		auto root = pFS->GetFSRoot();
+		FormatTreeEntry( root, tmpBuf, 256, 0, _context );
 
-		CDGNDosFile ddosFile = pFS->GetFile((unsigned short int)fileIdx);
-		std::string fileType = pFS->GetFileTypeString((unsigned short int)fileIdx);
-		fileType += ' '; // padding
-
-		snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %3d %6zu %04X %04X\n", 
-					fileIdx, 
-					tmpName.c_str(), 
-					tmpExt.c_str(),
-					fileType.c_str(),
-					fileSectors,
-					pFS->GetFileSize(fileIdx),
-					ddosFile.GetLoadAddress(),
-					ddosFile.GetExecAddress() );
+		tmpBuf[0] = 0;
 		_context->browser->add(tmpBuf);
+		/*for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
+		{
+			snprintf(   tmpBuf, tmpBufSize, "%s\n", _context->fs->GetFileName(fileIdx).c_str() );
+			_context->browser->add(tmpBuf);
+		}*/
 	}
 
 	snprintf( tmpBuf, tmpBufSize, "Disk info:\n%s side(s)\n%s tracks\n%zu total bytes\n%zu free bytes\n%zu free sectors",
 		std::to_string(pDisk->GetSidesNum()).c_str(),
 		std::to_string(pDisk->GetTracksNum()).c_str(),
 		pDisk->GetSidesNum()*pDisk->GetTracksNum()*pDisk->GetSectorsNum()*pDisk->GetSectorSize(),
-		pFS->GetFreeSize(),
-		pFS->GetFreeSize()/pDisk->GetSectorSize()
+		_context->fs->GetFreeSize(),
+		_context->fs->GetFreeSize()/pDisk->GetSectorSize()
 	);
 	_context->diskInfoLabel->copy_label( tmpBuf );
 }
@@ -266,6 +307,11 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 	{
 		delete pContext->disk;
 	}
+	if( pContext->fs )
+	{
+		delete pContext->fs;
+		pContext->fs = nullptr;
+	}
 	pContext->disk = pContext->diskImageFactory->LoadDiskImage( fileName );
 
 	if( pContext->disk == nullptr )
@@ -275,7 +321,6 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 	}
 	
 	// If a raw disk is loaded, try to guess geometry based on known disk sizes.
-	bool fsLoaded = false;
 	if( pContext->disk->NeedManualSetup() )
 	{
 		switch( pContext->disk->GetDataSize() )
@@ -286,7 +331,7 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 			pContext->disk->SetTracksNum(40);
 			pContext->disk->SetSectorsNum(DRAGONDOS_SECTORSPERTRACK);
 			pContext->disk->SetSectorSize(DRAGONDOS_SECTOR_SIZE);
-			fsLoaded = pContext->fs->Load( pContext->disk );
+			pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
 		}
 		break;
 		// This case is ambiguous as it can be either 1 side and 80 tracks, or
@@ -300,14 +345,14 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 			pContext->disk->SetTracksNum(80);
 			pContext->disk->SetSectorsNum(DRAGONDOS_SECTORSPERTRACK);
 			pContext->disk->SetSectorSize(DRAGONDOS_SECTOR_SIZE);
-			fsLoaded = pContext->fs->Load( pContext->disk );
+			pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
 
 			// If the filesystem didn't load, try 2 sides and 40 tracks.
-			if( !fsLoaded )
+			if( pContext->fs == nullptr )
 			{
 				pContext->disk->SetSidesNum(2);
 				pContext->disk->SetTracksNum(40);
-				fsLoaded = pContext->fs->Load( pContext->disk );
+				pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
 			}
 		}
 		break;
@@ -317,7 +362,7 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 			pContext->disk->SetTracksNum(80);
 			pContext->disk->SetSectorsNum(DRAGONDOS_SECTORSPERTRACK);
 			pContext->disk->SetSectorSize(DRAGONDOS_SECTOR_SIZE);
-			fsLoaded = pContext->fs->Load( pContext->disk );
+			pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
 		}
 		break;
 		
@@ -327,10 +372,10 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 	}
 	else
 	{
-		fsLoaded = pContext->fs->Load( pContext->disk );
+		pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
 	}
 
-	if( !fsLoaded )
+	if( pContext->fs == nullptr )
 	{
 		fl_alert( "Error processing file %s\nImage may be damaged or corrupt.", fileName.c_str() );
 	}
