@@ -43,7 +43,7 @@ public:
 	virtual int handle(int _event);
 	virtual void show();
 
-	void SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles );
+	void SetData( const IFileSystemInterface* _fs, const std::vector<int>& _selectedFiles );
 
 	void ViewAsHex();
 	void ViewAsText();
@@ -61,8 +61,8 @@ private:
 	void CreateControls         ();
 	void AddHexViewData         ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
 	void AddTextViewData        ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-	void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo );
-	void AddDisassemblyViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo );
+	void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+	void AddDisassemblyViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, uint16_t _loadAddress, uint16_t _execAddress );
 
 	void Decode_PMODE0_Image    ( const std::vector<unsigned char>& _src );
 	void Decode_PMODE1_Image    ( const std::vector<unsigned char>& _src );

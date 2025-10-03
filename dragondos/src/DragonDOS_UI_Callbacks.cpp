@@ -31,7 +31,7 @@ const size_t DRAGONDOS_DISK_SIZE_720KB = (2 * 80 * DRAGONDOS_SECTORSPERTRACK * D
 const size_t tmpBufSize = 256;
 const size_t indentSize = 3;
 
-void FormatTreeEntry( const CDirectoryEntryWrapper& _entry, char* _buf, size_t _bufSize, size_t _indent, const SDRAGONDOS_Context* _context )
+void FormatTreeEntry( const CDirectoryEntryWrapper& _entry, char* _buf, size_t _bufSize, size_t _indent, int& _fileIdx, const SDRAGONDOS_Context* _context )
 {
 	std::string indentStr;
 	indentStr.insert( indentStr.begin(), _indent, ' ' );
@@ -39,17 +39,19 @@ void FormatTreeEntry( const CDirectoryEntryWrapper& _entry, char* _buf, size_t _
 	if( _entry.IsDirectory() )
 	{
 		snprintf( _buf, _bufSize, "@f@C%d@.%s[%s]\n", FL_BLUE, indentStr.c_str(), _entry.GetName().c_str() );
-		_context->browser->add(_buf);
+		_context->browser->add(_buf, 0);
 
 		for( auto child : _entry.GetChildren() )
 		{
-			FormatTreeEntry( *child, _buf, _bufSize, _indent + indentSize, _context );
+			FormatTreeEntry( *child, _buf, _bufSize, _indent + indentSize, _fileIdx, _context );
 		}
 	}
 	else
 	{
-		snprintf( _buf, _bufSize, "@f@.%s%s\n", indentStr.c_str(), _entry.GetName().c_str() );
-		_context->browser->add(_buf);
+		++_fileIdx;
+		size_t fileSize = _context->fs->GetFileSize(_fileIdx);
+		snprintf( _buf, _bufSize, "@f@.%s%s (%zu bytes)\n", indentStr.c_str(), _entry.GetName().c_str(), fileSize );
+		_context->browser->add(_buf, reinterpret_cast<void*>(static_cast<uintptr_t>(_fileIdx + 1))); // the +1 offset is for recognizing directories as 0
 	}
 }
 
@@ -113,15 +115,11 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
 		COS9RBF_FS* pFS = (COS9RBF_FS*)_context->fs;
 
 		auto root = pFS->GetFSRoot();
-		FormatTreeEntry( root, tmpBuf, 256, 0, _context );
+		int fileIdx = -1;
+		FormatTreeEntry( root, tmpBuf, 256, 0, fileIdx, _context );
 
 		tmpBuf[0] = 0;
 		_context->browser->add(tmpBuf);
-		/*for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
-		{
-			snprintf(   tmpBuf, tmpBufSize, "%s\n", _context->fs->GetFileName(fileIdx).c_str() );
-			_context->browser->add(tmpBuf);
-		}*/
 	}
 
 	snprintf( tmpBuf, tmpBufSize, "Disk info:\n%s side(s)\n%s tracks\n%zu total bytes\n%zu free bytes\n%zu free sectors",
@@ -778,35 +776,46 @@ void removeFiles_cb(Fl_Widget* pWidget,void* _context)
 void viewFiles_cb(Fl_Widget* pWidget,void* _context)
 {
 	SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-	CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
 
 	std::stringstream decodedFiles;
 	std::string fltkTextColors;
 	std::vector<int> selectedFiles;
 
-	// Line numbers are 1 based. First 2 lines are the header lines.
-	for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size() ; ++line )
+	if( 0 == pContext->fs->GetFSName().compare("DragonDOS") )
 	{
-		if( pContext->browser->selected( line ) )
+		CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
+
+		// Line numbers are 1 based. First 2 lines are the header lines.
+		for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size() ; ++line )
 		{
-			selectedFiles.push_back( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
+			if( pContext->browser->selected( line ) )
+			{
+				selectedFiles.push_back( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
+			}
+		}
+	}
+	else if( 0 == pContext->fs->GetFSName().compare("OS-9 RBF") )
+	{
+		COS9RBF_FS* pFS = (COS9RBF_FS*)pContext->fs;
+
+		int fileIdx = -1;
+
+		// Line numbers are 1 based.
+		for( int line = 1; line <= pContext->browser->size() ; ++line )
+		{
+			if( pContext->browser->selected( line ) )
+			{
+				fileIdx = static_cast<int>(reinterpret_cast<uintptr_t>(pContext->browser->data( line )));
+				if( fileIdx > 0 )
+				{
+					selectedFiles.push_back( fileIdx - 1);
+				}
+			}
 		}
 	}
 
-	pContext->viewFileWindow->SetData( fs, selectedFiles );
+	pContext->viewFileWindow->SetData( pContext->fs, selectedFiles );
 	pContext->viewFileWindow->show();
-
-	for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size(); ++line  )
-	{
-		if( pContext->browser->selected(line) )
-		{
-			std::vector<unsigned char> file;
-			fs->ExtractFile( fs->GetFileName(line - DRAGONDOSUI_BROWSER_LINE_OFFSET), file, false );
-
-			unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
-			DragonDOS_BASIC::Decode( file, decodedFiles, fltkTextColors, programStart, false, false );
-		}
-	}
 }
 
 void viewFileAsHex_cb( Fl_Widget* pWidget, void* _viewFileWindow )

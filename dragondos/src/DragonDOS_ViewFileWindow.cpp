@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 #include <FL/Fl_Image.H>
@@ -310,7 +311,7 @@ void CDragonDOSViewFileWindow::CreateControls()
 	end();
 }
 
-void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vector<int>& _selectedFiles )
+void CDragonDOSViewFileWindow::SetData( const IFileSystemInterface* _fs, const std::vector<int>& _selectedFiles )
 {
 	mHexView.clear();
 	mHexViewColors.clear();
@@ -320,33 +321,71 @@ void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vec
 	mBasicViewColors.clear();
 	mDisassemblyView.clear();
 	mDisassemblyViewColors.clear();
+	mText6809.clear();
+	mText6809Colors.clear();
+	mText6309.clear();
+	mText6309Colors.clear();
+	mImageFileData.clear();
+	ClearImage();
 
 	for( auto file : _selectedFiles )
 	{
 		std::string fileName = _fs->GetFileName( file );
-		if( fileName.length() > DRAGONDOSVFW_MAX_FILENAME_LENGTH )
-		{
-			fileName =fileName.substr( 0, DRAGONDOSVFW_MAX_FILENAME_LENGTH );
-		}
 
 		std::string fileHeader;
 		if( _selectedFiles.size() > 1 )
 		{
 			fileHeader = "-[";
 			fileHeader += fileName;
-			fileHeader.append( DRAGONDOSVFW_MAX_FILENAME_LENGTH - fileName.length(), ' ' );
-			fileHeader += "]";
-			fileHeader.append( DRAGONDOSVFW_FILE_HEADER_FILLER_NUM, '-' );
+			if( 0 == _fs->GetFSName().compare("DragonDOS") )
+			{
+				fileHeader.append( DRAGONDOSVFW_MAX_FILENAME_LENGTH - fileName.length(), ' ' );
+				fileHeader += "]";
+				fileHeader.append( DRAGONDOSVFW_FILE_HEADER_FILLER_NUM, '-' );
+			}
+			else
+			{
+				fileHeader += "]";
+			}
 		}
 
-		const CDGNDosFile ddosFile = _fs->GetFile((unsigned short int)file);
+		bool isBinary = true;
+		bool isBasic = false;
+		uint16_t loadAddress = 0;
+		uint16_t execAddress = 0;
+		if( 0 == _fs->GetFSName().compare("DragonDOS") )
+		{
+			if( fileName.length() > DRAGONDOSVFW_MAX_FILENAME_LENGTH )
+			{
+				fileName =fileName.substr( 0, DRAGONDOSVFW_MAX_FILENAME_LENGTH );
+			}
+
+			CDragonDOS_FS* pDDFS = (CDragonDOS_FS*)_fs;
+			const CDGNDosFile ddosFile = pDDFS->GetFile((unsigned short int)file);
+			if( ddosFile.GetFileType() == DRAGONDOS_FILETYPE_BASIC )
+			{
+				isBinary = false;
+				isBasic = true;
+			}
+			else if( ddosFile.GetFileType() == DRAGONDOS_FILETYPE_BINARY )
+			{
+				loadAddress = ddosFile.GetLoadAddress();
+				execAddress = ddosFile.GetExecAddress();
+			}
+		}
 
 		std::vector<unsigned char> fileData;
 		_fs->ExtractFile        ( fileName, fileData, false );
 		AddHexViewData          ( fileHeader, fileData );
 		AddTextViewData         ( fileHeader, fileData );
-		AddBasicViewData        ( fileHeader, fileData, ddosFile );
-		AddDisassemblyViewData  ( fileHeader, fileData, ddosFile );
+		if( isBasic )
+		{
+			AddBasicViewData        ( fileHeader, fileData );
+		}
+		if( isBinary )
+		{
+			AddDisassemblyViewData  ( fileHeader, fileData, loadAddress, execAddress );
+		}
 	}
 
 	mHexViewColors.append ( mHexView.length() , DRAGONDOSVFW_COLOR_TEXT );
@@ -356,7 +395,6 @@ void CDragonDOSViewFileWindow::SetData( const CDragonDOS_FS* _fs, const std::vec
 	if( !_selectedFiles.empty() )
 	{
 		std::string fileName = _fs->GetFileName( _selectedFiles[0] );
-		mImageFileData.clear();
 		_fs->ExtractFile( fileName, mImageFileData, false );
 
 		DecodeImage();
@@ -510,7 +548,7 @@ void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, 
 	mTextView += strStream.str();
 }
 
-void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo )
+void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
 {
 	if( _fileData.empty() )
 	{
@@ -531,10 +569,7 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
 	}
 
 	unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
-	if( _fileInfo.GetFileType() == DRAGONDOS_FILETYPE_BASIC )
-	{
-		DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
-	}
+	DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
 
 	strStream << std::endl;
 	textColors += "\n";
@@ -543,7 +578,7 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
 	mBasicViewColors += textColors;
 }
 
-void CDragonDOSViewFileWindow::AddDisassemblyViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, const CDGNDosFile& _fileInfo )
+void CDragonDOSViewFileWindow::AddDisassemblyViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, uint16_t _loadAddress, uint16_t _execAddress )
 {
 	if( _fileData.empty() )
 	{
@@ -570,11 +605,8 @@ void CDragonDOSViewFileWindow::AddDisassemblyViewData( const std::string _fileHe
 		mText6309Colors += "\n";
 	}
 
-	if( _fileInfo.GetFileType() == DRAGONDOS_FILETYPE_BINARY )
-	{
-		m6809_Disassembler.Disassemble( _fileData, _fileInfo.GetLoadAddress(), _fileInfo.GetExecAddress(), mText6809, mText6809Colors );
-		m6309_Disassembler.Disassemble( _fileData, _fileInfo.GetLoadAddress(), _fileInfo.GetExecAddress(), mText6309, mText6309Colors );
-	}
+	m6809_Disassembler.Disassemble( _fileData, _loadAddress, _execAddress, mText6809, mText6809Colors );
+	m6309_Disassembler.Disassemble( _fileData, _loadAddress, _execAddress, mText6309, mText6309Colors );
 
 	mText6809 += "\n";
 	mText6809Colors += "\n";
