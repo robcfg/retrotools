@@ -350,6 +350,10 @@ bool COS9RBF_FS::ExtractFile( const std::string& _fileName, std::vector<unsigned
 	}
 
 	const CDirectoryEntryWrapper* fileEntry = FindDirectoryEntry( &GetFSRoot(), strings, 1);
+	if( fileEntry->IsDirectory() )
+	{
+		return false;
+	}
 
 	if( fileEntry )
 	{

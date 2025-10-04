@@ -3,6 +3,7 @@
 #include <FL/Fl.H>
 #include <FL/fl_ask.H>
 #include <FL/Fl_Native_File_Chooser.H>
+#include <iostream>
 #include <string>
 #include <filesystem>
 
@@ -651,85 +652,141 @@ void insertData_cb(Fl_Widget* pWidget,void* _context)
 void extractFiles_cb(Fl_Widget* pWidget,void* _context)
 {
 	SDRAGONDOS_Context* pContext = (SDRAGONDOS_Context*)_context;
-	CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
 	std::string path;
+	std::string errors;
 
-	if( pContext->browser->size() < DRAGONDOSUI_BROWSER_LINE_OFFSET )
-	{
-		return;
-	}
+	// if( pContext->browser->size() < DRAGONDOSUI_BROWSER_LINE_OFFSET )
+	// {
+	// 	return;
+	// }
 
 	if( !ChooseFilename( path, true, true, pContext ) )
 	{
 		return;
 	}
 
-	std::string errors;
 
-	for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size(); ++line  )
+	if( 0 == pContext->fs->GetFSName().compare("DragonDOS") )
 	{
-		if( pContext->browser->selected(line) )
+		CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
+
+		for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size(); ++line  )
 		{
-			SFileInfo fi = fs->GetFileInfo( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
-			std::vector<unsigned char> fileData;
-			std::string fileName = path;
-			fileName += DRAGONDOSUI_PATH_SEPARATOR;
-			fileName += fi.name;
-
-			bool extractBinaryHeaders = (pContext->extractBinaryHeadersButton != NULL) && (0 != pContext->extractBinaryHeadersButton->value());
-			if( !fs->ExtractFile(fi.name, fileData, extractBinaryHeaders ) )
+			if( pContext->browser->selected(line) )
 			{
-				errors += "Couldn't extract file ";
-				errors += fi.name;
-				errors += "\n";
-				continue;
-			}
-			
-			unsigned short int fileIdx = fs->GetFileEntry( fi.name );
-			if( fileIdx == DRAGONDOS_INVALID )
-			{
-				continue;
-			}
+				SFileInfo fi = fs->GetFileInfo( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
+				std::vector<unsigned char> fileData;
+				std::string fileName = path;
+				fileName += DRAGONDOSUI_PATH_SEPARATOR;
+				fileName += fi.name;
 
-			size_t bytesWritten = 0;
-			FILE* pOut = fopen( fileName.c_str(), "wb" );
-			if( nullptr == pOut )
-			{
-				errors += "Error writing file ";
-				errors += fileName;
-				errors += "\n";
-				continue;
-			}
+				bool extractBinaryHeaders = (pContext->extractBinaryHeadersButton != NULL) && (0 != pContext->extractBinaryHeadersButton->value());
+				if( !fs->ExtractFile(fi.name, fileData, extractBinaryHeaders ) )
+				{
+					errors += "Couldn't extract file ";
+					errors += fi.name;
+					errors += "\n";
+					continue;
+				}
+				
+				unsigned short int fileIdx = fs->GetFileEntry( fi.name );
+				if( fileIdx == DRAGONDOS_INVALID )
+				{
+					continue;
+				}
 
-			// Detokenize BASIC
-			SDGNDosDirectoryEntry entry = fs->GetDirectory()[fileIdx];
-			if( entry.fileType == DRAGONDOS_FILETYPE_BASIC  )
-			{
-				std::stringstream strStream;
-				std::stringstream clrStream;
-				std::string textColors;
-				unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
-
-				DragonDOS_BASIC::Decode( fileData, strStream, textColors, programStart, false, false );
-
-				bytesWritten = fwrite( strStream.str().c_str(), 1, strStream.str().length(), pOut );
-				fclose( pOut );
-			}
-			else
-			{
-				size_t bytesWritten = fwrite( fileData.data(), 1, fileData.size(), pOut );
-				fclose( pOut );
-
-				if( bytesWritten != fileData.size() )
+				size_t bytesWritten = 0;
+				FILE* pOut = fopen( fileName.c_str(), "wb" );
+				if( nullptr == pOut )
 				{
 					errors += "Error writing file ";
 					errors += fileName;
-					errors += " ";
-					errors += std::to_string(bytesWritten);
-					errors += " of ";
-					errors += std::to_string(fileData.size());
-					errors += " bytes written.\n";
+					errors += "\n";
 					continue;
+				}
+
+				// Detokenize BASIC
+				SDGNDosDirectoryEntry entry = fs->GetDirectory()[fileIdx];
+				if( entry.fileType == DRAGONDOS_FILETYPE_BASIC  )
+				{
+					std::stringstream strStream;
+					std::stringstream clrStream;
+					std::string textColors;
+					unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
+
+					DragonDOS_BASIC::Decode( fileData, strStream, textColors, programStart, false, false );
+
+					bytesWritten = fwrite( strStream.str().c_str(), 1, strStream.str().length(), pOut );
+					fclose( pOut );
+				}
+				else
+				{
+					size_t bytesWritten = fwrite( fileData.data(), 1, fileData.size(), pOut );
+					fclose( pOut );
+
+					if( bytesWritten != fileData.size() )
+					{
+						errors += "Error writing file ";
+						errors += fileName;
+						errors += " ";
+						errors += std::to_string(bytesWritten);
+						errors += " of ";
+						errors += std::to_string(fileData.size());
+						errors += " bytes written.\n";
+						continue;
+					}
+				}
+			}
+		}
+	}
+	else if( 0 == pContext->fs->GetFSName().compare("OS-9 RBF") )
+	{
+		COS9RBF_FS* fs = (COS9RBF_FS*)pContext->fs;
+		size_t fileIdx = 0;
+
+		// Line numbers start at 1 and the 1st one is always the root directory,so we start at 2 to skip it.
+		for( int line = 2; line <= pContext->browser->size(); ++line  )
+		{
+			if( pContext->browser->selected(line) )
+			{
+				std::vector<uint8_t> fileData;
+				fileIdx = static_cast<int>(reinterpret_cast<uintptr_t>(pContext->browser->data( line )));
+				if( fileIdx > 1 )
+				{
+					--fileIdx;
+					std::string fsFileName = fs->GetFileName(fileIdx);
+
+					if( fs->ExtractFile( fsFileName, fileData, false ) )
+					{
+						std::filesystem::path filePath( fsFileName );
+						std::string fileName = path;
+						fileName += DRAGONDOSUI_PATH_SEPARATOR;
+						fileName += filePath.filename().string();
+
+						FILE* pOut = fopen( fileName.c_str(), "wb" );
+						if( nullptr == pOut )
+						{
+							errors += "Error writing file ";
+							errors += fileName;
+							errors += "\n";
+							continue;
+						}
+
+						size_t bytesWritten = fwrite( fileData.data(), 1, fileData.size(), pOut );
+						fclose( pOut );
+
+						if( bytesWritten != fileData.size() )
+						{
+							errors += "Error writing file ";
+							errors += fileName;
+							errors += " ";
+							errors += std::to_string(bytesWritten);
+							errors += " of ";
+							errors += std::to_string(fileData.size());
+							errors += " bytes written.\n";
+							continue;
+						}
+					}
 				}
 			}
 		}
