@@ -12,6 +12,7 @@
 #include "DragonDOS_Common.h"
 #include "../../common/FileSystems/DragonDOS_FS.h"
 #include "../../common/FileSystems/OS9RBF_FS.h"
+#include "../../common/FileSystems/CoCoDS_FS.h"
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
 #include "../../common/DiskImages/VDKDiskImage.h"
@@ -28,6 +29,8 @@
 const size_t DRAGONDOS_DISK_SIZE_180KB = (1 * 40 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
 const size_t DRAGONDOS_DISK_SIZE_360KB = (2 * 40 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
 const size_t DRAGONDOS_DISK_SIZE_720KB = (2 * 80 * DRAGONDOS_SECTORSPERTRACK * DRAGONDOS_SECTOR_SIZE);
+
+const size_t COCODS_DISK_SIZE_160KB    = (COCODS_DISK_SIDES_NUM * COCODS_DISK_TRACKS_NUM * COCODS_DISK_SECTORS_PER_TRACK * COCODS_DISK_SECTOR_SIZE);
 
 const size_t tmpBufSize = 256;
 const size_t indentSize = 3;
@@ -67,6 +70,7 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
 	char tmpBuf[256] = {0};
 
 	_context->fileLabel->copy_label( _context->diskFilename.c_str() );
+	_context->fsLabel->copy_label( _context->fs->GetFSName().c_str() );
 	_context->browser->clear();
 
 	if( 0 == _context->fs->GetFSName().compare("DragonDOS") )
@@ -121,6 +125,47 @@ void UpdateUI( const SDRAGONDOS_Context* _context )
 
 		tmpBuf[0] = 0;
 		_context->browser->add(tmpBuf);
+	}
+	else if( 0 == _context->fs->GetFSName().compare("CoCo Disk System") )
+	{
+		_context->browser->add("@f@.File|Name    |Ext|Typ|Fmt|Sec|Bytes |Load|Exec\n");
+		_context->browser->add("@f@.----+--------+---+---+---+---+------+----+----\n");
+
+		for( size_t fileIdx = 0; fileIdx < _context->fs->GetFilesNum(); ++fileIdx )
+		{
+			CCoCoDS_FS* pFS = (CCoCoDS_FS*)_context->fs;
+			SFileInfo fileInfo = _context->fs->GetFileInfo( fileIdx );
+
+			std::filesystem::path filePath( pFS->GetFileName( fileIdx ) );
+			
+			std::string tmpName = filePath.stem().string();
+			if( tmpName.length() < UI_MAX_FILE_NAME_LEN )
+			{
+				tmpName.insert( tmpName.end(), UI_MAX_FILE_NAME_LEN - tmpName.length(), ' ' );
+			}
+			std::string tmpExt = filePath.extension().string();
+			if( tmpExt.length() < UI_MAX_FILE_EXT_LEN )
+			{
+				tmpExt.insert( tmpExt.end(), UI_MAX_FILE_EXT_LEN - tmpExt.length(), ' ' );
+			}
+
+			uint16_t fileSectors = (uint16_t)(pFS->GetFileSize(fileIdx)/pDisk->GetSectorSize());
+			fileSectors += (pFS->GetFileSize(fileIdx)%pDisk->GetSectorSize() != 0) ? 1 : 0;
+
+			CCoCoDS_File ddosFile = pFS->GetFile((unsigned short int)fileIdx);
+
+			snprintf(   tmpBuf, tmpBufSize, "@f@.%03zu  %s%s %s %s %3d %6zu %04X %04X\n", 
+						fileIdx, 
+						tmpName.c_str(), 
+						tmpExt.c_str(),
+						ddosFile.GetFileTypeString().c_str(),
+						ddosFile.GetFileFormatString().c_str(),
+						fileSectors,
+						pFS->GetFileSize(fileIdx),
+						ddosFile.GetLoadAddress(),
+						ddosFile.GetExecAddress() );
+			_context->browser->add(tmpBuf);
+		}
 	}
 
 	snprintf( tmpBuf, tmpBufSize, "Disk info:\n%s side(s)\n%s tracks\n%zu total bytes\n%zu free bytes\n%zu free sectors",
@@ -364,7 +409,14 @@ void openDisk_cb(Fl_Widget* pWidget,void* _context)
 			pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
 		}
 		break;
-		
+		case COCODS_DISK_SIZE_160KB:
+			pContext->disk->SetSidesNum(COCODS_DISK_SIDES_NUM);
+			pContext->disk->SetTracksNum(COCODS_DISK_TRACKS_NUM);
+			pContext->disk->SetSectorsNum(COCODS_DISK_SECTORS_PER_TRACK);
+			pContext->disk->SetSectorSize(COCODS_DISK_SECTOR_SIZE);
+			pContext->fs = pContext->fileSystemFactory->LoadFileSystem( pContext->disk );
+		break;
+
 		default:
 			break;
 		}

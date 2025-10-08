@@ -30,6 +30,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/FileSystemFactory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/OS9RBF_FS.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/CoCoDS_FS.cpp
     # Disk image formats
 	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/DiskImageFactory.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/EDSKDiskImage.cpp
@@ -68,6 +69,7 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/FileSystemFactory.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/OS9RBF_FS.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/CoCoDS_FS.cpp
     # Disk image formats
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/DiskImageFactory.cpp
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common/DiskImages/EDSKDiskImage.cpp

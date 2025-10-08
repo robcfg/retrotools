@@ -26,6 +26,7 @@
 #include "../../common/FileSystems/FileSystemFactory.h"
 #include "../../common/FileSystems/DragonDOS_FS.h"
 #include "../../common/FileSystems/OS9RBF_FS.h"
+#include "../../common/FileSystems/CoCoDS_FS.h"
 
 #ifndef __APPLE__
 #define DRAGONDOSUI_MENUBARHEIGHT 30
@@ -127,10 +128,15 @@ void CreateControls( int _width, int _menuBarHeight, SDRAGONDOS_Context* _contex
     // File Label
     _context->fileLabel = new Fl_Box( FL_NO_BOX, x, y, _width - 20, 30, "(No disk)" );
     _context->fileLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
-    y += 40;
+    y += 30;
 
-	_context->browser = new Fl_Multi_Browser( x, y, 380, 565 );
-    x += 390;
+	// File system label
+    _context->fsLabel = new Fl_Box( FL_NO_BOX, x, y, _width - 20, 30, "(No file system)" );
+    _context->fsLabel->align( FL_ALIGN_LEFT | FL_ALIGN_INSIDE );
+    y += 30;
+
+	_context->browser = new Fl_Multi_Browser( x, y, 390, 565 );
+    x += 400;
 
     Fl_Button* newDiskButton = new Fl_Button( x, y, 170, 30, "New disk");
     newDiskButton->callback( newDisk_cb, (void*)_context );
@@ -273,7 +279,7 @@ int main( int argc, char** argv )
 
     SDRAGONDOS_Context context;
 
-    CAppWindow* mainWindow = new CAppWindow( &context, 585, 615 + menuBarOffset, "DragonDOS 1.0.6 by Robcfg" );
+    CAppWindow* mainWindow = new CAppWindow( &context, 595, 635 + menuBarOffset, "DragonDOS 1.0.6 by Robcfg" );
 
     mainWindow->begin();
 
@@ -289,6 +295,7 @@ int main( int argc, char** argv )
 	FileSystemFactory filesystemFactory;
 	filesystemFactory.RegisterFileSystem( new CDragonDOS_FS );
 	filesystemFactory.RegisterFileSystem( new COS9RBF_FS    );
+	filesystemFactory.RegisterFileSystem( new CCoCoDS_FS    );
 	context.fileSystemFactory = &filesystemFactory;
 
     CreateMenuBar( mainWindow->w(), DRAGONDOSUI_MENUBARHEIGHT, modifierKey, &context );

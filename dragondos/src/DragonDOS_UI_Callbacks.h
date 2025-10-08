@@ -22,6 +22,7 @@ struct SDRAGONDOS_Context
 	FileSystemFactory*			fileSystemFactory	= nullptr;
 
     Fl_Box*                     fileLabel       	= nullptr;
+    Fl_Box*                     fsLabel 	      	= nullptr;
     Fl_Box*                     diskInfoLabel   	= nullptr;
     Fl_Multi_Browser*           browser         	= nullptr;
 
