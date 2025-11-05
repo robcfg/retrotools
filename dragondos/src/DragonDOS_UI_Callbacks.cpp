@@ -717,7 +717,6 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
 		return;
 	}
 
-
 	if( 0 == pContext->fs->GetFSName().compare("DragonDOS") )
 	{
 		CDragonDOS_FS* fs = (CDragonDOS_FS*)pContext->fs;
@@ -843,6 +842,49 @@ void extractFiles_cb(Fl_Widget* pWidget,void* _context)
 			}
 		}
 	}
+	else if( 0 == pContext->fs->GetFSName().compare("CoCo Disk System") )
+	{
+		CCoCoDS_FS* fs = (CCoCoDS_FS*)pContext->fs;
+
+		for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size(); ++line  )
+		{
+			if( pContext->browser->selected(line) )
+			{
+				const CCoCoDS_File& file = fs->GetFile( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
+				std::vector<unsigned char> fileData;
+
+				std::string fileName = path;
+				fileName += DRAGONDOSUI_PATH_SEPARATOR;
+				fileName += file.GetFileName();
+
+				file.GetFileData( fileData );
+
+				FILE* pOut = fopen( fileName.c_str(), "wb" );
+				if( nullptr == pOut )
+				{
+					errors += "Error writing file ";
+					errors += fileName;
+					errors += "\n";
+					continue;
+				}
+
+				size_t bytesWritten = fwrite( fileData.data(), 1, fileData.size(), pOut );
+				fclose( pOut );
+
+				if( bytesWritten != fileData.size() )
+				{
+					errors += "Error writing file ";
+					errors += fileName;
+					errors += " ";
+					errors += std::to_string(bytesWritten);
+					errors += " of ";
+					errors += std::to_string(fileData.size());
+					errors += " bytes written.\n";
+					continue;
+				}
+			}
+		}
+	}
 
 	if( !errors.empty() )
 	{
@@ -919,6 +961,19 @@ void viewFiles_cb(Fl_Widget* pWidget,void* _context)
 				{
 					selectedFiles.push_back( fileIdx - 1);
 				}
+			}
+		}
+	}
+	if( 0 == pContext->fs->GetFSName().compare("CoCo Disk System") )
+	{
+		CCoCoDS_FS* fs = (CCoCoDS_FS*)pContext->fs;
+
+		// Line numbers are 1 based. First 2 lines are the header lines.
+		for( int line = DRAGONDOSUI_BROWSER_LINE_OFFSET; line <= pContext->browser->size() ; ++line )
+		{
+			if( pContext->browser->selected( line ) )
+			{
+				selectedFiles.push_back( line - DRAGONDOSUI_BROWSER_LINE_OFFSET );
 			}
 		}
 	}

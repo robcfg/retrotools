@@ -128,7 +128,8 @@ public:
 	IFileSystemInterface* NewFileSystem() { return new CCoCoDS_FS; }
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	const CCoCoDS_File& 	GetFile         ( unsigned short int fileIdx ) const { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
+	const CCoCoDS_File& 	GetFile         ( unsigned short int fileIdx )		const { if(fileIdx < files.size()) return files[fileIdx]; return emptyFile; }
+	unsigned short int  	GetFileIdx      ( const std::string& _fileName ) 	const;
 
 private:
 	IDiskImageInterface*           		disk;
@@ -143,10 +144,9 @@ private:
 	bool                	SetDisk         ( IDiskImageInterface* _disk );
 	IDiskImageInterface*	GetDisk         ()                              { return disk; }
 	unsigned short int  	GetNumberOfFiles()                              { return (unsigned short int)files.size(); }
-	unsigned short int  	GetFileIdx      ( std::string _fileName );
 	bool                	ParseDirectory	();
 	bool                	ParseFiles		();
-	unsigned short int  	GetFileEntry	( std::string _fileName );
+	unsigned short int  	GetFileEntry	( std::string _fileName ) const;
 	void                	ReadGranule		( unsigned char _granule, std::vector<unsigned char>& _dst );
 
 	const std::vector<SCoCoDSDirectoryEntry>& GetDirectory() { return directory; }

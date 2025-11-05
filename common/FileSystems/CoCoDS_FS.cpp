@@ -1,5 +1,11 @@
-#include "CoCoDS_FS.h"
 #include <cstring>
+#include <string.h> // for strcasecmp
+
+#include "CoCoDS_FS.h"
+
+#ifndef _WIN32
+#define _stricmp strcasecmp
+#endif
 
 static const unsigned int granuleTracks[COCODS_DISK_MAX_GRANULES] = {
 	0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,
@@ -62,10 +68,22 @@ bool CCoCoDS_FS::SetDisk( IDiskImageInterface* _disk )
 
 	return true;
 }
-
-unsigned short int GetFileIdx( const std::string& _fileName )
+unsigned short int CCoCoDS_FS::GetFileIdx( const std::string& _fileName ) const
 {
-	return 0;
+	unsigned short int retVal = COCODS_INVALID;
+
+	unsigned short int fileIdx = 0;
+	while( retVal == COCODS_INVALID && fileIdx < files.size() )
+	{
+		if( 0 == _stricmp(_fileName.c_str(),files[fileIdx].GetFileName().c_str()) )
+		{
+			retVal = fileIdx;
+		}
+
+		++fileIdx;
+	}
+
+	return retVal;
 }
 
 bool CCoCoDS_FS::InsertFile( const std::string& _fileName, const std::vector<unsigned char>& src, bool _binaryFile )
@@ -179,14 +197,42 @@ bool CCoCoDS_FS::ParseFiles()
 	return true;
 }
 
-unsigned short int CCoCoDS_FS::GetFileEntry( std::string _fileName )
+unsigned short int CCoCoDS_FS::GetFileEntry( std::string _fileName ) const
 {
-	return 0;
+	unsigned short int retVal = COCODS_INVALID;
+
+	unsigned short int fileIdx = 0;
+	while( retVal == COCODS_INVALID && fileIdx < directory.size() )
+	{
+		std::string entryFilename = directory[fileIdx].name;
+		entryFilename += ".";
+		entryFilename += directory[fileIdx].extension;
+
+		if( 0 == _stricmp(_fileName.c_str(),entryFilename.c_str()) )
+		{
+			retVal = fileIdx;
+		}
+
+		++fileIdx;
+	}
+
+	return retVal;
 }
 
 bool CCoCoDS_FS::ExtractFile( const std::string& _fileName, std::vector<unsigned char>& _dst, bool _withBinaryHeader ) const
 {
-	return false;
+	unsigned short int fileIdx = GetFileIdx( _fileName );
+
+	if( fileIdx == COCODS_INVALID )
+	{
+		return false;
+	}
+
+	const CCoCoDS_File& entry = files[fileIdx];
+
+	entry.GetFileData( _dst );
+
+	return true;
 }
 
 void CCoCoDS_FS::ReadGranule( unsigned char _granule, std::vector<unsigned char>& _dst )
