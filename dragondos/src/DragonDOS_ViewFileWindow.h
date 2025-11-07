@@ -61,7 +61,7 @@ private:
 	void CreateControls         ();
 	void AddHexViewData         ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
 	void AddTextViewData        ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
-	void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData );
+	void AddBasicViewData       ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, bool _dialect );
 	void AddDisassemblyViewData ( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, uint16_t _loadAddress, uint16_t _execAddress );
 
 	void Decode_PMODE0_Image    ( const std::vector<unsigned char>& _src );

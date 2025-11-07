@@ -26,6 +26,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Commands.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/DiskExtendedColorBasic.cpp
 	# File systems
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/FileSystemFactory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../common/FileSystems/DragonDOS_FS.cpp
@@ -63,6 +64,7 @@ target_sources( dragondosui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_UI_Callbacks.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_Common.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_BASIC.cpp
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DiskExtendedColorBasic.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_ViewFileWindow.cpp
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/DragonDOS_NewDiskWindow.cpp
 	# File systems

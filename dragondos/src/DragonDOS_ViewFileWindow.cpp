@@ -28,9 +28,12 @@
 
 #include <FL/Fl_Image.H>
 
+#include "DiskExtendedColorBasic.h"
 #include "DragonDOS_BASIC.h"
 #include "DragonDOS_UI_Callbacks.h"
 #include "DragonDOS_ViewFileWindow.h"
+
+#include "../../common/FileSystems/CoCoDS_FS.h"
 
 #include "../graphics/DragonTextFont.h"
 
@@ -80,6 +83,8 @@ Fl_Text_Display::Style_Table_Entry stable[] = {
 #define DRAGONDOSVFW_TEXT                    5
 #define DRAGONDOSVFW_TEXT_COLUMNS            32
 #define DRAGONDOSVFW_TEXT_ROWS               16
+#define DRAGONDOSVFW_DRAGON_BASIC            true
+#define DRAGONDOSVFW_COCO_BASIC              false
 
 // Palettes
 const unsigned char TwoColorPalettes[2][2][3] = {   0x4C, 0x56, 0x3C, 0xBE, 0xC8, 0xAC,
@@ -228,8 +233,8 @@ void CDragonDOSViewFileWindow::CreateControls()
 	mViewAsImageButton->callback( viewFileAsImage_cb, (void*)this );
 	x += DRAGONDOSVFW_RADIO_BUTTON_WIDTH + DRAGONDOSVFW_RADIO_BUTTON_GAP;
 	
-	mViewAsImageButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Disasm. (D)");
-	mViewAsImageButton->callback( viewFileAsDisassembly_cb, (void*)this );
+	mViewAsDisassemblyButton = new Fl_Radio_Light_Button( x, y, DRAGONDOSVFW_RADIO_BUTTON_WIDTH, DRAGONDOSVFW_RADIO_BUTTON_HEIGHT, "Disasm. (D)");
+	mViewAsDisassemblyButton->callback( viewFileAsDisassembly_cb, (void*)this );
 	x = DRAGONDOSVFW_WINDOW_MARGIN;
 	y += 35;
 	int disasmY = y;
@@ -351,6 +356,7 @@ void CDragonDOSViewFileWindow::SetData( const IFileSystemInterface* _fs, const s
 
 		bool isBinary = true;
 		bool isBasic = false;
+		bool basicDialect = DRAGONDOSVFW_DRAGON_BASIC;
 		uint16_t loadAddress = 0;
 		uint16_t execAddress = 0;
 		if( 0 == _fs->GetFSName().compare("DragonDOS") )
@@ -373,6 +379,28 @@ void CDragonDOSViewFileWindow::SetData( const IFileSystemInterface* _fs, const s
 				execAddress = ddosFile.GetExecAddress();
 			}
 		}
+		else if( 0 == _fs->GetFSName().compare("CoCo Disk System") )
+		{
+			if( fileName.length() > DRAGONDOSVFW_MAX_FILENAME_LENGTH )
+			{
+				fileName =fileName.substr( 0, DRAGONDOSVFW_MAX_FILENAME_LENGTH );
+			}
+
+			CCoCoDS_FS* pCoCoFS = (CCoCoDS_FS*)_fs;
+			const CCoCoDS_File cocoFile = pCoCoFS->GetFile((unsigned short int)file);
+			if( cocoFile.GetFileType() == COCODS_FILETYPE_BASIC_PROGRAM )
+			{
+				isBinary = false;
+				isBasic = true;
+			}
+			else if( cocoFile.GetFileType() == COCODS_FILETYPE_MACHINE_LANGUAGE )
+			{
+				loadAddress = cocoFile.GetLoadAddress();
+				execAddress = cocoFile.GetExecAddress();
+			}
+
+			basicDialect = DRAGONDOSVFW_COCO_BASIC;
+		}
 
 		std::vector<unsigned char> fileData;
 		_fs->ExtractFile        ( fileName, fileData, false );
@@ -380,7 +408,7 @@ void CDragonDOSViewFileWindow::SetData( const IFileSystemInterface* _fs, const s
 		AddTextViewData         ( fileHeader, fileData );
 		if( isBasic )
 		{
-			AddBasicViewData        ( fileHeader, fileData );
+			AddBasicViewData        ( fileHeader, fileData, basicDialect );
 		}
 		if( isBinary )
 		{
@@ -548,7 +576,7 @@ void CDragonDOSViewFileWindow::AddTextViewData ( const std::string _fileHeader, 
 	mTextView += strStream.str();
 }
 
-void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData )
+void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, const std::vector<unsigned char>& _fileData, bool _dialect )
 {
 	if( _fileData.empty() )
 	{
@@ -569,7 +597,14 @@ void CDragonDOSViewFileWindow::AddBasicViewData( const std::string _fileHeader, 
 	}
 
 	unsigned short int programStart = DRAGONDOS_BASIC_PROGRAM_START;
-	DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
+	if( _dialect == DRAGONDOSVFW_DRAGON_BASIC )
+	{
+		DragonDOS_BASIC::Decode( _fileData, strStream, textColors, programStart, false, false );
+	}
+	else
+	{
+		DECBasic::Decode( _fileData, strStream, textColors, programStart, false, false );
+	}
 
 	strStream << std::endl;
 	textColors += "\n";
