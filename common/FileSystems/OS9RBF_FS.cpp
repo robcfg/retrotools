@@ -321,9 +321,11 @@ void CFileDescriptor::Load( IDiskImageInterface* _disk, unsigned long int _lsn, 
 					{
 						size_t lsnOffset = offset + OFF_FD_DIR_LSN;
 						unsigned long int dirLSN = (_data[lsnOffset]*65536)+(_data[lsnOffset+1]*256)+_data[lsnOffset+2];
-						tmpDir->Load( _disk, dirLSN, _sectorSize );
-						//entries.push_back( tmpDir );
-						AddChild( tmpDir );
+						if( dirLSN < (_disk->GetSectorsNum() * _disk->GetSidesNum() * _disk->GetTracksNum()) )
+						{
+							tmpDir->Load( _disk, dirLSN, _sectorSize );
+							AddChild( tmpDir );
+						}
 					}
 
 					offset += FD_DIR_SIZE;
