@@ -9,9 +9,6 @@
 //               with the Tandy Disk Extended Color Basic file
 //				 system.
 //
-// For info on the DragonDOS file system go to:
-//             http://dragon32.info/info/drgndos.txt
-//
 // By Roberto Carlos Fernández Gerhardt aka robcfg
 //
 ////////////////////////////////////////////////////////////////////

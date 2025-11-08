@@ -1,3 +1,14 @@
+////////////////////////////////////////////////////////////////////
+//
+// CoCoDS_FS.h - Implementation of CCoCoDS_FS, a helper class that
+//               allows file operations on a disk image formatted
+//               with the Tandy Disk Extended Color Basic file
+//				 system.
+//
+// By Roberto Carlos Fernández Gerhardt aka robcfg
+//
+////////////////////////////////////////////////////////////////////
+
 #include <cstring>
 #include <string.h> // for strcasecmp
 
@@ -351,7 +362,19 @@ bool CCoCoDS_FS::InitDisk( IDiskImageInterface* _disk )
 
 size_t CCoCoDS_FS::GetFreeSize() const
 {
-	return 0;
+	size_t retVal = 0;
+
+	for( size_t granuleIdx = 0; granuleIdx < COCODS_DISK_MAX_GRANULES; ++granuleIdx )
+	{
+		if( 0xFF == fat[granuleIdx] )
+		{
+			++retVal;
+		}
+	}
+
+	retVal *= COCODS_DISK_GRANULE_SIZE;
+
+	return retVal;
 }
 
 std::string CCoCoDS_File::GetFileTypeString() const
